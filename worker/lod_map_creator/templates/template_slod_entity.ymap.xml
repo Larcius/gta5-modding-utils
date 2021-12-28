@@ -1,0 +1,19 @@
+    <Item type="CEntityDef">
+      <archetypeName>${NAME}</archetypeName>
+      <flags value="${FLAGS}"/>
+      <guid value="0"/>
+      <position x="${POSITION.X}" y="${POSITION.Y}" z="${POSITION.Z}"/>
+      <rotation x="0.00000000" y="0.00000000" z="0.00000000" w="1.00000000"/>
+      <scaleXY value="1.00000000"/>
+      <scaleZ value="1.00000000"/>
+      <parentIndex value="${PARENT_INDEX}"/>
+      <lodDist value="${LOD_DISTANCE}"/>
+      <childLodDist value="${CHILD.LOD_DISTANCE}"/>
+      <lodLevel>${LOD_LEVEL}</lodLevel>
+      <numChildren value="${NUM_CHILDREN}"/>
+      <priorityLevel>PRI_REQUIRED</priorityLevel>
+      <extensions/>
+      <ambientOcclusionMultiplier value="255"/>
+      <artificialAmbientOcclusion value="255"/>
+      <tintValue value="0"/>
+    </Item>

@@ -1,0 +1,18 @@
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="${LOD_DISTANCE}"/>
+      <flags value="0"/>
+      <specialAttribute value="0"/>
+      <bbMin x="${BBOX.MIN.X}" y="${BBOX.MIN.Y}" z="${BBOX.MIN.Z}"/>
+      <bbMax x="${BBOX.MAX.X}" y="${BBOX.MAX.Y}" z="${BBOX.MAX.Z}"/>
+      <bsCentre x="${BSPHERE.CENTER.X}" y="${BSPHERE.CENTER.Y}" z="${BSPHERE.CENTER.Z}"/>
+      <bsRadius value="${BSPHERE.RADIUS}"/>
+      <hdTextureDist value="${HD_TEXTURE_DISTANCE}"/>
+      <name>${NAME}</name>
+      <textureDictionary>${TEXTURE_DICTIONARY}</textureDictionary>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>${NAME}</assetName>
+      <extensions/>
+    </Item>

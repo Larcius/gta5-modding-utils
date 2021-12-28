@@ -1,0 +1,9 @@
+    <Item>
+      <Name>${MAP.NAME}</Name>
+      <Bounds>
+${MAP.BOUNDS.ITEMS}
+      </Bounds>
+      <Flags/>
+      <WeatherTypes/>
+      <HoursOnOff value="0"/>
+    </Item>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<CPackFileMetaData>
+  <MapDataGroups>
+${MAP_DATA_GROUPS}
+  </MapDataGroups>
+  <HDTxdBindingArray/>
+  <imapDependencies/>
+  <imapDependencies_2/>
+  <itypDependencies_2/>
+  <Interiors/>
+</CPackFileMetaData>

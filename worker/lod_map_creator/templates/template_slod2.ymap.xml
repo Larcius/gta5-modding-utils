@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<CMapData>
+  <name>${NAME}</name>
+  <parent/>
+  <flags value="2"/>
+  <contentFlags value="20"/>
+  <streamingExtentsMin x="${EXTENTS.STREAMING.MIN.X}" y="${EXTENTS.STREAMING.MIN.Y}" z="${EXTENTS.STREAMING.MIN.Z}"/>
+  <streamingExtentsMax x="${EXTENTS.STREAMING.MAX.X}" y="${EXTENTS.STREAMING.MAX.Y}" z="${EXTENTS.STREAMING.MAX.Z}"/>
+  <entitiesExtentsMin x="${EXTENTS.ENTITIES.MIN.X}" y="${EXTENTS.ENTITIES.MIN.Y}" z="${EXTENTS.ENTITIES.MIN.Z}"/>
+  <entitiesExtentsMax x="${EXTENTS.ENTITIES.MAX.X}" y="${EXTENTS.ENTITIES.MAX.Y}" z="${EXTENTS.ENTITIES.MAX.Z}"/>
+  <entities>
+${ENTITIES}
+  </entities>
+  <containerLods/>
+  <boxOccluders/>
+  <occludeModels/>
+  <physicsDictionaries/>
+  <instancedData>
+    <ImapLink/>
+    <PropInstanceList/>
+    <GrassInstanceList/>
+  </instancedData>
+  <timeCycleModifiers/>
+  <carGenerators/>
+  <LODLightsSOA>
+    <direction/>
+    <falloff/>
+    <falloffExponent/>
+    <timeAndStateFlags/>
+    <hash/>
+    <coneInnerAngle/>
+    <coneOuterAngleOrCapExt/>
+    <coronaIntensity/>
+  </LODLightsSOA>
+  <DistantLODLightsSOA>
+    <position/>
+    <RGBI/>
+    <numStreetLights value="0"/>
+    <category value="0"/>
+  </DistantLODLightsSOA>
+  <block>
+    <version value="0"/>
+    <flags value="0"/>
+    <name>${NAME}</name>
+    <exportedBy>Larcius</exportedBy>
+    <owner/>
+    <time>03 March 2020 05:03</time>
+  </block>
+</CMapData>

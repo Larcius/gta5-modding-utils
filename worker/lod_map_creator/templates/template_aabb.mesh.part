@@ -1,0 +1,5 @@
+		Aabb
+		{
+			Min ${BBOX.MIN.X} ${BBOX.MIN.Y} ${BBOX.MIN.Z}
+			Max ${BBOX.MAX.X} ${BBOX.MAX.Y} ${BBOX.MAX.Z}
+		}

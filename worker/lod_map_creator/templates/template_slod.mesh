@@ -1,0 +1,15 @@
+Version 165 32
+{
+	Locked False
+	Skinned False
+	BoneCount 0
+	Mask 255
+	Bounds
+	{
+${BOUNDS}
+	}
+	Geometries
+	{
+${GEOMETRIES}
+	}
+}

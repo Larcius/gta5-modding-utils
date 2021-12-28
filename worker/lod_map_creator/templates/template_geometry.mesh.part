@@ -1,0 +1,14 @@
+		Geometry
+		{
+			ShaderIndex ${SHADER_INDEX}
+			Flags -
+			VertexDeclaration ${VERTEX_DECLARATION}
+			Indices ${INDICES.NUM}
+			{
+${INDICES}
+			}
+			Vertices ${VERTICES.NUM}
+			{
+${VERTICES}
+			}
+		}
