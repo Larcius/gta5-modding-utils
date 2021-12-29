@@ -128,3 +128,10 @@ class Util:
     def copyFiles(inputDir: str, outputDir: str, filter):
         for filename in Util.getListOfFiles(inputDir, filter):
             shutil.copyfile(os.path.join(inputDir, filename), os.path.join(outputDir, filename))
+
+    @staticmethod
+    def readFile(path: str) -> str:
+        file = open(path, 'r')
+        content = file.read()
+        file.close()
+        return content

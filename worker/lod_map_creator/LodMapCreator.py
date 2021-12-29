@@ -1,3 +1,4 @@
+import shutil
 from re import Match
 from typing import Any, IO, Optional
 
@@ -41,6 +42,7 @@ class LodMapCreator:
     contentTemplateEntitySlod: str
     contentTemplateSlod2Map: str
 
+    additionalYtypDirectory: Optional[str]
     ytypItems: dict[str, YtypItem]
     slodYtypItems: Optional[IO]
     slodCandidates: dict[str, UVMap]
@@ -55,6 +57,7 @@ class LodMapCreator:
 
     def prepareSlodCandidates(self):
         # TODO provide more slod models:
+        # prop_tree_mquite_01
         # prop_rio_del_01
 
         slodCandidates = {
@@ -138,11 +141,12 @@ class LodMapCreator:
 
     TEXTURE_UV_EPS = 1 / 512
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str):
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, additionalYtypDirectory: Optional[str]):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
         self.slodYtypItems = None
+        self.additionalYtypDirectory = additionalYtypDirectory
 
     def run(self):
         print("running lod map creator...")
@@ -154,6 +158,7 @@ class LodMapCreator:
         self.processFiles()
         self.fixMapExtents()
         self.copyOthers()
+        self.copyTextureDictionaries()
         print("lod map creator DONE")
 
     def getYtypName(self) -> str:
@@ -175,7 +180,7 @@ class LodMapCreator:
         return os.path.join(self.outputDir, "slod")
 
     def getOutputDirMeshes(self) -> str:
-        return os.path.join(self.outputDir, "_meshes")
+        return os.path.join(self.outputDir, "_slod_meshes")
 
     def readTemplates(self):
         templatesDir = os.path.join(os.path.dirname(__file__), "templates")
@@ -218,6 +223,8 @@ class LodMapCreator:
 
     def readYtypItems(self):
         self.ytypItems = YtypParser.readYtypDirectory(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "ytyp"))
+        if self.additionalYtypDirectory is not None:
+            self.ytypItems |= YtypParser.readYtypDirectory(self.additionalYtypDirectory)
 
     def replaceName(self, content: str, name: str) -> str:
         return re.sub('(?<=<CMapData>)(\\s*<name>)[^<]+(?=</name>)', "\\g<1>" + name, content)
@@ -540,7 +547,7 @@ class LodMapCreator:
             .replace("${BSPHERE.CENTER.Y}", Util.floatToStr(sphere.center[1])) \
             .replace("${BSPHERE.CENTER.Z}", Util.floatToStr(sphere.center[2])) \
             .replace("${BSPHERE.RADIUS}", Util.floatToStr(sphere.radius)) \
-            .replace("${NAME}", name.lower()) \
+            .replace("${MESH_FILENAME}", os.path.join(os.path.relpath(self.getOutputDirMeshes(), self.getOutputDirModels()), name.lower() + ".mesh")) \
             .replace("${SHADERS}\n", shaders)
 
         fileModelOdr = open(os.path.join(self.getOutputDirModels(), name.lower() + ".odr"), 'w')
@@ -923,3 +930,8 @@ class LodMapCreator:
             file = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
             file.write(content)
             file.close()
+
+    def copyTextureDictionaries(self):
+        texturesDir = os.path.join(os.path.dirname(__file__), "textures")
+        for filename in os.listdir(texturesDir):
+            shutil.copyfile(os.path.join(texturesDir, filename), os.path.join(self.getOutputDirModels(), self.prefix + "_" + filename))

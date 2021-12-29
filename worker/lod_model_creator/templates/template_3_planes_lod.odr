@@ -18,7 +18,7 @@ Version 165 32
 		AABBMax ${BBOX.MAX.X} ${BBOX.MAX.Y} ${BBOX.MAX.Z}
 		High 9998.00000000
 		{
-			../meshes/${PROP_NAME.LOWERCASE}_lod.mesh 0
+			${MESH_FILENAME} 0
 		}
 		Med 9998.00000000
 		Low 9998.00000000

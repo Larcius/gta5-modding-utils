@@ -7,6 +7,7 @@ import sys
 
 from worker.EntropyCreator import EntropyCreator
 from worker.lod_map_creator.LodMapCreator import LodMapCreator
+from worker.lod_model_creator.LodModelCreator import LodModelCreator
 from worker.sanitizer.Sanitizer import Sanitizer
 from worker.static_col_creator.StaticCollisionCreator import StaticCollisionCreator
 from worker.statistics.StatisticsPrinter import StatisticsPrinter
@@ -25,6 +26,7 @@ def copyDirectory(src: str, dest: str):
 def main(argv):
     inputDir = None
     outputDir = None
+    lodModel = False
     staticCol = False
     lodMap = False
     sanitizer = False
@@ -32,11 +34,12 @@ def main(argv):
     statistics = False
     prefix = None
 
-    usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> --entropy=<on|off> --sanitizer=<on|off> " \
-               "--staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off> "
+    usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> --lodModel=<on|off> --entropy=<on|off> " \
+               "--sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off> "
 
     try:
-        opts, args = getopt.getopt(argv, "h?i:o:", ["help", "inputDir=", "outputDir=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics="])
+        opts, args = getopt.getopt(argv, "h?i:o:",
+            ["help", "inputDir=", "outputDir=", "lodModel=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics="])
     except getopt.GetoptError:
         print(usageMsg)
         sys.exit(2)
@@ -51,6 +54,8 @@ def main(argv):
             outputDir = arg
         elif opt == "--prefix":
             prefix = arg
+        elif opt == "--lodModel":
+            lodModel = bool(distutils.util.strtobool(arg))
         elif opt == "--staticCol":
             staticCol = bool(distutils.util.strtobool(arg))
         elif opt == "--lodMap":
@@ -62,7 +67,7 @@ def main(argv):
         elif opt == "--statistics":
             statistics = bool(distutils.util.strtobool(arg))
 
-    if not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
+    if not lodModel and not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
         print("No goal specified, nothing to do.")
         print(usageMsg)
         sys.exit(2)
@@ -102,6 +107,18 @@ def main(argv):
     tempOutputDir = os.path.join(outputDir, "_temp_")
     os.makedirs(tempOutputDir)
 
+    outputLodModelsDir = os.path.join(outputDir, prefix + "_lod")
+    if lodModel:
+        lodModelCreator = LodModelCreator(nextInputDir, os.path.join(tempOutputDir, "lod_model"), prefix)
+        lodModelCreator.run()
+
+        os.makedirs(outputLodModelsDir)
+        moveDirectory(lodModelCreator.getOutputModelsDir(), outputLodModelsDir)
+
+        outputLodMeshesDir = os.path.join(outputDir, os.path.basename(lodModelCreator.getOutputMeshesDir()))
+        os.makedirs(outputLodMeshesDir)
+        moveDirectory(lodModelCreator.getOutputMeshesDir(), outputLodMeshesDir)
+
     if entropy:
         entropyCreator = EntropyCreator(nextInputDir, os.path.join(tempOutputDir, "entropy"), False, True, True)
         entropyCreator.run()
@@ -125,14 +142,14 @@ def main(argv):
         nextInputDir = staticCollisionCreator.getOutputDirMaps()
 
     if lodMap:
-        lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix)
+        lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix, outputLodModelsDir if lodModel else None)
         lodMapCreator.run()
 
         outputSlodDir = os.path.join(outputDir, prefix + "_slod")
         os.makedirs(outputSlodDir)
         moveDirectory(lodMapCreator.getOutputDirModels(), outputSlodDir)
 
-        outputMeshesDir = os.path.join(outputDir, "_meshes")
+        outputMeshesDir = os.path.join(outputDir, os.path.basename(lodMapCreator.getOutputDirMeshes()))
         os.makedirs(outputMeshesDir)
         moveDirectory(lodMapCreator.getOutputDirMeshes(), outputMeshesDir)
 
