@@ -34,9 +34,12 @@ class Ymap:
             lodDistance = float(match.group(5))
 
         priorityLevel = PriorityLevel.getLevel(lodDistance, hasParent)
+        if priorityLevel != PriorityLevel.REQUIRED:
+            # for optional entities use -1 to indicate that the lod distance should be automatically determined
+            # (as seen in original Rockstar ymap files)
+            lodDistance = -1
 
-        return match.group(1) + Util.floatToStr(lodDistance) + \
-               match.group(6) + priorityLevel + match.group(7)
+        return match.group(1) + Util.floatToStr(lodDistance) + match.group(6) + priorityLevel + match.group(7)
 
     @staticmethod
     def calculateAndReplaceLodDistanceForEntitiesWithLod(contentNoLod: str, ytypItems: dict[str, YtypItem]) -> str:

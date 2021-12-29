@@ -13,6 +13,6 @@ class PriorityLevel:
         elif lodDistance >= 25:
             return PriorityLevel.MEDIUM
         else:
-            # entities with priority level low seems to never show up so do not use it
+            # some entities with priority level low do not show up so do not use it
             # return PriorityLevel.LOW
             return PriorityLevel.MEDIUM
