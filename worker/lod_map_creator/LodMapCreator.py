@@ -606,7 +606,11 @@ class LodMapCreator:
             else:
                 hdEntities += entity
 
-        start = re.search("<entities>", content).end()
+        matchEntities = re.search("<entities>", content)
+        if matchEntities is None:
+            return content
+
+        start = matchEntities.end()
         end = re.search("\\s+</entities>[\\S\\s]*?\\Z", content, re.M).start()
 
         return content[:start] + hdEntities + orphanHdEntites + content[end:]

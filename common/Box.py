@@ -7,7 +7,7 @@ from common.Sphere import Sphere
 class Box:
     @staticmethod
     def createReversedInfinityBox() -> "Box":
-        return Box([float("inf")] * 3, [-float("inf")] * 3)
+        return Box([math.inf] * 3, [-math.inf] * 3)
 
     min: list[float]
     max: list[float]
@@ -54,3 +54,10 @@ class Box:
 
     def getEnclosingSphere(self) -> Sphere:
         return Sphere(self.getCenter().copy(), self.getDiagonal() / 2)
+
+    def isValid(self):
+        for i in range(3):
+            if not math.isfinite(self.min[i]) or not math.isfinite(self.max[i]) or self.min[i] > self.max[i]:
+                return False
+
+        return True

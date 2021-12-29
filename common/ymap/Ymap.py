@@ -91,9 +91,10 @@ class Ymap:
     def fixMapExtents(content: str, ytypItems: dict[str, YtypItem]) -> str:
             extents = Extents.calculateExtents(content, ytypItems)
 
-            result = extents.replaceExtents(content)
+            if extents.isValid():
+                result = extents.replaceExtents(content)
+            else:
+                result = content
 
             nowLocalIso = datetime.now().astimezone().replace(microsecond=0).isoformat()
-            result = Ymap.replaceDatetime(result, nowLocalIso)
-
-            return result
+            return Ymap.replaceDatetime(result, nowLocalIso)

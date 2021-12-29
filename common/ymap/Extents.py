@@ -85,3 +85,6 @@ class Extents:
             lodPoint = [scaledLodBboxList[i % 2][0], scaledLodBboxList[(i >> 1) % 2][1], scaledLodBboxList[(i >> 2) % 2][2]]
             transformedLodPoint = np.add(transforms3d.quaternions.rotate_vector(lodPoint, rotationQuaternion), position).tolist()
             self.streaming.extendByPoint(transformedLodPoint)
+
+    def isValid(self):
+        return self.entities.isValid() and self.streaming.isValid()
