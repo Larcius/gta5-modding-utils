@@ -1,6 +1,7 @@
 import distutils.util
 import getopt
 import os.path
+import re
 import shutil
 import sys
 
@@ -22,25 +23,28 @@ def copyDirectory(src: str, dest: str):
 
 
 def main(argv):
-    inputDir = ''
+    inputDir = None
     outputDir = None
     staticCol = False
     lodMap = False
     sanitizer = False
     entropy = False
     statistics = False
-    prefix = "custommap"
+    prefix = None
+
+    usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> --entropy=<on|off> --sanitizer=<on|off> " \
+               "--staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off> "
 
     try:
         opts, args = getopt.getopt(argv, "h?i:o:", ["help", "inputDir=", "outputDir=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics="])
     except getopt.GetoptError:
-        print("main.py -i <inputfile> -o <outputDir> --prefix=<PREFIX> [--entropy=<False|True>] [--sanitizer=<False|True>] [--staticCol=<False|True>] [--lodMap=<False|True>] [--statistics=<False|True>]")
+        print(usageMsg)
         sys.exit(2)
 
     for opt, arg in opts:
         if opt in ('-h', '-?', '--help'):
-            print("main.py -i <inputDir> -o <outputDir>")
-            sys.exit()
+            print(usageMsg)
+            sys.exit(0)
         elif opt in ("-i", "--inputDir"):
             inputDir = arg
         elif opt in ("-o", "--outputDir"):
@@ -58,8 +62,20 @@ def main(argv):
         elif opt == "--statistics":
             statistics = bool(distutils.util.strtobool(arg))
 
+    if not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
+        print("No goal specified, nothing to do.")
+        print(usageMsg)
+        sys.exit(2)
+
+    if not prefix:
+        prefix = input("Prefix of this project?")
+
+    if not re.match("[a-z][a-z0-9_]*[a-z0-9]", prefix):
+        print("prefix must contain only a-z 0-9 _ and must start with a letter and must not end in _")
+        sys.exit(2)
+
     if not inputDir:
-        inputDir = input("Input directory?")
+        inputDir = input("Input directory (containing the .ymap.xml files)?")
     inputDir = os.path.abspath(inputDir)
 
     if not outputDir:
@@ -70,16 +86,17 @@ def main(argv):
         if not os.path.isdir(outputDir):
             raise ValueError("outputDir is not a directory")
 
-        print("outputDir already exists")
-        clearDirConfirmation = input("Are you sure you want to clear directory " + outputDir + "? (yes|no)\nWARNING: This irreversibly erases all files within that directory!")
-        if not distutils.util.strtobool(clearDirConfirmation):
-            # this statement is very important to prevent unintended deletion of a directory
+        print("outputDir " + outputDir + " already exists.")
+        clearDirConfirmation = input("Are you sure you want to clear directory " + outputDir +
+                                     "?\nWARNING: This irreversibly erases all files within that directory!\nPlease enter yes or no: ")
+        # this if-statement is very important to prevent unintended deletion of a directory
+        if clearDirConfirmation == "yes" or clearDirConfirmation == "y":
+            shutil.rmtree(outputDir)
+        else:
             sys.exit(0)
 
     nextInputDir = inputDir
 
-    if os.path.exists(outputDir):
-        shutil.rmtree(outputDir)
     os.makedirs(outputDir)
 
     tempOutputDir = os.path.join(outputDir, "_temp_")
@@ -101,7 +118,7 @@ def main(argv):
         staticCollisionCreator = StaticCollisionCreator(nextInputDir, os.path.join(tempOutputDir, "static_col"))
         staticCollisionCreator.run()
 
-        outputStaticColsDir = os.path.join(outputDir, "static_col_models")
+        outputStaticColsDir = os.path.join(outputDir, prefix)
         os.makedirs(outputStaticColsDir)
         moveDirectory(staticCollisionCreator.getOutputDirCollisionModels(), outputStaticColsDir)
 
@@ -111,7 +128,7 @@ def main(argv):
         lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix)
         lodMapCreator.run()
 
-        outputSlodDir = os.path.join(outputDir, "slod")
+        outputSlodDir = os.path.join(outputDir, prefix + "_slod")
         os.makedirs(outputSlodDir)
         moveDirectory(lodMapCreator.getOutputDirModels(), outputSlodDir)
 
@@ -125,13 +142,13 @@ def main(argv):
         statisticsPrinter = StatisticsPrinter(nextInputDir)
         statisticsPrinter.run()
 
-    outputMapsDir = os.path.join(outputDir, "maps")
+    outputMapsDir = os.path.join(outputDir, prefix + "_metadata")
     os.makedirs(outputMapsDir)
-    if nextInputDir == inputDir:
-        dummy = ""
-        # copyDirectory(nextInputDir, outputDir + "/maps")
-    else:
+    if not os.path.samefile(nextInputDir, inputDir):
         moveDirectory(nextInputDir, outputMapsDir)
+    #else:
+    #    no need to duplicate the input dir
+    #    copyDirectory(nextInputDir, outputDir + "/maps")
     shutil.rmtree(tempOutputDir)
 
 

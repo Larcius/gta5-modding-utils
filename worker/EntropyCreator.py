@@ -4,7 +4,6 @@ import os
 import math
 import random
 import re
-import shutil
 from re import Match
 
 from common.Util import Util
@@ -15,6 +14,7 @@ from common.ytyp.YtypParser import YtypParser
 
 class EntropyCreator:
     CANDIDATES_SCALE = tuple({
+        "prop_palm_med",
         "prop_palm_huge",
         "test_tree_forest",
     })
@@ -103,7 +103,7 @@ class EntropyCreator:
             scaleZ = origScaleZ
 
         if self.limitTilt and isRotationCandidate:
-            treeHeight = self.ytypItems[entity].boundingBox.getSizes()[2] * origScaleZ
+            treeHeight = self.ytypItems[entity].boundingBox.getSizes()[2] * scaleZ
             maxAngleNoZ = Util.calculateMaxTilt(treeHeight)
         else:
             maxAngleNoZ = math.pi
@@ -112,11 +112,7 @@ class EntropyCreator:
 
         origRotZ, origRotY, origRotX = transforms3d.euler.quat2euler(origQuat, axes='rzyx')
 
-        # print("rotations:", rotX, rotY, rotZ)
-
         axisNoZ, angleNoZ = transforms3d.euler.euler2axangle(0, origRotY, origRotX, axes='rzyx')
-
-        # print("rotation except z axis:", axisNoZ, angleNoZ)
 
         if self.limitTilt and abs(angleNoZ) > maxAngleNoZ:
             newAngleNoZ = math.copysign(maxAngleNoZ, angleNoZ)
@@ -131,35 +127,32 @@ class EntropyCreator:
                 defaultMaxTilt = Util.calculateMaxTilt(999)
                 newAngleNoZ = random.uniform(-defaultMaxTilt, defaultMaxTilt)
 
-        unused, rotY, rotX = transforms3d.euler.axangle2euler(axisNoZ, newAngleNoZ, axes='rzyx')
+        if self.limitTilt or self.adaptRotationIfIdentity:
+            unused, rotY, rotX = transforms3d.euler.axangle2euler(axisNoZ, newAngleNoZ, axes='rzyx')
 
-        rotationQuaternion = transforms3d.euler.euler2quat(rotZ, rotY, rotX, axes='rzyx')
+            rotationQuaternion = transforms3d.euler.euler2quat(rotZ, rotY, rotX, axes='rzyx')
+        else:
+            rotationQuaternion = origQuat
 
-        ### debug only
-        # if angleNotTooLarge:
-        #	if not np.allclose(unused, 0, rtol=0, atol=1e-06):
-        #		print("error: expected rotZ to be 0 but was", unused)
-
-        #	if not np.allclose(rotationQuaternion, origQuat, rtol=0, atol=1e-06):
-        #		print("error: expected original quat and re-calculated quat to be the same", origQuat, rotationQuaternion)
-
-        #	return
-        ### end of debug only
-
-        if np.allclose(rotationQuaternion, origQuat, rtol=0, atol=1e-06) and np.allclose([scaleXY, scaleZ], [origScaleXY, origScaleZ], rtol=0, atol=1e-06):
+        if np.allclose(rotationQuaternion, origQuat, rtol=0, atol=1e-05) and np.allclose([scaleXY, scaleZ], [origScaleXY, origScaleZ], rtol=0, atol=1e-05):
             return match.group(0)
 
         if self.limitTilt and abs(angleNoZ) > maxAngleNoZ:
             print("\t\tlimiting original tilt (angle ignoring rotation around z axis) of " + Util.angleToStr(angleNoZ) + "° to " +
                   Util.angleToStr(newAngleNoZ) + "°")
 
-        if not np.allclose(rotationQuaternion, origQuat, rtol=0, atol=1e-06):
+        if not np.allclose(rotationQuaternion, origQuat, rtol=0, atol=1e-05):
             print("\t\tchanging rotation from tilt " + Util.angleToStr(angleNoZ) + "° to " + Util.angleToStr(newAngleNoZ) + "° and yaw " +
                   Util.angleToStr(origRotZ) + "° to " + Util.angleToStr(rotZ) + "°")
+        else:
+            rotationQuaternion = origQuat
 
-        if not np.allclose([scaleXY, scaleZ], [origScaleXY, origScaleZ], rtol=0, atol=1e-06):
+        if not np.allclose([scaleXY, scaleZ], [origScaleXY, origScaleZ], rtol=0, atol=1e-05):
             print("\t\tchanging scale from " + Util.floatToStr(origScaleXY) + ", " + Util.floatToStr(origScaleZ) + " to " +
                   Util.floatToStr(scaleXY) + ", " + Util.floatToStr(scaleZ))
+        else:
+            scaleXY = origScaleXY
+            scaleZ = origScaleZ
 
         return match.group(1) + \
                'x="' + Util.floatToStr(-rotationQuaternion[1]) + '" y="' + Util.floatToStr(-rotationQuaternion[2]) + \

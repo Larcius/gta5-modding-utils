@@ -7,7 +7,6 @@ from natsort import natsorted
 
 import os
 import re
-import shutil
 import math
 
 from common.Box import Box
@@ -43,6 +42,7 @@ class LodMapCreator:
     contentTemplateSlod2Map: str
 
     ytypItems: dict[str, YtypItem]
+    slodYtypItems: Optional[IO]
     slodCandidates: dict[str, UVMap]
 
     _foundSlodModel: bool
@@ -52,8 +52,6 @@ class LodMapCreator:
     _slodIndex: int
     _index: int
     _translation: list[float]
-
-    slodYtypItems: IO
 
     def prepareSlodCandidates(self):
         # TODO provide more slod models:
@@ -144,6 +142,7 @@ class LodMapCreator:
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
+        self.slodYtypItems = None
 
     def run(self):
         print("running lod map creator...")
