@@ -326,6 +326,9 @@ class LodModelCreator:
 """)
 
         for name in natsorted(self.trees):
+            if name not in self.ytyps:
+                continue
+
             tree = self.trees[name]
             ytypItem = self.ytyps[name]
 
