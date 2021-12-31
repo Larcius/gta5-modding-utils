@@ -6,6 +6,8 @@ import random
 import re
 from re import Match
 
+from natsort import natsorted
+
 from common.Util import Util
 from common.ymap.Ymap import Ymap
 from common.ytyp.YtypItem import YtypItem
@@ -160,7 +162,7 @@ class EntropyCreator:
                match.group(7) + Util.floatToStr(scaleXY) + match.group(9) + Util.floatToStr(scaleZ) + match.group(11)
 
     def processFiles(self):
-        for filename in os.listdir(self.inputDir):
+        for filename in natsorted(os.listdir(self.inputDir)):
             if filename.endswith(".ymap.xml"):
                 self.processFile(filename)
 

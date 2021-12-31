@@ -693,7 +693,7 @@ class LodMapCreator:
         mapNameSlod2 = mapPrefix.lower() + "_slod2"
 
         for filename in natsorted(os.listdir(self.inputDir)):
-            if not filename.endswith(".ymap.xml") or not filename.startswith(mapPrefix.lower()):
+            if not filename.endswith(".ymap.xml") or not (filename.startswith(mapPrefix.lower() + "_") or filename == mapPrefix.lower() + ".ymap.xml"):
                 continue
 
             mapName = filename[:-9]
@@ -875,7 +875,7 @@ class LodMapCreator:
         if contentEntitiesSlod2 or contentEntitiesSlod3:
             # <!--
             # fix parentIndex in lod map to match slod map
-            for filename in os.listdir(self.getOutputDirMaps()):
+            for filename in natsorted(os.listdir(self.getOutputDirMaps())):
                 if not filename.endswith("_lod.ymap.xml") or not filename.startswith(mapPrefix.lower()):
                     continue
 
@@ -917,7 +917,7 @@ class LodMapCreator:
         if self.slodYtypItems is not None:
             self.ytypItems |= YtypParser.readYtypDirectory(self.getOutputDirModels())
 
-        for filename in os.listdir(self.getOutputDirMaps()):
+        for filename in natsorted(os.listdir(self.getOutputDirMaps())):
             if not filename.endswith(".ymap.xml"):
                 continue
 

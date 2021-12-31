@@ -56,16 +56,16 @@ Then select all of your ymap files and export them in openFormats (right click a
 I recommend exporting them into another subdirectory so that the directory you state as input directory only contains these .ymap.xml files.
 
 Now that you have your Python environment prepared and provided the necessary files you can finally apply the scripts.
-For example if you want to run the sanitizing, static collision model creator and lod/slod map creator use this command:
+For example if you want to run sanitizing, static collision model creator, lod model creator and lod/slod map creator use this command:
 ````commandline
-python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --sanitizer=on --staticCol=on --lodMap=on
+python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --lodModel=on --sanitizer=on --staticCol=on --lodMap=on
 ````
 
 After that you will see the output in the given directory (if not explicitly stated then it's in a subdirectory `generated` in the provided input directory).
 Finally, you need to import these files in your dlc.rpf (please have a look at GTA V Remastered: Enhanced for an example structure).
 OpenIV automatically converts these openFormats files back to binary files on importing.
 
-Note: The directory `_meshes` is used when importing the files from directory `<PREFIX>_slod` so just ignore the directory `_meshes` 
+Note: The directories `_lod_meshes` and `_slod_meshes` are used when importing the files from directory `<PREFIX>_lod` and `<PREFIX>_slod`. 
 
 
 ## Used Python packages

@@ -6,7 +6,8 @@ import transforms3d
 
 import os
 import re
-import shutil
+
+from natsort import natsorted
 
 from common.Box import Box
 from common.Util import Util
@@ -563,7 +564,7 @@ class StaticCollisionCreator:
         return bbox
 
     def processFiles(self):
-        for mapFilename in os.listdir(self.inputDir):
+        for mapFilename in natsorted(os.listdir(self.inputDir)):
             if not mapFilename.endswith(".ymap.xml"):
                 continue
 

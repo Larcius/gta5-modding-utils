@@ -25,7 +25,7 @@ class StatisticsPrinter:
         self.ytypItems = YtypParser.readYtypDirectory(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "ytyp"))
 
     def processFiles(self):
-        for filename in os.listdir(self.inputDir):
+        for filename in natsorted(os.listdir(self.inputDir)):
             if not filename.endswith(".ymap.xml") or filename.endswith("_lod.ymap.xml"):
                 continue
 

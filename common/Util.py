@@ -118,11 +118,11 @@ class Util:
     @staticmethod
     def getListOfFiles(inputDir: str, filter):
         result = []
-        for filename in os.listdir(inputDir):
+        for filename in natsorted(os.listdir(inputDir)):
             if os.path.isfile(os.path.join(inputDir, filename)) and filter(filename):
                 result.append(filename)
 
-        return natsorted(result)
+        return result
 
     @staticmethod
     def copyFiles(inputDir: str, outputDir: str, filter):

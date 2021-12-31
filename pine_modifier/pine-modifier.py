@@ -6,6 +6,8 @@ import random
 import shutil
 
 # using a specific seed to be able to get reproducible results
+from natsort import natsorted
+
 random.seed(a=0)
 
 generatedDir = os.path.join(os.path.dirname(__file__), "generated")
@@ -28,7 +30,7 @@ def repl(matchobj):
     return matchobj.group(1) + floatToStr(scaleXY) + matchobj.group(2)
 
 
-for filename in os.listdir(os.path.join(os.path.dirname(__file__), "maps")):
+for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "maps"))):
     if not filename.endswith(".ymap.xml") or filename.endswith("_lod.ymap.xml"):
         continue
 

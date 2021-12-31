@@ -1,8 +1,7 @@
 from re import Match
-
+from natsort import natsorted
 import numpy as np
 import transforms3d
-
 import os
 import re
 
@@ -110,7 +109,7 @@ class Sanitizer:
                match.group(9) + Util.floatToStr(0) + match.group(10)
 
     def processFiles(self):
-        for filename in os.listdir(self.inputDir):
+        for filename in natsorted(os.listdir(self.inputDir)):
             if filename.endswith(".ymap.xml"):
                 self.processFile(filename)
 
