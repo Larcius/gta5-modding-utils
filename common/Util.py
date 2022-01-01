@@ -15,8 +15,6 @@ from common import Box, Sphere
 class Util:
     MIN_LOD_DISTANCE = 10
 
-    inf = float("infinity")
-
     @staticmethod
     def floatToStr(val: float) -> str:
         return "{:.8f}".format(val)
@@ -48,17 +46,17 @@ class Util:
         X = np.array(points)
 
         maxClusterSize = -1
-        furthestDistances = [Util.inf]
+        furthestDistances = [math.inf]
         clusters = None
-        numClusters = 1 if maxPoints <= 0 else math.ceil(len(points) / maxPoints) - 1
+        numClusters = 0 if maxPoints <= 0 else math.ceil(len(points) / maxPoints) - 1
         while maxClusterSize < 0 or 0 < maxPoints < maxClusterSize or max(furthestDistances) > maxFurthestDistance:
             numClusters += 1
             model = KMeans(n_clusters=numClusters, n_init=200, max_iter=5000, random_state=0, algorithm="full")
             clusters = model.fit_predict(X)
 
             maxClusterSize = -1
-            furthestDistances = [Util.inf] * numClusters
-            for cluster in range(numClusters):
+            furthestDistances = [0] * numClusters
+            for cluster in np.unique(clusters):
                 clusterEntries = np.where(clusters == cluster)
 
                 maxClusterSize = max(maxClusterSize, len(clusterEntries[0]))
