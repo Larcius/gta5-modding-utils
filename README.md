@@ -15,9 +15,11 @@ conda install --name gta5-modding-utils -c conda-forge scikit-learn -y
 conda install --name gta5-modding-utils -c conda-forge transforms3d -y
 conda install --name gta5-modding-utils -c conda-forge natsort -y
 conda env config vars set OMP_NUM_THREADS=1 --name gta5-modding-utils
+conda activate gta5-modding-utils
+python -m pip install matplotlib
 ```
 
-Now your Pyhton environment is ready to use:
+Now your environment is ready to use and from now on all you need to do is to activate this environment:
 ````commandline
 conda activate gta5-modding-utils
 ````
@@ -78,3 +80,4 @@ Note: The directories `_lod_meshes` and `_slod_meshes` are used when importing t
 * https://github.com/scikit-learn/scikit-learn
 * https://github.com/matthew-brett/transforms3d
 * https://github.com/SethMMorton/natsort
+* https://github.com/matplotlib/matplotlib
