@@ -45,12 +45,14 @@ class Util:
     def performClustering(points: list[list[float]], maxPoints: int, maxFurthestDistance: float) -> (Any, list[float]):
         X = np.array(points)
 
-        maxClusterSize = -1
-        furthestDistances = [math.inf]
-        clusters = None
-        numClusters = 0 if maxPoints <= 0 else math.ceil(len(points) / maxPoints) - 1
-        while maxClusterSize < 0 or 0 < maxPoints < maxClusterSize or max(furthestDistances) > maxFurthestDistance:
-            numClusters += 1
+        largestNonValidNumClusters = 0
+        smallestValidNumClusters = None
+        clustersForSmallestValidNumClusters = None
+        furthestDistancesForSmallestValidNumClusters = None
+
+        numClusters = 1 if maxPoints <= 0 else math.ceil(len(points) / maxPoints)
+        while largestNonValidNumClusters + 1 != smallestValidNumClusters:
+            print("\t\tcalculating clustering of " + str(numClusters) + " clusters")
             model = KMeans(n_clusters=numClusters, n_init=200, max_iter=5000, random_state=0, algorithm="full")
             clusters = model.fit_predict(X)
 
@@ -63,7 +65,31 @@ class Util:
 
                 furthestDistances[cluster] = Util.calculateFurthestDistance(X[clusterEntries[0]])
 
-        return clusters, furthestDistances
+            exceededLimits = 0 < maxPoints < maxClusterSize or max(furthestDistances) > maxFurthestDistance
+            if exceededLimits:
+                largestNonValidNumClusters = numClusters
+                if smallestValidNumClusters is None:
+                    nextNumClusters = numClusters + 1
+                    if 0 < maxPoints < maxClusterSize:
+                        nextNumClusters = max(nextNumClusters, numClusters + math.ceil(maxClusterSize / maxPoints))
+                    if max(furthestDistances) > maxFurthestDistance:
+                        ratio = max(furthestDistances) / maxFurthestDistance
+                        if numClusters == 1:
+                            # assuming that the points are more likely being distributed on a plane than on a line raise this to the power of 2
+                            ratio **= 2
+                        nextNumClusters = max(nextNumClusters, math.ceil(numClusters * ratio))
+                    numClusters = nextNumClusters
+                else:
+                    numClusters = math.ceil((largestNonValidNumClusters + smallestValidNumClusters) / 2)
+            else:
+                clustersForSmallestValidNumClusters = clusters
+                furthestDistancesForSmallestValidNumClusters = furthestDistances
+                smallestValidNumClusters = numClusters
+                numClusters = math.floor((largestNonValidNumClusters + smallestValidNumClusters) / 2)
+
+        print("\t\tfound valid clustering consisting of " + str(len(np.unique(clustersForSmallestValidNumClusters))) + " clusters")
+
+        return clustersForSmallestValidNumClusters, furthestDistancesForSmallestValidNumClusters
 
     @staticmethod
     def calculateLodDistance(boundingBox: Box, boundingSphere: Sphere, scale: list[float], hasParent: bool) -> float:
