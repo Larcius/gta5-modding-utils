@@ -19,7 +19,7 @@ class Clustering:
     ytypItems: dict[str, YtypItem]
     prefix: str
 
-    MAX_EXTEND = 1200
+    MAX_EXTEND = 1300
 
     _PATTERN = re.compile(
         '[\t ]*<Item type="CEntityDef">' +
@@ -75,7 +75,9 @@ class Clustering:
             content = f.read()
             f.close()
 
-            indexEntitiesStart = content.index("  <entities>")
+            indexEntitiesStart = content.find("  <entities>")
+            if indexEntitiesStart < 0:
+                continue
             indexEntitiesEnd = content.index("  </entities>")
 
             contentPreEntities = content[:indexEntitiesStart + 13]
