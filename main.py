@@ -43,7 +43,7 @@ def main(argv):
         opts, args = getopt.getopt(argv, "h?i:o:",
             ["help", "inputDir=", "outputDir=", "clustering=", "lodModel=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics="])
     except getopt.GetoptError:
-        print("Unknown command given. Please correct it.")
+        print("ERROR: Unknown argument. Please see below for usage.")
         print(usageMsg)
         sys.exit(2)
 
@@ -73,7 +73,7 @@ def main(argv):
             statistics = bool(distutils.util.strtobool(arg))
 
     if not clustering and not lodModel and not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
-        print("No goal specified, nothing to do.")
+        print("ERROR: No goal specified, nothing to do.")
         print(usageMsg)
         sys.exit(2)
 
@@ -81,12 +81,16 @@ def main(argv):
         prefix = input("Prefix of this project?")
 
     if not re.match("[a-z][a-z0-9_]*[a-z0-9]", prefix):
-        print("prefix must contain only a-z 0-9 _ and must start with a letter and must not end in _")
+        print("ERROR: prefix must contain only a-z 0-9 _ and must start with a letter and must not end in _")
         sys.exit(2)
 
     if not inputDir:
         inputDir = input("Input directory (containing the .ymap.xml files)?")
     inputDir = os.path.abspath(inputDir)
+
+    if not os.path.isdir(inputDir):
+        print("ERROR: inputDir " + inputDir + " is not a directory")
+        sys.exit(2)
 
     if not outputDir:
         outputDir = os.path.join(inputDir, "generated")
@@ -94,7 +98,8 @@ def main(argv):
 
     if os.path.exists(outputDir):
         if not os.path.isdir(outputDir):
-            raise ValueError("outputDir is not a directory")
+            print("ERROR: outputDir " + outputDir + " is not a directory")
+            sys.exit(2)
 
         print("outputDir " + outputDir + " already exists.")
         clearDirConfirmation = input("Are you sure you want to clear directory " + outputDir +
