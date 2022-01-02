@@ -41,6 +41,8 @@ class Sanitizer:
     inputDir: str
     outputDir: str
     ytypItems: dict[str, YtypItem]
+    lowercaseYtypItems: dict[str, str]
+    fixedArchetypeNames: set[str]
 
     def __init__(self, inputDir: str, outputDir: str):
         self.inputDir = inputDir
@@ -62,6 +64,7 @@ class Sanitizer:
 
     def readYtypItems(self):
         self.ytypItems = YtypParser.readYtypDirectory(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "ytyp"))
+        self.lowercaseYtypItems = dict((k.lower(), k) for k, v in self.ytypItems.items())
 
     def replaceName(self, content: str, name: str) -> str:
         result = re.sub('(?<=<CMapData>)(\\s*<name>)[^<]+(?=</name>)', "\\g<1>" + name, content)
@@ -72,14 +75,20 @@ class Sanitizer:
                         '\\s*)(?=</block>)', "\\g<1>" + name + "\\g<2>", result)
         return result
 
-    def repl(self, match: Match) -> str:
+    def repl(self, match: Match, fixedArchetypeNames: set[str]) -> str:
         archetypeName = match.group(2)
 
-        # if Sanitizer.removeEntitiesPattern.match(archetypeName):
+        if archetypeName.lower() in self.lowercaseYtypItems and archetypeName not in self.ytypItems:
+            fixedArchetypeName = self.lowercaseYtypItems[archetypeName.lower()]
+            fixedArchetypeNames.add("changing archetypeName from " + archetypeName + " to " + fixedArchetypeName)
+        else:
+            fixedArchetypeName = archetypeName
+
+        # if Sanitizer.removeEntitiesPattern.match(fixedArchetypeName):
         #    return ""
 
-        flags = int(match.group(3))
-        origQuat = [float(match.group(8)), -float(match.group(5)), -float(match.group(6)), -float(match.group(7))]
+        flags = int(match.group(4))
+        origQuat = [float(match.group(9)), -float(match.group(6)), -float(match.group(7)), -float(match.group(8))]
 
         rotationQuaternion = np.divide(origQuat, [transforms3d.quaternions.qnorm(origQuat)])
 
@@ -100,13 +109,15 @@ class Sanitizer:
             flags |= Flag.ALLOW_FULL_ROTATION
 
         return match.group(1) + \
+               fixedArchetypeName + \
+               match.group(3) + \
                str(flags) + \
-               match.group(4) + \
+               match.group(5) + \
                'x="' + Util.floatToStr(-rotationQuaternion[1]) + \
                '" y="' + Util.floatToStr(-rotationQuaternion[2]) + \
                '" z="' + Util.floatToStr(-rotationQuaternion[3]) + \
                '" w="' + Util.floatToStr(rotationQuaternion[0]) + '"' + \
-               match.group(9) + Util.floatToStr(0) + match.group(10)
+               match.group(10) + Util.floatToStr(0) + match.group(11)
 
     def processFiles(self):
         for filename in natsorted(os.listdir(self.inputDir)):
@@ -120,15 +131,19 @@ class Sanitizer:
         content = f.read()
         f.close()
 
+        fixedArchetypeNames = set()
         content_new = re.sub('(<Item type="CEntityDef">' +
-                             '\\s*<archetypeName>([^<]+)</archetypeName>' +
+                             '\\s*<archetypeName>)([^<]+)(</archetypeName>' +
                              '\\s*<flags value=")([^"]+)("\\s*/>' +
                              '(?:\\s*<[^/].*>)*' +
                              '\\s*<rotation )x="([^"]+)" y="([^"]+)" z="([^"]+)" w="([^"]+)"(/>' +
                              '(?:\\s*<[^/].*>)*' +
                              '\\s*<childLodDist value=")[^"]+("/>' +
                              '(?:\\s*<[^/].*>)*' +
-                             '\\s*</Item>)', self.repl, content, flags=re.M)
+                             '\\s*</Item>)', lambda match: self.repl(match, fixedArchetypeNames), content, flags=re.M)
+
+        for fixed in natsorted(fixedArchetypeNames):
+            print("\t\t" + fixed)
 
         content_new = self.replaceName(content_new, filename.lower()[:-9])
         content_new = Ymap.calculateAndReplaceLodDistance(content_new, self.ytypItems)
