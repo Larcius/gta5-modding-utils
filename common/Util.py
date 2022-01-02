@@ -7,6 +7,7 @@ from typing import Any
 import numpy as np
 from natsort import natsorted
 from scipy.spatial import ConvexHull
+from scipy.spatial.distance import pdist
 from sklearn.cluster import KMeans
 
 from common import Box, Sphere
@@ -21,15 +22,21 @@ class Util:
 
     @staticmethod
     def calculateFurthestDistance(coords: list[list[float]]) -> float:
+        coords = np.unique(coords, axis=0)
+
         if len(coords) == 0:
             return -1
         elif len(coords) == 1:
             return 0
-        elif len(coords) == 2:
-            return math.dist(coords[0], coords[1])
-        elif len(coords) == 3:
-            return max(math.dist(coords[0], coords[1]), math.dist(coords[0], coords[2]), math.dist(coords[1], coords[2]))
+        elif len(coords) < 11:
+            # this is only mandatory for len(coords) < 5 because ConvexHull needs at least 5 points
+            # however if there are only a few points then just compute the pairwise distances
+            return max(pdist(coords))
 
+        # for a large set of points do not compute the pairwise distances but first calculate the convex hull and
+        # just compute the maximum of the pairwise distances from that hull vertices.
+        # also don't use pdist here since we are only interested in the maximum distances and hence there is no need to
+        # actually create a list of size n*(n-1)/2 (where n is the number of vertices of the convex hull)
         points = np.array(coords)
         hull = ConvexHull(points)
         maxDistance = -1
@@ -78,7 +85,8 @@ class Util:
                             # assuming that the points are more likely being distributed on a plane than on a line raise this to the power of 2
                             ratio **= 2
                         nextNumClusters = max(nextNumClusters, math.ceil(numClusters * ratio))
-                    numClusters = nextNumClusters
+                    # ensure that there are at most as many clusters as points
+                    numClusters = min(len(points), nextNumClusters)
                 else:
                     numClusters = math.ceil((largestNonValidNumClusters + smallestValidNumClusters) / 2)
             else:
