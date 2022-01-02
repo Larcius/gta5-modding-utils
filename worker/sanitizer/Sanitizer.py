@@ -66,15 +66,6 @@ class Sanitizer:
         self.ytypItems = YtypParser.readYtypDirectory(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "ytyp"))
         self.lowercaseYtypItems = dict((k.lower(), k) for k, v in self.ytypItems.items())
 
-    def replaceName(self, content: str, name: str) -> str:
-        result = re.sub('(?<=<CMapData>)(\\s*<name>)[^<]+(?=</name>)', "\\g<1>" + name, content)
-        result = re.sub('(?<=<block>)(' +
-                        '(?:\\s*<[^/].*>)*?' +
-                        '\\s*<name>)[^<]+(</name>' +
-                        '(?:\\s*<[^/].*>)*?' +
-                        '\\s*)(?=</block>)', "\\g<1>" + name + "\\g<2>", result)
-        return result
-
     def repl(self, match: Match, fixedArchetypeNames: set[str]) -> str:
         archetypeName = match.group(2)
 
@@ -145,7 +136,7 @@ class Sanitizer:
         for fixed in natsorted(fixedArchetypeNames):
             print("\t\t" + fixed)
 
-        content_new = self.replaceName(content_new, filename.lower()[:-9])
+        content_new = Ymap.replaceName(content_new, filename.lower()[:-9])
         content_new = Ymap.calculateAndReplaceLodDistance(content_new, self.ytypItems)
         content_new = Ymap.fixMapExtents(content_new, self.ytypItems)
 

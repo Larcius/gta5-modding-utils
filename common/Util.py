@@ -49,6 +49,28 @@ class Util:
         return maxDistance
 
     @staticmethod
+    def _performClustering(X: np.ndarray, numClusters: int) -> (Any, float, list[float]):
+        print("\t\tcalculating clustering of " + str(numClusters) + " clusters")
+        model = KMeans(n_clusters=numClusters, n_init=200, max_iter=5000, random_state=0, algorithm="full")
+        clusters = model.fit_predict(X)
+
+        maxClusterSize = -1
+        furthestDistances = [0] * numClusters
+        for cluster in np.unique(clusters):
+            clusterEntries = np.where(clusters == cluster)
+
+            maxClusterSize = max(maxClusterSize, len(clusterEntries[0]))
+
+            furthestDistances[cluster] = Util.calculateFurthestDistance(X[clusterEntries[0]])
+
+        return clusters, maxClusterSize, furthestDistances
+
+    @staticmethod
+    def performClusteringFixedNumClusters(points: list[list[float]], numClusters: int) -> (Any, float, list[float]):
+        X = np.array(points)
+        return Util._performClustering(X, numClusters)
+
+    @staticmethod
     def performClustering(points: list[list[float]], maxPoints: int, maxFurthestDistance: float) -> (Any, list[float]):
         X = np.array(points)
 
@@ -59,18 +81,7 @@ class Util:
 
         numClusters = 1 if maxPoints <= 0 else math.ceil(len(points) / maxPoints)
         while largestNonValidNumClusters + 1 != smallestValidNumClusters:
-            print("\t\tcalculating clustering of " + str(numClusters) + " clusters")
-            model = KMeans(n_clusters=numClusters, n_init=200, max_iter=5000, random_state=0, algorithm="full")
-            clusters = model.fit_predict(X)
-
-            maxClusterSize = -1
-            furthestDistances = [0] * numClusters
-            for cluster in np.unique(clusters):
-                clusterEntries = np.where(clusters == cluster)
-
-                maxClusterSize = max(maxClusterSize, len(clusterEntries[0]))
-
-                furthestDistances[cluster] = Util.calculateFurthestDistance(X[clusterEntries[0]])
+            clusters, maxClusterSize, furthestDistances = Util._performClustering(X, numClusters)
 
             exceededLimits = 0 < maxPoints < maxClusterSize or max(furthestDistances) > maxFurthestDistance
             if exceededLimits:

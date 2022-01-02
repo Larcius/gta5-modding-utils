@@ -226,16 +226,6 @@ class LodMapCreator:
         if self.additionalYtypDirectory is not None:
             self.ytypItems |= YtypParser.readYtypDirectory(self.additionalYtypDirectory)
 
-    def replaceName(self, content: str, name: str) -> str:
-        return re.sub('(?<=<CMapData>)(\\s*<name>)[^<]+(?=</name>)', "\\g<1>" + name, content)
-
-    def replaceParent(self, content: str, parent: Optional[str]) -> str:
-        if parent == "" or parent is None:
-            newParent = "<parent/>"
-        else:
-            newParent = "<parent>" + parent + "</parent>"
-        return re.sub('<parent\\s*(?:/>|>[^<]*</parent>)', newParent, content, flags=re.M)
-
     def replaceFlagsAndContentFlags(self, content: str, flags: int, contentFlags: int) -> str:
         # TODO deal with existing flags, e.g. "Scripted (1)"
         return re.sub(
@@ -778,8 +768,8 @@ class LodMapCreator:
                                 '(?:\\s*<[^/].*>)*' +
                                 '\\s*</Item>)', self.replLod, contentNoLod, flags=re.M)
 
-            contentLod = self.replaceName(contentLod, mapNameLod)
-            contentLod = self.replaceParent(contentLod, mapNameSlod2 if self._foundSlodModel else None)
+            contentLod = Ymap.replaceName(contentLod, mapNameLod)
+            contentLod = Ymap.replaceParent(contentLod, mapNameSlod2 if self._foundSlodModel else None)
             contentFlag = ContentFlag.LOD
             if self._foundSlodModel:
                 contentFlag |= ContentFlag.SLOD
@@ -852,7 +842,7 @@ class LodMapCreator:
             f.write(contentLod)
             f.close()
 
-            contentNoLod = self.replaceParent(contentNoLod, mapNameLod)
+            contentNoLod = Ymap.replaceParent(contentNoLod, mapNameLod)
 
             # <!--
             # fix parent name and parentIndex in hd map to match lod map

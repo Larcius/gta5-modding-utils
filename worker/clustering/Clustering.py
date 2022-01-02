@@ -18,6 +18,7 @@ class Clustering:
     defaultPostEntities: str
     ytypItems: dict[str, YtypItem]
     prefix: str
+    numCluster: int
 
     MAX_EXTEND = 1300
 
@@ -30,10 +31,11 @@ class Clustering:
         '\\s*</Item>[\r\n]+'
     )
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str):
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: int):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
+        self.numCluster = numCluster
 
     def run(self):
         print("running clustering...")
@@ -94,8 +96,10 @@ class Clustering:
 
         print("\tperforming clustering of " + str(numFiles) + " ymap files and in total " + str(len(coords)) + " entities")
 
-        clusters, furthestDistances = \
-            Util.performClustering(coords, -1, Clustering.MAX_EXTEND)
+        if self.numCluster > 0:
+            clusters, unused, furthestDistances = Util.performClusteringFixedNumClusters(coords, self.numCluster)
+        else:
+            clusters, furthestDistances = Util.performClustering(coords, -1, Clustering.MAX_EXTEND)
 
         numClusters = len(np.unique(clusters))
 
@@ -160,6 +164,8 @@ class Clustering:
             content = file.read()
             file.close()
 
+            content = Ymap.replaceName(content, filename.lower()[:-9])
+            content = Ymap.replaceParent(content, None)
             content = Ymap.fixMapExtents(content, self.ytypItems)
 
             file = open(os.path.join(self.outputDir, filename), 'w')

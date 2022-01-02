@@ -28,6 +28,7 @@ def main(argv):
     inputDir = None
     outputDir = None
     clustering = False
+    numClusters = -1
     lodModel = False
     staticCol = False
     lodMap = False
@@ -36,12 +37,12 @@ def main(argv):
     statistics = False
     prefix = None
 
-    usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> --clustering=<on|off> --lodModel=<on|off> " \
+    usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> --clustering=<on|off> --numClusters=<integer> --lodModel=<on|off> " \
                "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off> "
 
     try:
         opts, args = getopt.getopt(argv, "h?i:o:",
-            ["help", "inputDir=", "outputDir=", "clustering=", "lodModel=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics="])
+            ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "lodModel=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics="])
     except getopt.GetoptError:
         print("ERROR: Unknown argument. Please see below for usage.")
         print(usageMsg)
@@ -59,6 +60,8 @@ def main(argv):
             prefix = arg
         elif opt == "--clustering":
             clustering = bool(distutils.util.strtobool(arg))
+        elif opt == "--numClusters":
+            numClusters = int(arg)
         elif opt == "--lodModel":
             lodModel = bool(distutils.util.strtobool(arg))
         elif opt == "--staticCol":
@@ -118,7 +121,7 @@ def main(argv):
     os.makedirs(tempOutputDir)
 
     if clustering:
-        clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix)
+        clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix, numClusters)
         clusteringWorker.run()
 
         nextInputDir = clusteringWorker.outputDir

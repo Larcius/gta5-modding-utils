@@ -56,10 +56,11 @@ Then select all of your ymap files and export them in openFormats (right click a
 I recommend exporting them into another subdirectory so that the directory you state as input directory only contains these .ymap.xml files.
 
 Now that you have your Python environment prepared and provided the necessary files you can finally apply the scripts.
-For example if you want to perform clustering (read entities from all ymaps, perform clustering and create new ymaps each containing one cluster) use this command:
+For example if you want to perform clustering (read entities from all ymaps, perform clustering and create new ymaps each containing one cluster) with 12 clusters use this command:
 ````commandline
-python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --clustering=on
+python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --clustering=on --numClusters=12
 ````
+
 For example if you want to run sanitizing, static collision model creator, lod model creator and lod/slod map creator use this command:
 ````commandline
 python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --lodModel=on --sanitizer=on --staticCol=on --lodMap=on

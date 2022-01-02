@@ -2,6 +2,7 @@ import math
 import re
 from datetime import datetime
 from re import Match
+from typing import Optional
 
 from common.Util import Util
 from common.ymap.Extents import Extents
@@ -85,6 +86,24 @@ class Ymap:
             '\\s*)(?=</block>)',
             "\\g<1>Larcius\\g<2>" + nowIso + "\\g<3>", content
         )
+
+    @staticmethod
+    def replaceName(content: str, name: str) -> str:
+        result = re.sub('(?<=<CMapData>)(\\s*<name>)[^<]+(?=</name>)', "\\g<1>" + name, content)
+        result = re.sub('(?<=<block>)(' +
+                        '(?:\\s*<[^/].*>)*?' +
+                        '\\s*<name>)[^<]+(</name>' +
+                        '(?:\\s*<[^/].*>)*?' +
+                        '\\s*)(?=</block>)', "\\g<1>" + name + "\\g<2>", result)
+        return result
+
+    @staticmethod
+    def replaceParent(content: str, parent: Optional[str]) -> str:
+        if parent == "" or parent is None:
+            newParent = "<parent/>"
+        else:
+            newParent = "<parent>" + parent + "</parent>"
+        return re.sub('<parent\\s*(?:/>|>[^<]*</parent>)', newParent, content, flags=re.M)
 
     # adapt extents and set current datetime
     @staticmethod
