@@ -26,6 +26,7 @@ DISABLE_INCREASE_OF_Z = True
 
 trees = {
     # trees
+    "Prop_Rio_Del_01": Tree(1, 0.09),
     "Prop_S_Pine_Dead_01": Tree(0.55),
     "Prop_Tree_Birch_01": Tree(0.95, -0.01),
     "Prop_Tree_Birch_02": Tree(0.63),
@@ -49,7 +50,7 @@ trees = {
     "Prop_Tree_Jacada_02": Tree(0.71, 0.1),
     "Prop_Tree_Maple_02": Tree(0.41, 0.05),
     "Prop_Tree_Maple_03": Tree(0.35, 0.05),
-    "Prop_Tree_Mquite_01": Tree(0.42, 0.05),  # wrong bounding box
+    "Prop_Tree_Mquite_01": Tree(0.45, -0.03),
     "Prop_Tree_Oak_01": Tree(2.68, -0.07),
     "Prop_Tree_Pine_01": Tree(0.82, 0.44),
     "Prop_Tree_Pine_02": Tree(0.80, -0.04),
