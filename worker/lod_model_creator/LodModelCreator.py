@@ -100,7 +100,7 @@ class LodModelCreator:
             "Prop_Tree_Birch_03b": LodModelCreator.Tree("Prop_Tree_Birch_03b", 0.5625),
             "Prop_Tree_Birch_04": LodModelCreator.Tree("Prop_Tree_Birch_04", 0.5625, 0.421875, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0),
                 UV(0.7734375, 0.453125)),
-            "Prop_Tree_Maple_02": LodModelCreator.Tree("Prop_Tree_Maple_02", 0.4375),
+            "Prop_Tree_Maple_02": LodModelCreator.Tree("Prop_Tree_Maple_02", 0.421875),
             "Prop_Tree_Maple_03": LodModelCreator.Tree("Prop_Tree_Maple_03", 0.5),
             "Prop_Tree_Cedar_02": LodModelCreator.Tree("Prop_Tree_Cedar_02", 0.515625, 0.46315789473, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "Prop_Tree_Cedar_03": LodModelCreator.Tree("Prop_Tree_Cedar_03", 0.5390625, 0.51052631578, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
@@ -136,13 +136,12 @@ class LodModelCreator:
             "TEST_Tree_Forest_Trunk_04": LodModelCreator.Tree("TEST_Tree_Forest_Trunk_04", 0.453125, 1, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0),
                 UV(0.78125, 0.5546875), 0.6484375),
             # trees2
-            # TODO provide more lod models:
-            # prop_rio_del_01
-            # prop_tree_mquite_01
             "Prop_Tree_LFicus_02": LodModelCreator.Tree("Prop_Tree_LFicus_02", 0.4453125, 0.55, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "Prop_Tree_LFicus_03": LodModelCreator.Tree("Prop_Tree_LFicus_03", 0.46875, 0.359375, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "Prop_Tree_LFicus_05": LodModelCreator.Tree("Prop_Tree_LFicus_05", 0.46875, 0.3125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "Prop_Tree_LFicus_06": LodModelCreator.Tree("Prop_Tree_LFicus_06", 0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), None, 0.15),
+            "Prop_Tree_Mquite_01": LodModelCreator.Tree("Prop_Tree_Mquite_01", 0.46875),
+            "Prop_Rio_Del_01": LodModelCreator.Tree("Prop_Rio_Del_01", 0.53125),
             # bushes
             "Prop_Bush_Lrg_04b": LodModelCreator.Tree("Prop_Bush_Lrg_04b", 0.37333333, 0.40625, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None, None,
                 UV(0.5859375, 0), UV(1, 0.5), 0.45283018867),
