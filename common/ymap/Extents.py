@@ -42,6 +42,8 @@ class Extents:
             rotationQuat = [float(match.group(8)), -float(match.group(5)), -float(match.group(6)), -float(match.group(7))]
             scale = [float(match.group(9)), float(match.group(9)), float(match.group(10))]
             lodDistance = float(match.group(11))
+            if lodDistance < 0:
+                lodDistance = ytypItems[archetypeName].lodDist
             bbox = ytypItems[archetypeName].boundingBox
 
             extents.adaptExtents(position, rotationQuat, scale, lodDistance, bbox)
