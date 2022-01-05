@@ -6,13 +6,16 @@ class PriorityLevel:
 
     @staticmethod
     def getLevel(lodDistance: float, hasParent: bool) -> str:
-        if hasParent or lodDistance >= 100:
-            return PriorityLevel.REQUIRED
-        elif lodDistance >= 50:
-            return PriorityLevel.HIGH
-        elif lodDistance >= 25:
-            return PriorityLevel.MEDIUM
-        else:
-            # some entities with priority level low do not show up so do not use it
-            # return PriorityLevel.LOW
-            return PriorityLevel.MEDIUM
+        # there is a bug with level low so don't use it:
+        # https://gtaforums.com/topic/919609-relv-v-proprestore/
+        # further testing revealed that sometimes props with level MEDIUM or HIGH don't spawn either
+        # so just use REQUIRED do avoid issues with <priorityLevel>
+        return PriorityLevel.REQUIRED
+        # if hasParent or lodDistance >= 100:
+        #     return PriorityLevel.REQUIRED
+        # elif lodDistance >= 50:
+        #     return PriorityLevel.HIGH
+        # elif lodDistance >= 25:
+        #     return PriorityLevel.MEDIUM
+        # else:
+        #     return PriorityLevel.LOW

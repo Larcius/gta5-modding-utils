@@ -35,7 +35,7 @@ class Ymap:
             lodDistance = float(match.group(5))
 
         priorityLevel = PriorityLevel.getLevel(lodDistance, hasParent)
-        if priorityLevel != PriorityLevel.REQUIRED:
+        if priorityLevel != PriorityLevel.REQUIRED or lodDistance < 100:
             # for optional entities use -1 to indicate that the lod distance should be automatically determined
             # (as seen in original Rockstar ymap files)
             lodDistance = -1
