@@ -142,6 +142,7 @@ class LodModelCreator:
             "Prop_Tree_LFicus_06": LodModelCreator.Tree("Prop_Tree_LFicus_06", 0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), None, 0.15),
             "Prop_Tree_Mquite_01": LodModelCreator.Tree("Prop_Tree_Mquite_01", 0.46875),
             "Prop_Rio_Del_01": LodModelCreator.Tree("Prop_Rio_Del_01", 0.53125),
+            "Prop_Rus_Olive": LodModelCreator.Tree("Prop_Rus_Olive", 0.484375, 0.53125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             # bushes
             "Prop_Bush_Lrg_04b": LodModelCreator.Tree("Prop_Bush_Lrg_04b", 0.37333333, 0.40625, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None, None,
                 UV(0.5859375, 0), UV(1, 0.5), 0.45283018867),
