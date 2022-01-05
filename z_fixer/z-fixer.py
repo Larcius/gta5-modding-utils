@@ -27,6 +27,7 @@ DISABLE_INCREASE_OF_Z = True
 trees = {
     # trees
     "Prop_Rio_Del_01": Tree(1, 0.09),
+    "Prop_Rus_Olive": Tree(0.55, 0.08),
     "Prop_S_Pine_Dead_01": Tree(0.55),
     "Prop_Tree_Birch_01": Tree(0.95, -0.01),
     "Prop_Tree_Birch_02": Tree(0.63),
