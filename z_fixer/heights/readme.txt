@@ -1,1 +1,1 @@
-put the hmap.txt files in this directory
+put the hmap.txt file in this directory

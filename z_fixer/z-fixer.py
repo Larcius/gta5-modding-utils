@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import math
+import transforms3d
 from dataclasses import dataclass
 from natsort import natsorted
 
@@ -16,7 +17,7 @@ class Tree:
 
 # True means extract x, y coordinates
 # False means fix z coordinates
-ENABLE_MODE_EXTRACT = False
+ENABLE_MODE_EXTRACT = True
 
 # if True then z coordinate will not be changed if calculated value is greater than original value
 DISABLE_INCREASE_OF_Z = True
@@ -150,15 +151,28 @@ def repl(matchobj):
 
     heights = getHeights()
 
+    origQuat = [float(matchobj.group(10)), -float(matchobj.group(7)), -float(matchobj.group(8)), -float(matchobj.group(9))]  # order is w, -x, -y, -z
+    origRotZ, origRotY, origRotX = transforms3d.euler.quat2euler(origQuat, axes='rzyx')
+    axisNoZ, angleNoZ = transforms3d.euler.euler2axangle(0, origRotY, origRotX, axes='rzyx')
+
     zCoord = float(matchobj.group(5))
-    scaleXY = float(matchobj.group(7))
-    scaleZ = float(matchobj.group(8))
+    scaleXY = float(matchobj.group(11))
+    scaleZ = float(matchobj.group(12))
 
     tree = trees[prop]
-    calcZCoord = heights[math.ceil(tree.trunkRadius * scaleXY * 2)][0] + tree.offsetZ * scaleZ
+
+    flatProjectedTrunkRadius = tree.trunkRadius * abs(math.cos(angleNoZ))
+    additionalOffsetZDueToRotation = -tree.trunkRadius * abs(math.sin(angleNoZ))
+
+    calcZCoord = heights[math.ceil(flatProjectedTrunkRadius * scaleXY * 2)][0] + tree.offsetZ * scaleZ + additionalOffsetZDueToRotation * scaleXY
 
     if DISABLE_INCREASE_OF_Z and calcZCoord > zCoord:
         calcZCoord = zCoord
+
+    if abs(calcZCoord - zCoord) > 1:
+        position = [float(matchobj.group(3)), float(matchobj.group(5)), float(matchobj.group(5))]
+        print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - zCoord,
+            "(new z coordinate is " + str(calcZCoord) + ")")
 
     return matchobj.group(1) + floatToStr(calcZCoord) + matchobj.group(6)
 
@@ -176,6 +190,7 @@ for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "ma
                          '\\s*<archetypeName>([^<]+)</archetypeName>' +
                          '(?:\\s*<[^/].*>)*' +
                          '\\s*<position x="([^>]+)" y="([^>]+)" z=")([^"]+)("\\s*/>' +
+                         '\\s*<rotation x="([^>]+)" y="([^>]+)" z="([^"]+)" w="([^"]+)"\\s*/>' +
                          '(?:\\s*<[^/].*>)*' +
                          '\\s*<scaleXY\s+value="([^"]+)"\\s*/>' +
                          '\\s*<scaleZ\s+value="([^"]+)"\\s*/>' +
