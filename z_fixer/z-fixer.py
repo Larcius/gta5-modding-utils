@@ -170,9 +170,9 @@ def repl(matchobj):
         calcZCoord = zCoord
 
     if abs(calcZCoord - zCoord) > 1:
-        position = [float(matchobj.group(3)), float(matchobj.group(5)), float(matchobj.group(5))]
+        position = [float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))]
         print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - zCoord,
-            "(new z coordinate is " + str(calcZCoord) + ")")
+              "(new z coordinate is " + str(calcZCoord) + ")")
 
     return matchobj.group(1) + floatToStr(calcZCoord) + matchobj.group(6)
 
