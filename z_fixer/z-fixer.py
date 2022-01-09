@@ -22,6 +22,9 @@ ENABLE_MODE_EXTRACT = True
 # if True then z coordinate will not be changed if calculated value is greater than original value
 DISABLE_INCREASE_OF_Z = True
 
+# IMPORTANT: this must be the same as in HeightMapGenerator.cs
+RADIUS_STEP_SIZE = 0.05
+
 # trees can be found at x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\
 # and update\x64\dlcpacks\patchday2ng\dlc.rpf\x64\levels\gta5\props\vegetation\v_trees.rpf
 
@@ -45,7 +48,7 @@ trees = {
     "Prop_Tree_Cedar_S_05": Tree(0.7),
     "Prop_Tree_Cedar_S_06": Tree(0.6),
     "Prop_Tree_Cypress_01": Tree(0.7),
-    "Prop_Tree_Eng_Oak_01": Tree(1.13),
+    "Prop_Tree_Eng_Oak_01": Tree(1.13, -0.02),
     "Prop_Tree_Eucalip_01": Tree(1.51, -0.17),
     "Prop_Tree_Fallen_Pine_01": Tree(1.25, 0.54),
     "Prop_Tree_Jacada_01": Tree(0.56, -0.06),
@@ -105,7 +108,7 @@ else:
     heightmap = open(os.path.join(os.path.dirname(__file__), 'heights', 'hmap.txt'), 'r')
 
 
-def getHeights():
+def getMinMaxHeights(radius: float):
     global heightmap
 
     heightmapEntry = heightmap.readline()
@@ -115,22 +118,36 @@ def getHeights():
 
     steps = heightmapEntry.split(";")
 
-    if len(steps) < 16:
-        print("ERROR: wrong number of values in heightmap entry: " + heightmapEntry)
+    # use linear interpolation to get min and max heights
+
+    radiusIndexFloat = radius / RADIUS_STEP_SIZE
+
+    radiusIndexFloor = math.floor(radiusIndexFloat)
+    radiusIndexCeil = math.ceil(radiusIndexFloat)
+
+    if radiusIndexCeil >= len(steps):
+        print("ERROR: need height for radius " + str(radius) + " (radius index " + str(radiusIndexCeil) + ") but only got heights for radii up to "
+              + str((len(steps) - 1) * RADIUS_STEP_SIZE) + " (max index " + str(len(steps) - 1) + ") in heightmap entry:")
+        print(heightmapEntry)
+        print("Solution: Increase maxRadiusSteps in HeightMapGenerator.cs")
         quit()
 
-    result = []
+    stepFloor = steps[radiusIndexFloor]
+    stepCeil = steps[radiusIndexCeil]
 
-    for step in steps:
-        minMax = step.split(",")
+    minMaxFloor = stepFloor.split(",")
+    minMaxCeil = stepCeil.split(",")
 
-        if len(minMax) != 2:
-            print("ERROR: wrong number of min/max in heightmap entry: " + heightmapEntry)
-            quit()
+    if len(minMaxFloor) != 2 or len(minMaxCeil) != 2:
+        print("ERROR: wrong number of min/max in heightmap entry: " + heightmapEntry)
+        quit()
 
-        result.append([float(minMax[0]), float(minMax[1])])
+    mod = radiusIndexFloat % 1
 
-    return result
+    minHeight = float(minMaxFloor[0]) * (1 - mod) + float(minMaxCeil[0]) * mod
+    maxHeight = float(minMaxFloor[1]) * (1 - mod) + float(minMaxCeil[1]) * mod
+
+    return [minHeight, maxHeight]
 
 
 def floatToStr(val):
@@ -149,8 +166,6 @@ def repl(matchobj):
         outCoords.write(matchobj.group(3) + ", " + matchobj.group(4) + "\n")
         return matchobj.group(0)
 
-    heights = getHeights()
-
     origQuat = [float(matchobj.group(10)), -float(matchobj.group(7)), -float(matchobj.group(8)), -float(matchobj.group(9))]  # order is w, -x, -y, -z
     origRotZ, origRotY, origRotX = transforms3d.euler.quat2euler(origQuat, axes='rzyx')
     axisNoZ, angleNoZ = transforms3d.euler.euler2axangle(0, origRotY, origRotX, axes='rzyx')
@@ -164,7 +179,9 @@ def repl(matchobj):
     flatProjectedTrunkRadius = tree.trunkRadius * abs(math.cos(angleNoZ))
     additionalOffsetZDueToRotation = -tree.trunkRadius * abs(math.sin(angleNoZ))
 
-    calcZCoord = heights[math.ceil(flatProjectedTrunkRadius * scaleXY * 2)][0] + tree.offsetZ * scaleZ + additionalOffsetZDueToRotation * scaleXY
+    minMaxHeight = getMinMaxHeights(flatProjectedTrunkRadius * scaleXY)
+
+    calcZCoord = minMaxHeight[0] + tree.offsetZ * scaleZ + additionalOffsetZDueToRotation * scaleXY
 
     if DISABLE_INCREASE_OF_Z and calcZCoord > zCoord:
         calcZCoord = zCoord

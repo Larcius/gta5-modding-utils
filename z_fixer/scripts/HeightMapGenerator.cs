@@ -20,8 +20,10 @@ namespace HeightMap
 
 		private const float maxCoordinate = 10000f;
 		private const int maxHeight = 1024;
-		private const int maxRadiusSteps = 20;
-		private const float radiusStepSize = 0.5f;
+		private const int maxRadiusSteps = 200;
+
+		// IMPORTANT: this must be the same as in z-fixer.py
+		private const float radiusStepSize = 0.05f;
 
 		public StreamWriter writer;
 		private StreamReader reader;
