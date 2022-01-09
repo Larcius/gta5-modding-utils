@@ -1,0 +1,1 @@
+put the .ymap.xml files in this directory

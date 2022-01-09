@@ -134,3 +134,6 @@ dmypy.json
 
 # project specific
 /resources/**
+/z_fixer/maps/**
+/z_fixer/heights/**
+/z_fixer/generated/**
