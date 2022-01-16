@@ -9,34 +9,26 @@ namespace HeightMap
 {
 	public class HeightMapGenerator : Script
 	{
-		private const int numAngleSteps = 8;
-		private const double angleStep = 2d * Math.PI / numAngleSteps;
-		private static Vector2[] unitCircle = new Vector2[numAngleSteps];
-		static HeightMapGenerator() {
-			for (int i = 0; i < numAngleSteps; i++) {
-				unitCircle[i] = new Vector2((float) Math.Sin(angleStep * i), (float) Math.Cos(angleStep * i));
-			}
-		}
-
 		private const float maxCoordinate = 10000f;
-		private const int maxHeight = 1024;
-		private const int maxRadiusSteps = 200;
+		private const int maxHeight = 2048;
 
-		// IMPORTANT: this must be the same as in z-fixer.py
-		private const float radiusStepSize = 0.05f;
+		// resolution (samples per meter)
+		private const float resolution = 0.1f;
 
 		public StreamWriter writer;
 		private StreamReader reader;
 
 		private string filenameInput = "Full path (e.g. C:\\<SOME PATH>\\z_fixer\\generated\\coords.txt)";
-		
+
 		public bool startRequested, abortRequested;
 
 		private int stepSize;
 
 		private float prevZ;
-		
-		private Vector2 coords;
+
+		private Vector3 coords;
+		private Quaternion rotation;
+		private float radius;
 
 		public HeightMapGenerator()
 		{
@@ -77,15 +69,21 @@ namespace HeightMap
 					continue;
 				}
 
-				if (splitted.Length != 2) {
+				if (splitted.Length != 8) {
 					writer.Write("ERROR: malformed line: ");
 					writer.WriteLine(line);
 					continue;
 				}
 
-				float x = 0, y = 0;
+				float x, y, z, qx, qy, qz, qw, r;
 				if (!Single.TryParse(splitted[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out x) ||
-						!Single.TryParse(splitted[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out y)) {
+						!Single.TryParse(splitted[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out y) ||
+						!Single.TryParse(splitted[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out z) ||
+						!Single.TryParse(splitted[3], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out qx) ||
+						!Single.TryParse(splitted[4], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out qy) ||
+						!Single.TryParse(splitted[5], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out qz) ||
+						!Single.TryParse(splitted[6], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out qw) ||
+						!Single.TryParse(splitted[7], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out r)) {
 
 					writer.Write("ERROR: malformed coordinates: ");
 					writer.WriteLine(line);
@@ -98,12 +96,20 @@ namespace HeightMap
 					continue;
 				}
 
-				coords = new Vector2(x, y);
+				if (Single.IsNaN(z) || z < 0) {
+					z = 0;
+				} else if (z > maxHeight) {
+					z = maxHeight;
+				}
+
+				coords = new Vector3(x, y, z);
+				rotation = new Quaternion(qx, qy, qz, qw);
+				radius = Math.Abs(r);
 				return true;
 			}
 			return false;
 		}
-		
+
 		private void finish()
 		{
 			reader.Close();
@@ -120,16 +126,6 @@ namespace HeightMap
 				return Single.NaN;
 			}
 			return result;
-			/*
-			unsafe
-			{
-				float result = 0;
-				if (!Function.Call<bool>(Hash.GET_GROUND_Z_FOR_3D_COORD, x, y, (float) maxHeight, &result)) {
-					result = Single.NaN;//World.GetGroundHeight(new Vector3(x, y, (float) maxHeight));
-				}
-				return result;
-			}
-			*/
 		}
 
 		private bool isApproxEqual(float f1, float f2) {
@@ -155,8 +151,17 @@ namespace HeightMap
 			if (startRequested) {
 				startRequested = false;
 			} else {
-				float z = Single.NaN;
-				if (stepSize > 0) {
+				bool addWarning;
+				float z;
+				if (stepSize == 0) {
+					addWarning = true;
+					if (Single.IsNaN(coords.Z)) {
+						z = 0f;
+					} else {
+						z = coords.Z;
+					}
+				} else {
+					addWarning = false;
 					z = getHeight(coords.X, coords.Y);
 
 					if (Single.IsNaN(z)) {
@@ -175,28 +180,51 @@ namespace HeightMap
 					}
 				}
 
-				writer.Write(z.ToString(System.Globalization.CultureInfo.InvariantCulture));
+				writer.Write(coords.X.ToString(System.Globalization.CultureInfo.InvariantCulture));
+				writer.Write(",");
+				writer.Write(coords.Y.ToString(System.Globalization.CultureInfo.InvariantCulture));
 				writer.Write(",");
 				writer.Write(z.ToString(System.Globalization.CultureInfo.InvariantCulture));
-			
-				float min = z, max = z;
-				for (int radiusStep = 1; radiusStep <= maxRadiusSteps; radiusStep++)
-				{
-					float radius = radiusStepSize * radiusStep;
-					for (int i = 0; i < numAngleSteps; i++)
-					{
-						float curZ = getHeight(coords.X + unitCircle[i].X * radius, coords.Y + unitCircle[i].Y * radius);
+				writer.Write(",");
 
-						if (!Single.IsNaN(curZ)) {
-							min = Math.Min(min, curZ);
-							max = Math.Max(max, curZ);
-						}
+				float minZ = z;
+				for (float curRadius = resolution; radius > 0 && curRadius < radius + resolution; curRadius += resolution) {
+					// if curRadius is approx. or even greater than the max radius then set it to max radius
+					if (curRadius >= radius - 0.001f) {
+						curRadius = radius;
 					}
 
-					writer.Write(";");
-					writer.Write(min.ToString(System.Globalization.CultureInfo.InvariantCulture));
-					writer.Write(",");
-					writer.Write(max.ToString(System.Globalization.CultureInfo.InvariantCulture));
+					// calculate number of angle steps depending on the radius
+					int numAngleSteps;
+					if (resolution / curRadius > Math.Sqrt(3)) {
+						// use at least 3 angle steps
+						numAngleSteps = 3;
+					} else {
+						// using the formula for side-length of an regular n-polygon for a given outer radius:
+						// side-length = 2 * outer-radius * sin(PI / n)
+						// note that the previous check also ensured that the argument for arcsin is always less than 1
+						// furthermore it is ensured that the result of arcsin is always strictly positive
+						// since resolution and curRadius are always strictly positive
+						numAngleSteps = (int) Math.Ceiling(Math.PI / (Math.Asin(resolution / curRadius / 2f)));
+					}
+
+					double angleStep = 2d * Math.PI / numAngleSteps;
+					for (double angle = 0; angle < 2d * Math.PI; angle += angleStep) {
+						Vector3 point = new Vector3((float) Math.Sin(angle) * curRadius, (float) Math.Cos(angle) * curRadius, 0f);
+						point = rotation * point;
+
+						float curZ = getHeight(coords.X + point.X, coords.Y + point.Y);
+
+						if (!Single.IsNaN(curZ)) {
+							minZ = Math.Min(minZ, curZ - point.Z);
+						}
+					}
+				}
+
+				writer.Write(minZ.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+				if (addWarning) {
+					writer.Write(",WARNING: could not get z coordinate so just used the one from the input file or 0 if NaN was given");
 				}
 
 				writer.WriteLine("");
@@ -204,8 +232,8 @@ namespace HeightMap
 
 			if (readCoords()) {
 				// prepare for next step
-				stepSize = maxHeight;
-				setPlayerPosition(coords.X, coords.Y, maxHeight);
+				stepSize = 2 * maxHeight;
+				setPlayerPosition(coords.X, coords.Y, coords.Z);
 			} else {
 				finish();
 			}

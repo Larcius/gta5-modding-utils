@@ -3,7 +3,6 @@
 import os
 import re
 import shutil
-import math
 import transforms3d
 from dataclasses import dataclass
 from natsort import natsorted
@@ -22,9 +21,6 @@ ENABLE_MODE_EXTRACT = True
 # if True then z coordinate will not be changed if calculated value is greater than original value
 DISABLE_INCREASE_OF_Z = True
 
-# IMPORTANT: this must be the same as in HeightMapGenerator.cs
-RADIUS_STEP_SIZE = 0.05
-
 # trees can be found at x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\
 # and update\x64\dlcpacks\patchday2ng\dlc.rpf\x64\levels\gta5\props\vegetation\v_trees.rpf
 
@@ -39,9 +35,9 @@ trees = {
     "Prop_Tree_Birch_03b": Tree(0.18, -0.04),
     "Prop_Tree_Birch_04": Tree(0.57, -0.03),
     "Prop_Tree_Birch_05": Tree(0.22, -0.06),
-    "Prop_Tree_Cedar_02": Tree(0.89, 0.08),
-    "Prop_Tree_Cedar_03": Tree(0.65, 0.08),
-    "Prop_Tree_Cedar_04": Tree(1.1, 0.09),
+    "Prop_Tree_Cedar_02": Tree(1.4, 0.08),
+    "Prop_Tree_Cedar_03": Tree(1.4, 0.08),
+    "Prop_Tree_Cedar_04": Tree(1.4, 0.09),
     "Prop_Tree_Cedar_S_01": Tree(0.52, 0.03),
     "Prop_Tree_Cedar_S_02": Tree(0.13, 0.01),
     "Prop_Tree_Cedar_S_04": Tree(1),
@@ -108,7 +104,7 @@ else:
     heightmap = open(os.path.join(os.path.dirname(__file__), 'heights', 'hmap.txt'), 'r')
 
 
-def getMinMaxHeights(radius: float):
+def getMinHeight():
     global heightmap
 
     heightmapEntry = heightmap.readline()
@@ -116,38 +112,14 @@ def getMinMaxHeights(radius: float):
         print("ERROR: cannot get entry in heightmap")
         quit()
 
-    steps = heightmapEntry.split(";")
+    parts = heightmapEntry.split(",")
 
-    # use linear interpolation to get min and max heights
-
-    radiusIndexFloat = radius / RADIUS_STEP_SIZE
-
-    radiusIndexFloor = math.floor(radiusIndexFloat)
-    radiusIndexCeil = math.ceil(radiusIndexFloat)
-
-    if radiusIndexCeil >= len(steps):
-        print("ERROR: need height for radius " + str(radius) + " (radius index " + str(radiusIndexCeil) + ") but only got heights for radii up to "
-              + str((len(steps) - 1) * RADIUS_STEP_SIZE) + " (max index " + str(len(steps) - 1) + ") in heightmap entry:")
+    if len(parts) < 4:
+        print("ERROR: invalid line in heightmap entry:")
         print(heightmapEntry)
-        print("Solution: Increase maxRadiusSteps in HeightMapGenerator.cs")
         quit()
 
-    stepFloor = steps[radiusIndexFloor]
-    stepCeil = steps[radiusIndexCeil]
-
-    minMaxFloor = stepFloor.split(",")
-    minMaxCeil = stepCeil.split(",")
-
-    if len(minMaxFloor) != 2 or len(minMaxCeil) != 2:
-        print("ERROR: wrong number of min/max in heightmap entry: " + heightmapEntry)
-        quit()
-
-    mod = radiusIndexFloat % 1
-
-    minHeight = float(minMaxFloor[0]) * (1 - mod) + float(minMaxCeil[0]) * mod
-    maxHeight = float(minMaxFloor[1]) * (1 - mod) + float(minMaxCeil[1]) * mod
-
-    return [minHeight, maxHeight]
+    return float(parts[3])
 
 
 def floatToStr(val):
@@ -162,33 +134,33 @@ def repl(matchobj):
     if prop not in trees:
         return matchobj.group(0)
 
-    if ENABLE_MODE_EXTRACT:
-        outCoords.write(matchobj.group(3) + ", " + matchobj.group(4) + "\n")
-        return matchobj.group(0)
-
-    origQuat = [float(matchobj.group(10)), -float(matchobj.group(7)), -float(matchobj.group(8)), -float(matchobj.group(9))]  # order is w, -x, -y, -z
-    origRotZ, origRotY, origRotX = transforms3d.euler.quat2euler(origQuat, axes='rzyx')
-    axisNoZ, angleNoZ = transforms3d.euler.euler2axangle(0, origRotY, origRotX, axes='rzyx')
-
-    zCoord = float(matchobj.group(5))
-    scaleXY = float(matchobj.group(11))
-    scaleZ = float(matchobj.group(12))
-
     tree = trees[prop]
 
-    flatProjectedTrunkRadius = tree.trunkRadius * abs(math.cos(angleNoZ))
-    additionalOffsetZDueToRotation = -tree.trunkRadius * abs(math.sin(angleNoZ))
+    coords = [float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))]
+    scaleXY = float(matchobj.group(11))
+    scaleZ = float(matchobj.group(12))
+    origQuat = [float(matchobj.group(10)), -float(matchobj.group(7)), -float(matchobj.group(8)), -float(matchobj.group(9))]  # order is w, -x, -y, -z
+    transformed = transforms3d.quaternions.rotate_vector([0, 0, -tree.offsetZ * scaleZ], origQuat)
 
-    minMaxHeight = getMinMaxHeights(flatProjectedTrunkRadius * scaleXY)
+    if ENABLE_MODE_EXTRACT:
+        for i in range(3):
+            coords[i] += transformed[i]
 
-    calcZCoord = minMaxHeight[0] + tree.offsetZ * scaleZ + additionalOffsetZDueToRotation * scaleXY
+        outCoords.write(str(coords[0]) + "," + str(coords[1]) + "," + str(coords[2]) +
+                        "," + str(origQuat[1]) + "," + str(origQuat[2]) + "," + str(origQuat[3]) + "," + str(origQuat[0]) +
+                        "," + str(tree.trunkRadius * scaleXY) + "\n")
+        return matchobj.group(0)
 
-    if DISABLE_INCREASE_OF_Z and calcZCoord > zCoord:
-        calcZCoord = zCoord
+    minHeight = getMinHeight()
 
-    if abs(calcZCoord - zCoord) > 1:
+    calcZCoord = minHeight - transformed[2]
+
+    if DISABLE_INCREASE_OF_Z and calcZCoord > coords[2]:
+        calcZCoord = coords[2]
+
+    if abs(calcZCoord - coords[2]) > 1:
         position = [float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))]
-        print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - zCoord,
+        print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - coords[2],
               "(new z coordinate is " + str(calcZCoord) + ")")
 
     return matchobj.group(1) + floatToStr(calcZCoord) + matchobj.group(6)
