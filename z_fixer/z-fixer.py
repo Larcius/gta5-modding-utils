@@ -19,7 +19,9 @@ class Tree:
 ENABLE_MODE_EXTRACT = True
 
 # if True then z coordinate will not be changed if calculated value is greater than original value
-DISABLE_INCREASE_OF_Z = True
+DISABLE_INCREASE_OF_Z = False
+
+IGNORE_BUSHES = True
 
 # trees can be found at x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\
 # and update\x64\dlcpacks\patchday2ng\dlc.rpf\x64\levels\gta5\props\vegetation\v_trees.rpf
@@ -58,7 +60,7 @@ trees = {
     "Prop_Tree_Stump_01": Tree(0.70, 0.02),
     "Prop_W_R_Cedar_01": Tree(1.34, 0.09),
     "Prop_W_R_Cedar_Dead": Tree(1.34, 0.09),
-    "TEST_Tree_Cedar_Trunk_001": Tree(1.03, 0.09),
+    "TEST_Tree_Cedar_Trunk_001": Tree(1.3, 0.09),
     "TEST_Tree_Forest_Trunk_01": Tree(4.82, -0.03),
     "TEST_Tree_Forest_Trunk_Base_01": Tree(4.25),
     # bushes
@@ -131,7 +133,7 @@ def repl(matchobj):
 
     prop = matchobj.group(2)
 
-    if prop not in trees:
+    if prop not in trees or (IGNORE_BUSHES and prop.startswith("Prop_Bush_")):
         return matchobj.group(0)
 
     tree = trees[prop]
@@ -146,7 +148,8 @@ def repl(matchobj):
         for i in range(3):
             coords[i] += transformed[i]
 
-        outCoords.write(str(coords[0]) + "," + str(coords[1]) + "," + str(coords[2]) +
+        # adding 10m to z coordinate to avoid getting the height of a lower level (e.g. ceiling of subway station instead of the actual ground)
+        outCoords.write(str(coords[0]) + "," + str(coords[1]) + "," + str(coords[2] + 10) +
                         "," + str(origQuat[1]) + "," + str(origQuat[2]) + "," + str(origQuat[3]) + "," + str(origQuat[0]) +
                         "," + str(tree.trunkRadius * scaleXY) + "\n")
         return matchobj.group(0)
