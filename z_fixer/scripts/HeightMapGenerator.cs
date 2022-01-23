@@ -12,8 +12,17 @@ namespace HeightMap
 		private const float maxCoordinate = 10000f;
 		private const int maxHeight = 2048;
 
-		// resolution (samples per meter)
+		// resolution (distance in meters between two samples)
 		private const float resolution = 0.1f;
+
+		private static Vector2[] epsHexagon = new Vector2[6];
+		static HeightMapGenerator() {
+			const float eps = 0.025f;
+			double angleStep = 2d * Math.PI / epsHexagon.Length;
+			for (int i = 0; i < epsHexagon.Length; i++) {
+				epsHexagon[i] = new Vector2((float) Math.Sin(angleStep * i) * eps, (float) Math.Cos(angleStep * i) * eps);
+			}
+		}
 
 		public StreamWriter writer;
 		private StreamReader reader;
@@ -120,6 +129,22 @@ namespace HeightMap
 			writer = null;
 		}
 
+		// unfortunately checking only exactly that point is not reliable because you may hit a small hole in the surface.
+		// So check not only a single point but also points on an eps hexagon around it
+		private float getHeightEpsHexagon(float x, float y) {
+			float result = World.GetGroundHeight(new Vector2(x, y));
+			for (int i = 0; i < epsHexagon.Length; i++) {
+				float z = getHeight(x + epsHexagon[i].X, y + epsHexagon[i].Y);
+				if (!Single.IsNaN(z)) {
+					result = Math.Max(result, z);
+				}
+			}
+			if (result == 0f) {
+				return Single.NaN;
+			}
+			return result;
+		}
+
 		private float getHeight(float x, float y) {
 			float result = World.GetGroundHeight(new Vector2(x, y));
 			if (result == 0) {
@@ -162,7 +187,7 @@ namespace HeightMap
 					}
 				} else {
 					addWarning = false;
-					z = getHeight(coords.X, coords.Y);
+					z = getHeightEpsHexagon(coords.X, coords.Y);
 
 					if (Single.IsNaN(z)) {
 						z = prevZ - stepSize;
@@ -213,7 +238,7 @@ namespace HeightMap
 						Vector3 point = new Vector3((float) Math.Sin(angle) * curRadius, (float) Math.Cos(angle) * curRadius, 0f);
 						point = rotation * point;
 
-						float curZ = getHeight(coords.X + point.X, coords.Y + point.Y);
+						float curZ = getHeightEpsHexagon(coords.X + point.X, coords.Y + point.Y);
 
 						if (!Single.IsNaN(curZ)) {
 							minZ = Math.Min(minZ, curZ - point.Z);

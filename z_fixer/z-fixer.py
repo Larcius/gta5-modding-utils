@@ -1,8 +1,12 @@
 # TODO refactoring needed
 
 import os
+import random
 import re
 import shutil
+import struct
+from typing import Optional
+
 import transforms3d
 from dataclasses import dataclass
 from natsort import natsorted
@@ -12,6 +16,11 @@ from natsort import natsorted
 class Tree:
     trunkRadius: float
     offsetZ: float = 0
+    maxOffsetZ: Optional[float] = None
+
+    def getRandomOffsetZ(self) -> float:
+        maxOffsetZ = self.offsetZ if (DISABLE_INCREASE_OF_Z or self.maxOffsetZ is None or self.maxOffsetZ > self.offsetZ) else self.maxOffsetZ
+        return random.uniform(maxOffsetZ, self.offsetZ)
 
 
 # True means extract x, y coordinates
@@ -28,71 +37,71 @@ IGNORE_BUSHES = True
 
 trees = {
     # trees
-    "Prop_Rio_Del_01": Tree(1, 0.09),
-    "Prop_Rus_Olive": Tree(0.55, 0.08),
-    "Prop_S_Pine_Dead_01": Tree(0.55),
-    "Prop_Tree_Birch_01": Tree(0.95, -0.01),
-    "Prop_Tree_Birch_02": Tree(0.63),
-    "Prop_Tree_Birch_03": Tree(0.24, -0.03),
-    "Prop_Tree_Birch_03b": Tree(0.18, -0.04),
-    "Prop_Tree_Birch_04": Tree(0.57, -0.03),
-    "Prop_Tree_Birch_05": Tree(0.22, -0.06),
-    "Prop_Tree_Cedar_02": Tree(1.4, 0.08),
-    "Prop_Tree_Cedar_03": Tree(1.4, 0.08),
-    "Prop_Tree_Cedar_04": Tree(1.4, 0.09),
-    "Prop_Tree_Cedar_S_01": Tree(0.52, 0.03),
-    "Prop_Tree_Cedar_S_02": Tree(0.13, 0.01),
-    "Prop_Tree_Cedar_S_04": Tree(1),
-    "Prop_Tree_Cedar_S_05": Tree(0.7),
-    "Prop_Tree_Cedar_S_06": Tree(0.6),
-    "Prop_Tree_Cypress_01": Tree(0.7),
-    "Prop_Tree_Eng_Oak_01": Tree(1.13, -0.02),
-    "Prop_Tree_Eucalip_01": Tree(1.51, -0.17),
-    "Prop_Tree_Fallen_Pine_01": Tree(1.25, 0.54),
-    "Prop_Tree_Jacada_01": Tree(0.56, -0.06),
-    "Prop_Tree_Jacada_02": Tree(0.71, 0.1),
-    "Prop_Tree_Maple_02": Tree(0.41, 0.05),
-    "Prop_Tree_Maple_03": Tree(0.35, 0.05),
-    "Prop_Tree_Mquite_01": Tree(0.45, -0.03),
-    "Prop_Tree_Oak_01": Tree(2.68, -0.07),
-    "Prop_Tree_Pine_01": Tree(0.82, 0.44),
-    "Prop_Tree_Pine_02": Tree(0.80, -0.04),
-    "Prop_Tree_Stump_01": Tree(0.70, 0.02),
-    "Prop_W_R_Cedar_01": Tree(1.34, 0.09),
-    "Prop_W_R_Cedar_Dead": Tree(1.34, 0.09),
-    "TEST_Tree_Cedar_Trunk_001": Tree(1.3, 0.09),
-    "TEST_Tree_Forest_Trunk_01": Tree(4.82, -0.03),
-    "TEST_Tree_Forest_Trunk_Base_01": Tree(4.25),
+    "prop_rio_del_01": Tree(1, 0.09),
+    "prop_rus_olive": Tree(0.55, 0.08),
+    "prop_s_pine_dead_01": Tree(0.55),
+    "prop_tree_birch_01": Tree(0.95, -0.01),
+    "prop_tree_birch_02": Tree(0.63),
+    "prop_tree_birch_03": Tree(0.24, -0.03),
+    "prop_tree_birch_03b": Tree(0.18, -0.04),
+    "prop_tree_birch_04": Tree(0.57, -0.03),
+    "prop_tree_birch_05": Tree(0.22, -0.06),
+    "prop_tree_cedar_02": Tree(1.4, 0.08),
+    "prop_tree_cedar_03": Tree(1.4, 0.08),
+    "prop_tree_cedar_04": Tree(1.4, 0.09),
+    "prop_tree_cedar_s_01": Tree(0.52, 0.03),
+    "prop_tree_cedar_s_02": Tree(0.13, 0.01),
+    "prop_tree_cedar_s_04": Tree(1),
+    "prop_tree_cedar_s_05": Tree(0.7),
+    "prop_tree_cedar_s_06": Tree(0.6),
+    "prop_tree_cypress_01": Tree(0.7),
+    "prop_tree_eng_oak_01": Tree(1.13, -0.02),
+    "prop_tree_eucalip_01": Tree(1.51, -0.17),
+    "prop_tree_fallen_pine_01": Tree(1.25, 0.54, 0.2),
+    "prop_tree_jacada_01": Tree(0.56, -0.06),
+    "prop_tree_jacada_02": Tree(0.71, 0.1),
+    "prop_tree_maple_02": Tree(0.41, 0.05),
+    "prop_tree_maple_03": Tree(0.35, 0.05),
+    "prop_tree_mquite_01": Tree(0.45, -0.03),
+    "prop_tree_oak_01": Tree(2.68, -0.07),
+    "prop_tree_pine_01": Tree(0.82, 0.44),
+    "prop_tree_pine_02": Tree(0.80, -0.04),
+    "prop_tree_stump_01": Tree(0.70, 0.02),
+    "prop_w_r_cedar_01": Tree(1.34, 0.09),
+    "prop_w_r_cedar_dead": Tree(1.34, 0.09),
+    "test_tree_cedar_trunk_001": Tree(1.3, 0.09),
+    "test_tree_forest_trunk_01": Tree(4.82, -0.03),
+    "test_tree_forest_trunk_base_01": Tree(4.25),
     # bushes
-    "Prop_Bush_Lrg_02": Tree(3, 0.188),
-    "Prop_Bush_Lrg_02b": Tree(1.1, -0.01),
-    "Prop_Bush_Lrg_04b": Tree(2.6, 2.2),
-    "Prop_Bush_Lrg_04c": Tree(2.6, 2.2),
-    "Prop_Bush_Lrg_04d": Tree(2.6, 2.2),
+    "prop_bush_lrg_02": Tree(3, 0.188, 0),
+    "prop_bush_lrg_02b": Tree(1.1, -0.01),
+    "prop_bush_lrg_04b": Tree(2.6, 2.2, 0),
+    "prop_bush_lrg_04c": Tree(2.6, 2.2, 0),
+    "prop_bush_lrg_04d": Tree(2.6, 2.2, 0),
     # palms
-    "Prop_Palm_Sm_01d": Tree(0.7, -0.05),
-    "Prop_Palm_Sm_01e": Tree(1.1, -0.05),
-    "Prop_Palm_Sm_01f": Tree(0.72),
-    "Prop_Palm_Med_01a": Tree(0.89),
-    "Prop_Palm_Med_01b": Tree(1, -0.05),
-    "Prop_Palm_Med_01c": Tree(1.2, -0.1),
-    "Prop_Fan_Palm_01a": Tree(1.2, 0.23),
-    "Prop_Palm_Fan_02_a": Tree(0.6, -0.05),
-    "Prop_Palm_Fan_02_b": Tree(1.35, -0.1),
-    "Prop_Palm_Sm_01a": Tree(0.65, -0.05),
-    "Prop_Palm_Fan_04_a": Tree(0.65, -0.1),
-    "Prop_Palm_Fan_04_b": Tree(0.85, -0.12),
-    "Prop_Palm_Fan_03_a": Tree(1.7, -0.03),
-    "Prop_Palm_Fan_03_b": Tree(0.9, -0.03),
-    "Prop_Palm_Fan_03_c": Tree(1),
-    "Prop_Palm_Fan_03_c_graff": Tree(1),
-    "Prop_Palm_Fan_04_c": Tree(1.25, -0.22),
-    "Prop_Palm_Med_01d": Tree(1.15),
-    "Prop_Palm_Fan_03_d": Tree(0.8),
-    "Prop_Palm_Fan_03_d_Graff": Tree(0.8),
-    "Prop_Palm_Fan_04_d": Tree(1.5, -0.15),
-    "Prop_Palm_Huge_01a": Tree(0.95, 0.37),
-    "Prop_Palm_Huge_01b": Tree(0.95, -0.08),
+    "prop_palm_sm_01a": Tree(0.65, -0.05, -0.5),
+    "prop_palm_sm_01d": Tree(0.7, -0.05, -0.57),
+    "prop_palm_sm_01e": Tree(1.1, -0.05, -1.75),
+    "prop_palm_sm_01f": Tree(0.72, 0, -1.15),
+    "prop_palm_med_01a": Tree(0.89, 0, -0.87),
+    "prop_palm_med_01b": Tree(1, -0.05, -1.3),
+    "prop_palm_med_01c": Tree(1.2, -0.1, -1.5),
+    "prop_palm_med_01d": Tree(1.15, 0, -0.9),
+    "prop_fan_palm_01a": Tree(1.2, 0.23, -1),
+    "prop_palm_fan_02_a": Tree(0.6, -0.05, -0.8),
+    "prop_palm_fan_02_b": Tree(1.35, -0.1, -1.28),
+    "prop_palm_fan_04_a": Tree(0.65, -0.1, -0.7),
+    "prop_palm_fan_04_b": Tree(0.85, -0.12, -0.8),
+    "prop_palm_fan_03_a": Tree(1.7, -0.03, -1.5),
+    "prop_palm_fan_03_b": Tree(0.9, -0.03, -1.6),
+    "prop_palm_fan_03_c": Tree(1, 0, -1.9),
+    "prop_palm_fan_03_c_graff": Tree(1, 0, -1.9),
+    "prop_palm_fan_03_d": Tree(0.8, 0, -1.7),
+    "prop_palm_fan_03_d_graff": Tree(0.8, 0, -1.7),
+    "prop_palm_fan_04_c": Tree(1.25, -0.22, -1.1),
+    "prop_palm_fan_04_d": Tree(1.5, -0.15, -1.1),
+    "prop_palm_huge_01a": Tree(0.95, 0.37, -0.25),
+    "prop_palm_huge_01b": Tree(0.95, -0.08, -1.2),
 }
 
 generatedDir = os.path.join(os.path.dirname(__file__), "generated")
@@ -128,12 +137,16 @@ def floatToStr(val):
     return "{:.8f}".format(val)
 
 
+def hashFloat(val: float) -> int:
+    return hash(struct.pack("f", val))
+
+
 def repl(matchobj):
     global trees
 
-    prop = matchobj.group(2)
+    prop = matchobj.group(2).lower()
 
-    if prop not in trees or (IGNORE_BUSHES and prop.startswith("Prop_Bush_")):
+    if prop not in trees or (IGNORE_BUSHES and prop.startswith("prop_bush_")):
         return matchobj.group(0)
 
     tree = trees[prop]
@@ -142,14 +155,19 @@ def repl(matchobj):
     scaleXY = float(matchobj.group(11))
     scaleZ = float(matchobj.group(12))
     origQuat = [float(matchobj.group(10)), -float(matchobj.group(7)), -float(matchobj.group(8)), -float(matchobj.group(9))]  # order is w, -x, -y, -z
-    transformed = transforms3d.quaternions.rotate_vector([0, 0, -tree.offsetZ * scaleZ], origQuat)
+
+    # set a seed here to get the same offsetZ for multiple runs
+    seed = hashFloat(coords[0]) ^ hashFloat(coords[1])
+    random.seed(a=seed)
+    offsetZ = tree.getRandomOffsetZ()
+
+    transformed = transforms3d.quaternions.rotate_vector([0, 0, -offsetZ * scaleZ], origQuat)
 
     if ENABLE_MODE_EXTRACT:
         for i in range(3):
             coords[i] += transformed[i]
 
-        # adding 10m to z coordinate to avoid getting the height of a lower level (e.g. ceiling of subway station instead of the actual ground)
-        outCoords.write(str(coords[0]) + "," + str(coords[1]) + "," + str(coords[2] + 10) +
+        outCoords.write(str(coords[0]) + "," + str(coords[1]) + "," + str(coords[2]) +
                         "," + str(origQuat[1]) + "," + str(origQuat[2]) + "," + str(origQuat[3]) + "," + str(origQuat[0]) +
                         "," + str(tree.trunkRadius * scaleXY) + "\n")
         return matchobj.group(0)
@@ -196,10 +214,3 @@ for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "ma
 
 if not ENABLE_MODE_EXTRACT:
     heightmap.close()
-
-    # copy all other files
-    for filename in os.listdir(os.path.join(os.path.dirname(__file__), "maps")):
-        if filename.endswith(".ymap.xml"):
-            continue
-
-        shutil.copyfile(os.path.join(os.path.dirname(__file__), "maps", filename), os.path.join(os.path.dirname(__file__), "generated", filename))
