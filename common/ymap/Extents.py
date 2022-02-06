@@ -32,7 +32,7 @@ class Extents:
         extents = Extents.createReversedInfinityExtents()
 
         for match in re.finditer(Extents.getExpressionForCalculateExtents(), ymapContent):
-            archetypeName = match.group(1)
+            archetypeName = match.group(1).lower()
 
             if archetypeName not in ytypItems:
                 print("WARNING: could not find archetype " + archetypeName + ". Proceeding without it but this might yield wrong extents")

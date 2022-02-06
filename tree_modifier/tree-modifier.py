@@ -27,44 +27,44 @@ random.seed(a=0)
 # and update\x64\dlcpacks\patchday2ng\dlc.rpf\x64\levels\gta5\props\vegetation\v_trees.rpf
 
 trees = {
-    "Prop_S_Pine_Dead_01": Tree(12, False, 0.55),
-    "Prop_Tree_Birch_01": Tree(16, True, 0.95),
-    "Prop_Tree_Birch_02": Tree(12, True, 0.63),
-    "Prop_Tree_Birch_03": Tree(8, True, 0.24, -0.08),
-    "Prop_Tree_Birch_03b": Tree(6, True, 0.18),
-    "Prop_Tree_Birch_04": Tree(13, True, 0.57),
-    "Prop_Tree_Cedar_02": Tree(31, False, 0.89),
-    "Prop_Tree_Cedar_03": Tree(36, False, 0.65),
-    "Prop_Tree_Cedar_04": Tree(33, False, 1.1),
-    "Prop_Tree_Cedar_S_01": Tree(10, True, 0.52),
-    "Prop_Tree_Cedar_S_02": Tree(5, True, 0.13),
-    # "Prop_Tree_Cedar_S_04": Tree(17, True, 1),
-    # "Prop_Tree_Cedar_S_05": Tree(10, True, 0.7),
-    # "Prop_Tree_Cedar_S_06": Tree(6, True, 0.6),
-    # "Prop_Tree_Cypress_01": Tree(18, True, 0.7),
-    "Prop_Tree_Eng_Oak_01": Tree(17, True, 1.13),
-    "Prop_Tree_Eucalip_01": Tree(32, True, 1.51, -0.4),
-    "Prop_Tree_Fallen_Pine_01": Tree(11, False, 1.25),
-    "Prop_Tree_Jacada_01": Tree(14, True, 0.56),
-    "Prop_Tree_Jacada_02": Tree(11, True, 0.71),
-    "Prop_Tree_Maple_02": Tree(8, False, 0.41),
-    "Prop_Tree_Maple_03": Tree(9, False, 0.35),
-    "Prop_Tree_Mquite_01": Tree(5, False, 0.42),  # wrong bounding box
-    "Prop_Tree_Oak_01": Tree(23, True, 2.68, -0.1),
-    "Prop_Tree_Pine_01": Tree(31, False, 0.82),
-    "Prop_Tree_Pine_02": Tree(29, False, 0.80),
-    # "Prop_Tree_Stump_01": Tree(2, False, 0.70),
-    "Prop_W_R_Cedar_01": Tree(25, False, 1.34),
-    "Prop_W_R_Cedar_Dead": Tree(22, False, 1.34),
-    "TEST_Tree_Cedar_Trunk_001": Tree(35, False, 1.03),
-    "TEST_Tree_Forest_Trunk_01": Tree(104, True, 4.82, -0.5),
-    # "TEST_Tree_Forest_Trunk_Base_01": Tree(3, True, 4.25),
+    "prop_s_pine_dead_01": Tree(12, False, 0.55),
+    "prop_tree_birch_01": Tree(16, True, 0.95),
+    "prop_tree_birch_02": Tree(12, True, 0.63),
+    "prop_tree_birch_03": Tree(8, True, 0.24, -0.08),
+    "prop_tree_birch_03b": Tree(6, True, 0.18),
+    "prop_tree_birch_04": Tree(13, True, 0.57),
+    "prop_tree_cedar_02": Tree(31, False, 0.89),
+    "prop_tree_cedar_03": Tree(36, False, 0.65),
+    "prop_tree_cedar_04": Tree(33, False, 1.1),
+    "prop_tree_cedar_s_01": Tree(10, True, 0.52),
+    "prop_tree_cedar_s_02": Tree(5, True, 0.13),
+    # "prop_tree_cedar_s_04": Tree(17, True, 1),
+    # "prop_tree_cedar_s_05": Tree(10, True, 0.7),
+    # "prop_tree_cedar_s_06": Tree(6, True, 0.6),
+    # "prop_tree_cypress_01": Tree(18, True, 0.7),
+    "prop_tree_eng_oak_01": Tree(17, True, 1.13),
+    "prop_tree_eucalip_01": Tree(32, True, 1.51, -0.4),
+    "prop_tree_fallen_pine_01": Tree(11, False, 1.25),
+    "prop_tree_jacada_01": Tree(14, True, 0.56),
+    "prop_tree_jacada_02": Tree(11, True, 0.71),
+    "prop_tree_maple_02": Tree(8, False, 0.41),
+    "prop_tree_maple_03": Tree(9, False, 0.35),
+    "prop_tree_mquite_01": Tree(5, False, 0.42),
+    "prop_tree_oak_01": Tree(23, True, 2.68, -0.1),
+    "prop_tree_pine_01": Tree(31, False, 0.82),
+    "prop_tree_pine_02": Tree(29, False, 0.80),
+    # "prop_tree_stump_01": Tree(2, False, 0.70),
+    "prop_w_r_cedar_01": Tree(25, False, 1.34),
+    "prop_w_r_cedar_dead": Tree(22, False, 1.34),
+    "test_tree_cedar_trunk_001": Tree(35, False, 1.03),
+    "test_tree_forest_trunk_01": Tree(104, True, 4.82, -0.5),
+    # "test_tree_forest_trunk_base_01": Tree(3, True, 4.25),
 }
 
 trees_reduced_probability = {
-    "Prop_S_Pine_Dead_01",
-    "Prop_Tree_Fallen_Pine_01",
-    "Prop_W_R_Cedar_Dead"
+    "prop_s_pine_dead_01",
+    "prop_tree_fallen_pine_01",
+    "prop_w_r_cedar_dead"
 }
 
 trees_giant = set()
@@ -189,7 +189,7 @@ def repl(matchobj):
         props = props - trees_only_flatlands
 
     if heights[3][0] > random.uniform(120, 140):
-        props = props - {"Prop_Tree_Eucalip_01"}
+        props = props - {"prop_tree_eucalip_01"}
 
     if random.random() < 0.5:
         props = props - trees_reduced_probability
@@ -204,11 +204,11 @@ def repl(matchobj):
             scaleXY = scaleZ = random.uniform(0.3, 0.6)
         else:
             scaleXY = scaleZ = random.uniform(0.7, 1.1)
-    elif prop == "TEST_Tree_Forest_Trunk_Base_01":
+    elif prop == "test_tree_forest_trunk_base_01":
         scaleXY = scaleZ = random.uniform(0.7, 1.1)
-    elif prop == "Prop_Tree_Oak_01":
+    elif prop == "prop_tree_oak_01":
         scaleXY = scaleZ = random.uniform(1, 1.5)
-    elif prop == "Prop_Tree_Eucalip_01":
+    elif prop == "prop_tree_eucalip_01":
         scaleXY = scaleZ = random.uniform(1, 1.8)
     elif prop in trees_xlarge_large:
         adaptedOrigScaleZ = origHeight / trees[prop].height
@@ -257,7 +257,7 @@ for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "ma
     f.close()
 
     content_new = re.sub('(<Item type="CEntityDef">' +
-                         '\\s*<archetypeName>)(TEST_Tree_Forest_Trunk_01)(</archetypeName>' +
+                         '\\s*<archetypeName>)(test_tree_forest_trunk_01)(</archetypeName>' +
                          '(?:\\s*<[^/].*>)*' +
                          '\\s*<position[^>]*\\s+z=")([^"]+)("\\s*/>' +
                          '(?:\\s*<[^/].*>)*' +

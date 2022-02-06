@@ -87,7 +87,7 @@ class EntropyCreator:
         return entity in self.ytypItems and entity.lower().startswith(EntropyCreator.CANDIDATES_ROTATION)
 
     def repl(self, match: Match) -> str:
-        entity = match.group(2)
+        entity = match.group(2).lower()
         origScaleXY = float(match.group(8))
         origScaleZ = float(match.group(10))
 

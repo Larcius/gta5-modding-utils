@@ -40,14 +40,14 @@ class StatisticsPrinter:
                          '\\s*</Item>'
 
             for match in re.finditer(expression, content):
-                archetypeName = match.group(1)
+                archetypeName = match.group(1).lower()
 
                 if archetypeName in self.ytypItems:
                     ytypName = self.ytypItems[archetypeName].parent
                 else:
                     ytypName = "others"
 
-                # if not tree.startswith("Prop_S_Pine_") and not tree.startswith("Prop_Tree_") and not tree.startswith("Prop_W_R_Cedar_") and not tree.startswith("TEST_Tree_"):
+                # if not tree.startswith("prop_s_pine_") and not tree.startswith("prop_tree_") and not tree.startswith("prop_w_r_cedar_") and not tree.startswith("test_tree_"):
                 #	continue
 
                 if ytypName not in self.countProps:

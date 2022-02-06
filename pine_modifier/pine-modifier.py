@@ -38,7 +38,7 @@ for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "ma
     content = f.read()
 
     content_new = re.sub('(<Item type="CEntityDef">' +
-                         '\\s*<archetypeName>Prop_Tree_Pine_0[12]</archetypeName>' +
+                         '\\s*<archetypeName>prop_tree_pine_0[12]</archetypeName>' +
                          '(?:\\s*<[^/].*>)*' +
                          '\\s*<scaleXY\\s+value=")[^"]+("\\s*/>' +
                          '\\s*<scaleZ\\s+value="([^"]+)"\\s*/>' +

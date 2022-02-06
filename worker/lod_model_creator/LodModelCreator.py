@@ -55,9 +55,9 @@ class LodModelCreator:
             return self.uvSideMin is not None and self.uvSideMax is not None
 
         def getTextureDictionary(self, prefix: str) -> str:
-            if self.name.startswith("Prop_Bush_"):
+            if self.name.startswith("prop_bush_"):
                 dictMain = "bushes"
-            elif self.name.startswith("Prop_Palm_") or self.name.startswith("Prop_Fan_Palm_"):
+            elif self.name.startswith("prop_palm_") or self.name.startswith("prop_fan_palm_"):
                 dictMain = "palms"
             else:
                 dictMain = "trees"
@@ -92,93 +92,94 @@ class LodModelCreator:
     def prepareLodCandidates(self):
         trees = {
             # trees
-            "Prop_Tree_Birch_01": LodModelCreator.Tree("Prop_Tree_Birch_01", 0.546875, 0.6640625, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1),
+            "prop_tree_birch_01": LodModelCreator.Tree("prop_tree_birch_01", 0.546875, 0.6640625, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1),
                 UV(0.7734375, 0.5078125)),
-            "Prop_Tree_Birch_02": LodModelCreator.Tree("Prop_Tree_Birch_02", 0.421875, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1),
+            "prop_tree_birch_02": LodModelCreator.Tree("prop_tree_birch_02", 0.421875, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1),
                 UV(0.765625, 0.3671875)),
-            "Prop_Tree_Birch_03": LodModelCreator.Tree("Prop_Tree_Birch_03", 0.546875),
-            "Prop_Tree_Birch_03b": LodModelCreator.Tree("Prop_Tree_Birch_03b", 0.5625),
-            "Prop_Tree_Birch_04": LodModelCreator.Tree("Prop_Tree_Birch_04", 0.5625, 0.421875, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0),
+            "prop_tree_birch_03": LodModelCreator.Tree("prop_tree_birch_03", 0.546875),
+            "prop_tree_birch_03b": LodModelCreator.Tree("prop_tree_birch_03b", 0.5625),
+            "prop_tree_birch_04": LodModelCreator.Tree("prop_tree_birch_04", 0.5625, 0.421875, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0),
                 UV(0.7734375, 0.453125)),
-            "Prop_Tree_Maple_02": LodModelCreator.Tree("Prop_Tree_Maple_02", 0.421875),
-            "Prop_Tree_Maple_03": LodModelCreator.Tree("Prop_Tree_Maple_03", 0.5),
-            "Prop_Tree_Cedar_02": LodModelCreator.Tree("Prop_Tree_Cedar_02", 0.515625, 0.46315789473, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "Prop_Tree_Cedar_03": LodModelCreator.Tree("Prop_Tree_Cedar_03", 0.5390625, 0.51052631578, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "Prop_Tree_Cedar_04": LodModelCreator.Tree("Prop_Tree_Cedar_04", 0.484375, 0.3947368421, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1),
+            "prop_tree_maple_02": LodModelCreator.Tree("prop_tree_maple_02", 0.421875),
+            # TODO provide top view
+            "prop_tree_maple_03": LodModelCreator.Tree("prop_tree_maple_03", 0.5),
+            "prop_tree_cedar_02": LodModelCreator.Tree("prop_tree_cedar_02", 0.515625, 0.46315789473, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_tree_cedar_03": LodModelCreator.Tree("prop_tree_cedar_03", 0.5390625, 0.51052631578, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_tree_cedar_04": LodModelCreator.Tree("prop_tree_cedar_04", 0.484375, 0.3947368421, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1),
                 UV(0.484375, 0.87890625)),
-            "Prop_Tree_Cedar_S_01": LodModelCreator.Tree("Prop_Tree_Cedar_S_01", 0.484375, 0.71875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1),
+            "prop_tree_cedar_s_01": LodModelCreator.Tree("prop_tree_cedar_s_01", 0.484375, 0.71875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1),
                 UV(0.46875, 0.8203125)),
-            "Prop_Tree_Cedar_S_04": LodModelCreator.Tree("Prop_Tree_Cedar_S_04", 0.5, 0.68269230769, UV(0, 0), UV(1, 0.8125), UV(0, 1), UV(1, 0.8125)),
-            "Prop_Tree_Cedar_S_05": LodModelCreator.Tree("Prop_Tree_Cedar_S_05", 0.46875),
-            "Prop_Tree_Cedar_S_06": LodModelCreator.Tree("Prop_Tree_Cedar_S_06", 0.5),
-            "Prop_Tree_Cypress_01": LodModelCreator.Tree("Prop_Tree_Cypress_01", 0.5),
-            "Prop_Tree_Eng_Oak_01": LodModelCreator.Tree("Prop_Tree_Eng_Oak_01", 0.5, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.75, 0.53125)),
-            "Prop_Tree_Eucalip_01": LodModelCreator.Tree("Prop_Tree_Eucalip_01", 0.5, 0.359375, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1)),
-            "Prop_Tree_Jacada_01": LodModelCreator.Tree("Prop_Tree_Jacada_01", 0.484375, 0.46875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "Prop_Tree_Jacada_02": LodModelCreator.Tree("Prop_Tree_Jacada_02", 0.515625, 0.546875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "Prop_Tree_Oak_01": LodModelCreator.Tree("Prop_Tree_Oak_01", 0.4765625, 0.4765625, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), UV(0.46875, 0.75)),
-            "Prop_Tree_Olive_01": LodModelCreator.Tree("Prop_Tree_Olive_01", 0.5, 0.40625, UV(0, 0), UV(1, 0.5), UV(0, 1), UV(1, 0.5)),
-            "Prop_Tree_Pine_01": LodModelCreator.Tree("Prop_Tree_Pine_01", 0.515625, 0.515625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
+            "prop_tree_cedar_s_04": LodModelCreator.Tree("prop_tree_cedar_s_04", 0.5, 0.68269230769, UV(0, 0), UV(1, 0.8125), UV(0, 1), UV(1, 0.8125)),
+            "prop_tree_cedar_s_05": LodModelCreator.Tree("prop_tree_cedar_s_05", 0.46875),
+            "prop_tree_cedar_s_06": LodModelCreator.Tree("prop_tree_cedar_s_06", 0.5),
+            "prop_tree_cypress_01": LodModelCreator.Tree("prop_tree_cypress_01", 0.5),
+            "prop_tree_eng_oak_01": LodModelCreator.Tree("prop_tree_eng_oak_01", 0.5, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.75, 0.53125)),
+            "prop_tree_eucalip_01": LodModelCreator.Tree("prop_tree_eucalip_01", 0.5, 0.359375, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1)),
+            "prop_tree_jacada_01": LodModelCreator.Tree("prop_tree_jacada_01", 0.484375, 0.46875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_jacada_02": LodModelCreator.Tree("prop_tree_jacada_02", 0.515625, 0.546875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_oak_01": LodModelCreator.Tree("prop_tree_oak_01", 0.4765625, 0.4765625, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), UV(0.46875, 0.75)),
+            "prop_tree_olive_01": LodModelCreator.Tree("prop_tree_olive_01", 0.5, 0.40625, UV(0, 0), UV(1, 0.5), UV(0, 1), UV(1, 0.5)),
+            "prop_tree_pine_01": LodModelCreator.Tree("prop_tree_pine_01", 0.515625, 0.515625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.515625, 0.79296875)),
-            "Prop_Tree_Pine_02": LodModelCreator.Tree("Prop_Tree_Pine_02", 0.546875, 0.6875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
+            "prop_tree_pine_02": LodModelCreator.Tree("prop_tree_pine_02", 0.546875, 0.6875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.5, 0.80078125)),
-            "Prop_Tree_Fallen_Pine_01": LodModelCreator.Tree("Prop_Tree_Fallen_Pine_01", 0.609375, 1, UV(0, 0), UV(1, 0.625)),
+            "prop_tree_fallen_pine_01": LodModelCreator.Tree("prop_tree_fallen_pine_01", 0.609375, 1, UV(0, 0), UV(1, 0.625)),
             # , UV(0, 1), UV(1, 0.625), UV(0.390625, 0.7734375)),
-            "Prop_S_Pine_Dead_01": LodModelCreator.Tree("Prop_S_Pine_Dead_01", 0.40625, 0.4875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
+            "prop_s_pine_dead_01": LodModelCreator.Tree("prop_s_pine_dead_01", 0.40625, 0.4875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.53125, 0.8515625)),
-            "Prop_W_R_Cedar_01": LodModelCreator.Tree("Prop_W_R_Cedar_01", 0.5, 0.8, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "Prop_W_R_Cedar_Dead": LodModelCreator.Tree("Prop_W_R_Cedar_Dead", 0.59375, 0.425, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
+            "prop_w_r_cedar_01": LodModelCreator.Tree("prop_w_r_cedar_01", 0.5, 0.8, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_w_r_cedar_dead": LodModelCreator.Tree("prop_w_r_cedar_dead", 0.59375, 0.425, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.53125, 0.78125)),
-            "TEST_Tree_Cedar_Trunk_001": LodModelCreator.Tree("TEST_Tree_Cedar_Trunk_001", 0.515625, 0.5769231, UV(0, 0), UV(1, 0.8125), UV(0, 1),
+            "test_tree_cedar_trunk_001": LodModelCreator.Tree("test_tree_cedar_trunk_001", 0.515625, 0.5769231, UV(0, 0), UV(1, 0.8125), UV(0, 1),
                 UV(1, 0.8125)),
-            "TEST_Tree_Forest_Trunk_01": LodModelCreator.Tree("TEST_Tree_Forest_Trunk_01", 0.515625, 0.3894231, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125),
+            "test_tree_forest_trunk_01": LodModelCreator.Tree("test_tree_forest_trunk_01", 0.515625, 0.3894231, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125),
                 UV(1, 1)),
-            "TEST_Tree_Forest_Trunk_04": LodModelCreator.Tree("TEST_Tree_Forest_Trunk_04", 0.453125, 1, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0),
+            "test_tree_forest_trunk_04": LodModelCreator.Tree("test_tree_forest_trunk_04", 0.453125, 1, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0),
                 UV(0.78125, 0.5546875), 0.6484375),
             # trees2
-            "Prop_Tree_LFicus_02": LodModelCreator.Tree("Prop_Tree_LFicus_02", 0.4453125, 0.55, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "Prop_Tree_LFicus_03": LodModelCreator.Tree("Prop_Tree_LFicus_03", 0.46875, 0.359375, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "Prop_Tree_LFicus_05": LodModelCreator.Tree("Prop_Tree_LFicus_05", 0.46875, 0.3125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "Prop_Tree_LFicus_06": LodModelCreator.Tree("Prop_Tree_LFicus_06", 0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), None, 0.15),
-            "Prop_Tree_Mquite_01": LodModelCreator.Tree("Prop_Tree_Mquite_01", 0.46875),
-            "Prop_Rio_Del_01": LodModelCreator.Tree("Prop_Rio_Del_01", 0.53125),
-            "Prop_Rus_Olive": LodModelCreator.Tree("Prop_Rus_Olive", 0.484375, 0.53125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_lficus_02": LodModelCreator.Tree("prop_tree_lficus_02", 0.4453125, 0.55, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_lficus_03": LodModelCreator.Tree("prop_tree_lficus_03", 0.46875, 0.359375, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_lficus_05": LodModelCreator.Tree("prop_tree_lficus_05", 0.46875, 0.3125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_lficus_06": LodModelCreator.Tree("prop_tree_lficus_06", 0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), None, 0.15),
+            "prop_tree_mquite_01": LodModelCreator.Tree("prop_tree_mquite_01", 0.46875),
+            "prop_rio_del_01": LodModelCreator.Tree("prop_rio_del_01", 0.53125),
+            "prop_rus_olive": LodModelCreator.Tree("prop_rus_olive", 0.484375, 0.53125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             # bushes
-            "Prop_Bush_Lrg_04b": LodModelCreator.Tree("Prop_Bush_Lrg_04b", 0.37333333, 0.40625, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None, None,
+            "prop_bush_lrg_04b": LodModelCreator.Tree("prop_bush_lrg_04b", 0.37333333, 0.40625, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None, None,
                 UV(0.5859375, 0), UV(1, 0.5), 0.45283018867),
-            "Prop_Bush_Lrg_04c": LodModelCreator.Tree("Prop_Bush_Lrg_04c", 0.37333333, 0.4375, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None, None,
+            "prop_bush_lrg_04c": LodModelCreator.Tree("prop_bush_lrg_04c", 0.37333333, 0.4375, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None, None,
                 UV(0.5859375, 0), UV(1, 0.5), 0.5660377358),
-            "Prop_Bush_Lrg_04d": LodModelCreator.Tree("Prop_Bush_Lrg_04d", 0.4, 0.421875, UV(0, 0), UV(0.5078125, 0.5), UV(0, 0.5), UV(0.75, 1), None, None,
+            "prop_bush_lrg_04d": LodModelCreator.Tree("prop_bush_lrg_04d", 0.4, 0.421875, UV(0, 0), UV(0.5078125, 0.5), UV(0, 0.5), UV(0.75, 1), None, None,
                 UV(0.5078125, 0), UV(1, 0.484375), 0.47619047619),
             # palms
-            "Prop_Palm_Fan_02_b": LodModelCreator.Tree("Prop_Palm_Fan_02_b", 0.515625, 0.25625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
+            "prop_palm_fan_02_b": LodModelCreator.Tree("prop_palm_fan_02_b", 0.515625, 0.25625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.484375, 0.8125)),
-            "Prop_Palm_Fan_03_c": LodModelCreator.Tree("Prop_Palm_Fan_03_c", 0.5, 0.166666667, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "Prop_Palm_Fan_03_d": LodModelCreator.Tree("Prop_Palm_Fan_03_d", 0.484375, 0.15865384615, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1),
+            "prop_palm_fan_03_c": LodModelCreator.Tree("prop_palm_fan_03_c", 0.5, 0.166666667, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_palm_fan_03_d": LodModelCreator.Tree("prop_palm_fan_03_d", 0.484375, 0.15865384615, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1),
                 UV(0.484375, 0.90625)),
-            "Prop_Palm_Fan_04_b": LodModelCreator.Tree("Prop_Palm_Fan_04_b", 0.484375, 0.321875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1),
+            "prop_palm_fan_04_b": LodModelCreator.Tree("prop_palm_fan_04_b", 0.484375, 0.321875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1),
                 UV(0.46875, 0.80859375)),
-            "Prop_Palm_Huge_01a": LodModelCreator.Tree("Prop_Palm_Huge_01a", 0.46875, 0.11574074074, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375),
+            "prop_palm_huge_01a": LodModelCreator.Tree("prop_palm_huge_01a", 0.46875, 0.11574074074, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375),
                 UV(0.484375, 0.921875)),
-            "Prop_Palm_Med_01b": LodModelCreator.Tree("Prop_Palm_Med_01b", 0.515625, 0.24431818181, UV(0, 0), UV(1, 0.6875), UV(0, 1), UV(1, 0.6875),
+            "prop_palm_med_01b": LodModelCreator.Tree("prop_palm_med_01b", 0.515625, 0.24431818181, UV(0, 0), UV(1, 0.6875), UV(0, 1), UV(1, 0.6875),
                 UV(0.546875, 0.84375)),
-            "Prop_Palm_Sm_01e": LodModelCreator.Tree("Prop_Palm_Sm_01e", 0.515625, None, UV(0, 0), UV(1, 1)),
+            "prop_palm_sm_01e": LodModelCreator.Tree("prop_palm_sm_01e", 0.515625, None, UV(0, 0), UV(1, 1)),
         }
         # add other Props that should use the same UV mapping
-        trees["Prop_Palm_Sm_01d"] = trees["Prop_Palm_Sm_01f"] = \
-            trees["Prop_Palm_Sm_01e"]
-        trees["Prop_Palm_Med_01a"] = trees["Prop_Palm_Med_01c"] = \
-            trees["Prop_Palm_Med_01b"]
-        trees["Prop_Fan_Palm_01a"] = trees["Prop_Palm_Fan_02_a"] = \
-            trees["Prop_Palm_Fan_02_b"]
-        trees["Prop_Palm_Sm_01a"] = trees["Prop_Palm_Fan_04_a"] = trees["Prop_Palm_Fan_04_b"] = \
-            trees["Prop_Palm_Fan_04_b"]
-        trees["Prop_Palm_Fan_03_a"] = trees["Prop_Palm_Fan_03_b"] = trees["Prop_Palm_Fan_03_c_graff"] = trees["Prop_Palm_Fan_04_c"] = \
-            trees["Prop_Palm_Fan_03_c"]
-        trees["Prop_Palm_Med_01d"] = trees["Prop_Palm_Fan_03_d_Graff"] = trees["Prop_Palm_Fan_04_d"] = \
-            trees["Prop_Palm_Fan_03_d"]
-        trees["Prop_Palm_Huge_01b"] = \
-            trees["Prop_Palm_Huge_01a"]
+        trees["prop_palm_sm_01d"] = trees["prop_palm_sm_01f"] = \
+            trees["prop_palm_sm_01e"]
+        trees["prop_palm_med_01a"] = trees["prop_palm_med_01c"] = \
+            trees["prop_palm_med_01b"]
+        trees["prop_fan_palm_01a"] = trees["prop_palm_fan_02_a"] = \
+            trees["prop_palm_fan_02_b"]
+        trees["prop_palm_sm_01a"] = trees["prop_palm_fan_04_a"] = trees["prop_palm_fan_04_b"] = \
+            trees["prop_palm_fan_04_b"]
+        trees["prop_palm_fan_03_a"] = trees["prop_palm_fan_03_b"] = trees["prop_palm_fan_03_c_graff"] = trees["prop_palm_fan_04_c"] = \
+            trees["prop_palm_fan_03_c"]
+        trees["prop_palm_med_01d"] = trees["prop_palm_fan_03_d_graff"] = trees["prop_palm_fan_04_d"] = \
+            trees["prop_palm_fan_03_d"]
+        trees["prop_palm_huge_01b"] = \
+            trees["prop_palm_huge_01a"]
 
         self.trees = trees
 
@@ -327,6 +328,7 @@ class LodModelCreator:
 
         for name in natsorted(self.trees):
             if name not in self.ytyps:
+                print("WARNING: could not find archetype " + name + " in any of the provided ytyp files. Skipping lod creation for this archetype.")
                 continue
 
             tree = self.trees[name]

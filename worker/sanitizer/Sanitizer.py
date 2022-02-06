@@ -14,12 +14,12 @@ from common.ytyp.YtypParser import YtypParser
 
 class Sanitizer:
     # REMOVE_ENTITIES = [
-    #    "Prop_Rub_Binbag.*",
-    #    "Prop_Rub_BoxPile.*",
-    #    "Prop_Rub_Cardpile.*",
-    #    "Prop_rub_Flotsam.*",
-    #    "Prop_rub_litter.*",
-    #    # "Prop_BoxPile.*",
+    #    "prop_rub_binbag.*",
+    #    "prop_rub_boxpile.*",
+    #    "prop_rub_cardpile.*",
+    #    "prop_rub_flotsam.*",
+    #    "prop_rub_litter.*",
+    #    # "prop_boxpile.*",
     #    "ng_proc_binbag.*",
     #    "bkr_prop_fakeid_binbag.*",
     #    "hei_prop_heist_binbag.*",
@@ -27,12 +27,12 @@ class Sanitizer:
     #    "prop_cs_street_binbag.*",
     #    "prop_ld_binbag.*",
     #    "prop_ld_rub_binbag.*",
-    #    # "Prop_Shrub_Rake",
-    #    # "Prop_Rub_Bike_02",
-    #    # "Prop_Rub_cabinet02",
-    #    # "Prop_Rub_Scrap_05",
-    #    # "Prop_Rub_Tyre_01",
-    #    # "Prop_Rub_Stool"
+    #    # "prop_shrub_rake",
+    #    # "prop_rub_bike_02",
+    #    # "prop_rub_cabinet02",
+    #    # "prop_rub_scrap_05",
+    #    # "prop_rub_tyre_01",
+    #    # "prop_rub_stool"
     # ]
     # removeEntitiesPattern = re.compile("(?:" + ")|(?:".join(REMOVE_ENTITIES) + ")", re.IGNORECASE)
 
@@ -67,7 +67,7 @@ class Sanitizer:
         self.lowercaseYtypItems = dict((k.lower(), k) for k, v in self.ytypItems.items())
 
     def repl(self, match: Match, fixedArchetypeNames: set[str]) -> str:
-        archetypeName = match.group(2)
+        archetypeName = match.group(2).lower()
 
         if archetypeName.lower() in self.lowercaseYtypItems and archetypeName not in self.ytypItems:
             fixedArchetypeName = self.lowercaseYtypItems[archetypeName.lower()]

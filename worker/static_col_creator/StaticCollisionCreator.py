@@ -17,6 +17,7 @@ from common.ymap.Flag import Flag
 class StaticCollisionCreator:
     MAX_NUM_CHILDREN = -1  # 255
     ENTITIES_EXTENTS_MAX_DIAGONAL = 420
+    IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION = True
 
     templateObnContent: str
 
@@ -315,21 +316,21 @@ class StaticCollisionCreator:
         if not self.isExistColModel(entity):
             return False
 
-        # if not flags & (Flag.UNKNOWN_3 | Flag.STATIC_ENTITY):
-        #	return False
-
-        #	TODO use this to not add collision of entities where flag DISABLE_EMBEDDED_COLLISION is set
-        #	if flags & Flag.DISABLE_EMBEDDED_COLLISION:
-        #		return False
+        if not StaticCollisionCreator.IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION and flags & Flag.DISABLE_EMBEDDED_COLLISION:
+            return False
 
         return True
 
     def replaceYmapCEntityDef(self, match: Match) -> str:
-        entity = match.group(1)
+        entity = match.group(1).lower()
         flags = int(match.group(2))
 
         if not self.shouldEntityBeUsedInStaticCol(entity, flags):
-            return match.group(0)
+            if StaticCollisionCreator.IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION:
+                flags &= ~Flag.DISABLE_EMBEDDED_COLLISION
+                return re.sub('(?<=<flags value=")[^"]+("\\s*/>)', str(flags) + "\\g<1>", match.group(0), flags=re.M)
+            else:
+                return match.group(0)
 
         flags |= Flag.DISABLE_EMBEDDED_COLLISION
 
@@ -580,7 +581,7 @@ class StaticCollisionCreator:
         # <!-- clustering
         pattern = re.compile('[\t ]*<Item type="CEntityDef">' +
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                             '\\s*<flags value="([^"]+)"\\s*/>' + \
+                             '\\s*<flags value="([^"]+)"\\s*/>' +
                              '(?:\\s*<[^/].*>)*' +
                              '\\s*<position x="([^"]+)" y="([^"]+)" z="[^"]+"\\s*/>' +
                              '(?:\\s*<[^/].*>)*' +
@@ -590,7 +591,7 @@ class StaticCollisionCreator:
 
         coords = []
         for matchobj in re.finditer(pattern, mapContent):
-            if self.shouldEntityBeUsedInStaticCol(matchobj.group(1), int(matchobj.group(2))):
+            if self.shouldEntityBeUsedInStaticCol(matchobj.group(1).lower(), int(matchobj.group(2))):
                 coords.append([float(matchobj.group(3)), float(matchobj.group(4))])
 
         foundScolModel = len(coords) > 0

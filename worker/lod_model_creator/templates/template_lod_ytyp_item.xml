@@ -7,12 +7,12 @@
       <bsCentre x="${BSPHERE.CENTER.X}" y="${BSPHERE.CENTER.Y}" z="${BSPHERE.CENTER.Z}"/>
       <bsRadius value="${BSPHERE.RADIUS}"/>
       <hdTextureDist value="2500.00000000"/>
-      <name>${PROP_NAME.NORMAL}_LOD</name>
+      <name>${PROP_NAME.NORMAL}_lod</name>
       <textureDictionary>${TEXTURE_DICTIONARY}</textureDictionary>
       <clipDictionary/>
       <drawableDictionary/>
       <physicsDictionary/>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
-      <assetName>${PROP_NAME.NORMAL}_LOD</assetName>
+      <assetName>${PROP_NAME.NORMAL}_lod</assetName>
       <extensions/>
     </Item>

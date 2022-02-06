@@ -50,7 +50,7 @@ class YtypParser:
             bbMax = [float(match.group(5)), float(match.group(6)), float(match.group(7))]
             bsCenter = [float(match.group(8)), float(match.group(9)), float(match.group(10))]
             bsRadius = float(match.group(11))
-            name = match.group(12)
+            name = match.group(12).lower()
             items[name] = YtypItem(lodDist, Box(bbMin, bbMax), Sphere(bsCenter, bsRadius), parent)
 
         return items

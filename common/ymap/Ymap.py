@@ -13,10 +13,10 @@ from common.ytyp.YtypItem import YtypItem
 class Ymap:
     @staticmethod
     def _replCalculateAndReplaceLodDistance(match: Match, ytypItems: dict[str, YtypItem], onlyIfLodModelExists: bool):
-        archetypeName = match.group(2)
-        archetypeNameLod = archetypeName + "_LOD"
+        archetypeName = match.group(2).lower()
+        archetypeNameLod = archetypeName + "_lod"
 
-        # TODO nicht nur onlyIfLodModelExists auswerten, sondern allgemein handhaben anhand von parentIndex
+        # TODO do not just check for onlyIfLodModelExists but more generally by looking at parentIndex
         hasParent = onlyIfLodModelExists
 
         if onlyIfLodModelExists and archetypeNameLod not in ytypItems:

@@ -151,16 +151,6 @@ def main(argv):
 
         nextInputDir = sanitizerWorker.outputDir
 
-    if staticCol:
-        staticCollisionCreator = StaticCollisionCreator(nextInputDir, os.path.join(tempOutputDir, "static_col"))
-        staticCollisionCreator.run()
-
-        outputStaticColsDir = os.path.join(outputDir, prefix)
-        os.makedirs(outputStaticColsDir)
-        moveDirectory(staticCollisionCreator.getOutputDirCollisionModels(), outputStaticColsDir)
-
-        nextInputDir = staticCollisionCreator.getOutputDirMaps()
-
     if lodMap:
         lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix, outputLodModelsDir)
         lodMapCreator.run()
@@ -174,6 +164,16 @@ def main(argv):
         moveDirectory(lodMapCreator.getOutputDirMeshes(), outputMeshesDir)
 
         nextInputDir = lodMapCreator.getOutputDirMaps()
+
+    if staticCol:
+        staticCollisionCreator = StaticCollisionCreator(nextInputDir, os.path.join(tempOutputDir, "static_col"))
+        staticCollisionCreator.run()
+
+        outputStaticColsDir = os.path.join(outputDir, prefix)
+        os.makedirs(outputStaticColsDir)
+        moveDirectory(staticCollisionCreator.getOutputDirCollisionModels(), outputStaticColsDir)
+
+        nextInputDir = staticCollisionCreator.getOutputDirMaps()
 
     if statistics:
         statisticsPrinter = StatisticsPrinter(nextInputDir)
