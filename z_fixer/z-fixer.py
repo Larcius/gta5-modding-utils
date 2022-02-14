@@ -1,5 +1,4 @@
 # TODO refactoring needed
-
 import os
 import random
 import re
@@ -31,6 +30,9 @@ ENABLE_MODE_EXTRACT = True
 DISABLE_INCREASE_OF_Z = False
 
 IGNORE_BUSHES = True
+
+DELETE_IF_ON_STREET = True
+
 
 # trees can be found at x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\
 # and update\x64\dlcpacks\patchday2ng\dlc.rpf\x64\levels\gta5\props\vegetation\v_trees.rpf
@@ -115,22 +117,22 @@ else:
     heightmap = open(os.path.join(os.path.dirname(__file__), 'heights', 'hmap.txt'), 'r')
 
 
-def getMinHeight():
+def getMinHeight() -> [float, float]:
     global heightmap
 
-    heightmapEntry = heightmap.readline()
+    heightmapEntry = heightmap.readline().rstrip("\n")
     if not heightmapEntry:
         print("ERROR: cannot get entry in heightmap")
         quit()
 
     parts = heightmapEntry.split(",")
 
-    if len(parts) < 4:
+    if len(parts) < 5:
         print("ERROR: invalid line in heightmap entry:")
         print(heightmapEntry)
         quit()
 
-    return float(parts[3])
+    return float(parts[3]), float(parts[4])
 
 
 def floatToStr(val):
@@ -172,17 +174,22 @@ def repl(matchobj):
                         "," + str(tree.trunkRadius * scaleXY) + "\n")
         return matchobj.group(0)
 
-    minHeight = getMinHeight()
+    minHeight, distanceToStreet = getMinHeight()
 
     calcZCoord = minHeight - transformed[2]
 
     if DISABLE_INCREASE_OF_Z and calcZCoord > coords[2]:
         calcZCoord = coords[2]
 
+    position = [float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))]
+
     if abs(calcZCoord - coords[2]) > 1:
-        position = [float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))]
         print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - coords[2],
               "(new z coordinate is " + str(calcZCoord) + ")")
+
+    if DELETE_IF_ON_STREET and distanceToStreet < 3 + tree.trunkRadius * scaleXY:
+        print("INFO: removing", prop, "at position", position, "because it is placed on a street or path")
+        return ""
 
     return matchobj.group(1) + floatToStr(calcZCoord) + matchobj.group(6)
 
@@ -202,10 +209,10 @@ for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "ma
                          '\\s*<position x="([^>]+)" y="([^>]+)" z=")([^"]+)("\\s*/>' +
                          '\\s*<rotation x="([^>]+)" y="([^>]+)" z="([^"]+)" w="([^"]+)"\\s*/>' +
                          '(?:\\s*<[^/].*>)*' +
-                         '\\s*<scaleXY\s+value="([^"]+)"\\s*/>' +
-                         '\\s*<scaleZ\s+value="([^"]+)"\\s*/>' +
+                         '\\s*<scaleXY\\s+value="([^"]+)"\\s*/>' +
+                         '\\s*<scaleZ\\s+value="([^"]+)"\\s*/>' +
                          '(?:\\s*<[^/].*>)*' +
-                         '\\s*</Item>)', repl, content, flags=re.M)
+                         '\\s*</Item>\\s*)', repl, content, flags=re.M)
 
     if not ENABLE_MODE_EXTRACT:
         f = open(os.path.join(os.path.dirname(__file__), "generated", filename), 'w')

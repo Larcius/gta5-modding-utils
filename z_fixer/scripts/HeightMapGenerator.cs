@@ -162,6 +162,29 @@ namespace HeightMap
 			Game.Player.Character.Position = new Vector3(x, y, z);
 		}
 
+		private Vector3 getClosestPointOnLineSegment(Vector3 pos, Vector3 linePoint1, Vector3 linePoint2) {
+			Vector3 d = (linePoint2 - linePoint1).Normalized;
+			Vector3 v = pos - linePoint1;
+			float t = Vector3.Dot(v, d);
+			return linePoint1 + d * t;
+		}
+
+		private Vector3 getNearestPositionOnStreet(Vector3 position) {
+			OutputArgument outPos = new OutputArgument();
+
+			Function.Call(Hash.GET_NTH_CLOSEST_VEHICLE_NODE, position.X, position.Y, position.Z, 1, outPos, 1, 0x40400000, 0);
+			Vector3 next1 = outPos.GetResult<Vector3>();
+
+			Function.Call(Hash.GET_NTH_CLOSEST_VEHICLE_NODE, position.X, position.Y, position.Z, 2, outPos, 1, 0x40400000, 0);
+			Vector3 next2 = outPos.GetResult<Vector3>();
+
+			if (position.DistanceTo(next2) > 25) {
+				return next1;
+			} else {
+				return getClosestPointOnLineSegment(position, next1, next2);
+			}
+		}
+
 		private void OnTick(object sender, EventArgs e)
 		{
 			if (writer == null) {
@@ -247,6 +270,12 @@ namespace HeightMap
 				}
 
 				writer.Write(minZ.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+				Vector3 position = new Vector3(coords.X, coords.Y, z);
+				Vector3 nextPositionOnStreet = getNearestPositionOnStreet(position);
+				float distanceToStreet = position.DistanceTo(nextPositionOnStreet);
+				writer.Write(",");
+				writer.Write(distanceToStreet.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
 				if (addWarning) {
 					writer.Write(",WARNING: could not get z coordinate so just used the one from the input file or 0 if NaN was given");

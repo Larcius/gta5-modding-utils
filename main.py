@@ -6,6 +6,7 @@ import shutil
 import sys
 
 from worker.EntropyCreator import EntropyCreator
+from worker.vegetation_creator.VegetationCreator import VegetationCreator
 from worker.clustering.Clustering import Clustering
 from worker.lod_map_creator.LodMapCreator import LodMapCreator
 from worker.lod_model_creator.LodModelCreator import LodModelCreator
@@ -27,6 +28,7 @@ def copyDirectory(src: str, dest: str):
 def main(argv):
     inputDir = None
     outputDir = None
+    vegetationCreator = False
     clustering = False
     numClusters = -1
     lodModel = False
@@ -42,7 +44,7 @@ def main(argv):
 
     try:
         opts, args = getopt.getopt(argv, "h?i:o:",
-            ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "lodModel=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics="])
+            ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "lodModel=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
     except getopt.GetoptError:
         print("ERROR: Unknown argument. Please see below for usage.")
         print(usageMsg)
@@ -58,6 +60,8 @@ def main(argv):
             outputDir = arg
         elif opt == "--prefix":
             prefix = arg
+        elif opt == "--vegetationCreator":
+            vegetationCreator = bool(distutils.util.strtobool(arg))
         elif opt == "--clustering":
             clustering = bool(distutils.util.strtobool(arg))
         elif opt == "--numClusters":
@@ -75,7 +79,7 @@ def main(argv):
         elif opt == "--statistics":
             statistics = bool(distutils.util.strtobool(arg))
 
-    if not clustering and not lodModel and not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
+    if not vegetationCreator and not clustering and not lodModel and not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
         print("ERROR: No goal specified, nothing to do.")
         print(usageMsg)
         sys.exit(2)
@@ -120,6 +124,18 @@ def main(argv):
     tempOutputDir = os.path.join(outputDir, "_temp_")
     os.makedirs(tempOutputDir)
 
+    if vegetationCreator:
+        vegetationCreatorWorker = VegetationCreator(nextInputDir, os.path.join(tempOutputDir, "vegetationCreator"), prefix)
+        vegetationCreatorWorker.run()
+
+        nextInputDir = vegetationCreatorWorker.outputDir
+
+    if entropy:
+        entropyCreator = EntropyCreator(nextInputDir, os.path.join(tempOutputDir, "entropy"), False, True, False, True)
+        entropyCreator.run()
+
+        nextInputDir = entropyCreator.outputDir
+
     if clustering:
         clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix, numClusters)
         clusteringWorker.run()
@@ -138,12 +154,6 @@ def main(argv):
         outputLodMeshesDir = os.path.join(outputDir, os.path.basename(lodModelCreator.getOutputMeshesDir()))
         os.makedirs(outputLodMeshesDir)
         moveDirectory(lodModelCreator.getOutputMeshesDir(), outputLodMeshesDir)
-
-    if entropy:
-        entropyCreator = EntropyCreator(nextInputDir, os.path.join(tempOutputDir, "entropy"), False, True, True)
-        entropyCreator.run()
-
-        nextInputDir = entropyCreator.outputDir
 
     if sanitizer:
         sanitizerWorker = Sanitizer(nextInputDir, os.path.join(tempOutputDir, "sanitizer"))

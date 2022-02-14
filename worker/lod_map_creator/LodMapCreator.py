@@ -625,42 +625,12 @@ class LodMapCreator:
         return min(LodMapCreator.SLOD_DISTANCE - 1, round(LodMapCreator.LOD_DISTANCE + slodFurthestDistance))
 
     def determinePrefixBundles(self):
-        self.bundlePrefixes = []
-        numMatches = 0
-        candidate = None
+        mapNames = []
         for filename in natsorted(os.listdir(self.inputDir)):
-            if not filename.endswith(".ymap.xml") or filename.endswith("_lod.ymap.xml"):
-                continue
+            if filename.endswith(".ymap.xml") and not filename.endswith("_lod.ymap.xml"):
+                mapNames.append(filename[:-9])
 
-            mapName = filename[:-9]
-
-            if candidate is None:
-                candidate = mapName
-
-            parts = [candidate.rstrip("_"), "", ""]
-            while not mapName.startswith(parts[0]):
-                parts = parts[0].rpartition("_")
-
-            newCandidate = parts[0]
-
-            if newCandidate == "":
-                if numMatches > 0:
-                    self.bundlePrefixes.append(candidate)
-                numMatches = 1
-                candidate = mapName
-            elif newCandidate == candidate:
-                numMatches += 1
-            else:
-                if numMatches > 1:
-                    self.bundlePrefixes.append(candidate)
-                    numMatches = 1
-                    candidate = mapName
-                else:
-                    numMatches += 1
-                    candidate = newCandidate
-
-        if candidate != "" and numMatches > 0:
-            self.bundlePrefixes.append(candidate)
+        self.bundlePrefixes = Util.determinePrefixBundles(mapNames)
 
     def processFiles(self):
         for mapPrefix in self.bundlePrefixes:

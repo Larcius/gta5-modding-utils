@@ -178,3 +178,48 @@ class Util:
         content = file.read()
         file.close()
         return content
+
+    @staticmethod
+    def calculateAngle(vertexMiddle: list[float], vertex1: list[float], vertex2: list[float]) -> float:
+        vector1 = np.subtract(vertex1, vertexMiddle)
+        vector2 = np.subtract(vertex2, vertexMiddle)
+
+        unitVector1 = vector1 / np.linalg.norm(vector1)
+        unitVector2 = vector2 / np.linalg.norm(vector2)
+        return np.arccos(np.dot(unitVector1, unitVector2))
+
+    @staticmethod
+    def determinePrefixBundles(names: list[str]) -> list[str]:
+        bundlePrefixes = []
+        numMatches = 0
+        candidate = None
+        for name in natsorted(names):
+            if candidate is None:
+                candidate = name
+
+            parts = [candidate.rstrip("_"), "", ""]
+            while not name.startswith(parts[0]):
+                parts = parts[0].rpartition("_")
+
+            newCandidate = parts[0]
+
+            if newCandidate == "":
+                if numMatches > 0:
+                    bundlePrefixes.append(candidate)
+                numMatches = 1
+                candidate = name
+            elif newCandidate == candidate:
+                numMatches += 1
+            else:
+                if numMatches > 1:
+                    bundlePrefixes.append(candidate)
+                    numMatches = 1
+                    candidate = name
+                else:
+                    numMatches += 1
+                    candidate = newCandidate
+
+        if candidate != "" and numMatches > 0:
+            bundlePrefixes.append(candidate)
+
+        return bundlePrefixes

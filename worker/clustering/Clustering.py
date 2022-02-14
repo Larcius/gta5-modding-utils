@@ -64,14 +64,14 @@ class Clustering:
     def processFiles(self):
         coords = []
         customPostEntities = []
-        numFiles = 0
+        mapNames = []
         for filename in natsorted(os.listdir(self.inputDir)):
             if not filename.endswith(".ymap.xml"):
                 continue
 
             print("\treading " + filename)
 
-            numFiles += 1
+            mapNames.append(filename[:-9])
 
             f = open(os.path.join(self.inputDir, filename), 'r')
             content = f.read()
@@ -94,7 +94,7 @@ class Clustering:
         if not coords:
             return
 
-        print("\tperforming clustering of " + str(numFiles) + " ymap files and in total " + str(len(coords)) + " entities")
+        print("\tperforming clustering of " + str(len(mapNames)) + " ymap files and in total " + str(len(coords)) + " entities")
 
         if self.numCluster > 0:
             clusters, unused, furthestDistances = Util.performClusteringFixedNumClusters(coords, self.numCluster)
@@ -106,8 +106,9 @@ class Clustering:
         numDigitsMapIndices = math.ceil(math.log(numClusters, 10))
 
         outputFiles = {}
+        mapPrefix = Util.determinePrefixBundles(mapNames)[0]
         for cluster in np.unique(clusters):
-            outputFiles[cluster] = open(os.path.join(self.outputDir, self.prefix + "_" + str(cluster + 1).zfill(numDigitsMapIndices) + ".ymap.xml"), 'w')
+            outputFiles[cluster] = open(os.path.join(self.outputDir, mapPrefix + "_" + str(cluster + 1).zfill(numDigitsMapIndices) + ".ymap.xml"), 'w')
             outputFiles[cluster].write(contentPreEntities)
 
         i = 0

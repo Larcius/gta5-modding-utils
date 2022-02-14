@@ -18,6 +18,7 @@ class StaticCollisionCreator:
     MAX_NUM_CHILDREN = -1  # 255
     ENTITIES_EXTENTS_MAX_DIAGONAL = 420
     IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION = True
+    IGNORE_IF_SCALING_CLOSE_TO_IDENTITY = True
 
     templateObnContent: str
 
@@ -312,11 +313,14 @@ class StaticCollisionCreator:
     def isExistColModel(self, entity: str) -> bool:
         return os.path.exists(self.getColModelPathCandidate(entity))
 
-    def shouldEntityBeUsedInStaticCol(self, entity: str, flags: int) -> bool:
+    def shouldEntityBeUsedInStaticCol(self, entity: str, flags: int, scale: list[float]) -> bool:
         if not self.isExistColModel(entity):
             return False
 
         if not StaticCollisionCreator.IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION and flags & Flag.DISABLE_EMBEDDED_COLLISION:
+            return False
+
+        if StaticCollisionCreator.IGNORE_IF_SCALING_CLOSE_TO_IDENTITY and min(scale) >= 0.9 and max(scale) <= 1.1:
             return False
 
         return True
@@ -325,7 +329,9 @@ class StaticCollisionCreator:
         entity = match.group(1).lower()
         flags = int(match.group(2))
 
-        if not self.shouldEntityBeUsedInStaticCol(entity, flags):
+        scale = [float(match.group(10)), float(match.group(10)), float(match.group(11))]
+
+        if not self.shouldEntityBeUsedInStaticCol(entity, flags, scale):
             if StaticCollisionCreator.IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION:
                 flags &= ~Flag.DISABLE_EMBEDDED_COLLISION
                 return re.sub('(?<=<flags value=")[^"]+("\\s*/>)', str(flags) + "\\g<1>", match.group(0), flags=re.M)
@@ -333,8 +339,6 @@ class StaticCollisionCreator:
                 return match.group(0)
 
         flags |= Flag.DISABLE_EMBEDDED_COLLISION
-
-        scale = [float(match.group(10)), float(match.group(10)), float(match.group(11))]
 
         position = [float(match.group(3)), float(match.group(4)), float(match.group(5))]
         rotationQuaternion = [float(match.group(9)), -float(match.group(6)), -float(match.group(7)), -float(match.group(8))]  # order is w, -x, -y, -z
@@ -585,13 +589,16 @@ class StaticCollisionCreator:
                              '(?:\\s*<[^/].*>)*' +
                              '\\s*<position x="([^"]+)" y="([^"]+)" z="[^"]+"\\s*/>' +
                              '(?:\\s*<[^/].*>)*' +
+                             '\\s*<scaleXY value="([^"]+)"/>' +
+                             '\\s*<scaleZ value="([^"]+)"/>' +
+                             '(?:\\s*<[^/].*>)*' +
                              '\\s*<lodLevel>LODTYPES_DEPTH_(?:ORPHAN)?HD</lodLevel>' +
                              '(?:\\s*<[^/].*>)*' +
                              '\\s*</Item>[\r\n]+')
 
         coords = []
         for matchobj in re.finditer(pattern, mapContent):
-            if self.shouldEntityBeUsedInStaticCol(matchobj.group(1).lower(), int(matchobj.group(2))):
+            if self.shouldEntityBeUsedInStaticCol(matchobj.group(1).lower(), int(matchobj.group(2)), [float(matchobj.group(5)), float(matchobj.group(6))]):
                 coords.append([float(matchobj.group(3)), float(matchobj.group(4))])
 
         foundScolModel = len(coords) > 0

@@ -19,6 +19,21 @@ class EntropyCreator:
         "prop_palm_med",
         "prop_palm_huge",
         "test_tree_forest",
+        "prop_s_pine_dead",
+        "prop_tree_birch",
+        "prop_tree_cedar",
+        "prop_tree_cypress",
+        "prop_tree_eng_oak",
+        "prop_tree_eucalip",
+        "prop_tree_fallen_pine",
+        "prop_tree_jacada",
+        "prop_tree_lficus",
+        "prop_tree_maple",
+        "prop_tree_oak",
+        "prop_tree_olive",
+        "prop_tree_pine",
+        "prop_w_r_cedar",
+        "test_tree",
     })
     CANDIDATES_ROTATION = tuple({
         "prop_cactus",
@@ -52,13 +67,15 @@ class EntropyCreator:
     limitTilt: bool
     adaptRotationIfIdentity: bool
     limitScale: bool
+    adaptScaleIfIdentity: bool
 
-    def __init__(self, inputDir: str, outputDir: str, limitTilt: bool, adaptRotationIfIdentity: bool, limitScale: bool):
+    def __init__(self, inputDir: str, outputDir: str, limitTilt: bool, adaptRotationIfIdentity: bool, limitScale: bool, adaptScaleIfIdentity: bool):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.limitTilt = limitTilt
         self.adaptRotationIfIdentity = adaptRotationIfIdentity
         self.limitScale = limitScale
+        self.adaptScaleIfIdentity = adaptScaleIfIdentity
 
         # using a specific seed to be able to get reproducible results
         random.seed(a=0)
@@ -81,17 +98,17 @@ class EntropyCreator:
         self.ytypItems = YtypParser.readYtypDirectory(os.path.join(os.path.dirname(__file__), "..", "resources", "ytyp"))
 
     def isScaleCandidate(self, entity: str) -> bool:
-        return entity in self.ytypItems and entity.lower().startswith(EntropyCreator.CANDIDATES_SCALE)
+        return entity in self.ytypItems and entity.startswith(EntropyCreator.CANDIDATES_SCALE)
 
     def isRotationCandidate(self, entity: str) -> bool:
-        return entity in self.ytypItems and entity.lower().startswith(EntropyCreator.CANDIDATES_ROTATION)
+        return entity in self.ytypItems and entity.startswith(EntropyCreator.CANDIDATES_ROTATION)
 
     def repl(self, match: Match) -> str:
         entity = match.group(2).lower()
         origScaleXY = float(match.group(8))
         origScaleZ = float(match.group(10))
 
-        maxScaleZ = random.uniform(0.85, 1.1)
+        maxScaleZ = random.uniform(0.9, 1.3)
 
         isRotationCandidate = self.isRotationCandidate(entity)
         isScaleCandidate = self.isScaleCandidate(entity)
@@ -103,6 +120,9 @@ class EntropyCreator:
         else:
             scaleXY = origScaleXY
             scaleZ = origScaleZ
+
+        if self.adaptScaleIfIdentity and isScaleCandidate and origScaleZ == 1:
+            scaleXY = scaleZ = maxScaleZ
 
         if self.limitTilt and isRotationCandidate:
             treeHeight = self.ytypItems[entity].boundingBox.getSizes()[2] * scaleZ
