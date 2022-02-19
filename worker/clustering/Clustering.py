@@ -1,6 +1,7 @@
 import numpy as np
 from natsort import natsorted
 from matplotlib import pyplot
+import matplotlib.patheffects as PathEffects
 import math
 import os
 import re
@@ -20,7 +21,7 @@ class Clustering:
     prefix: str
     numCluster: int
 
-    MAX_EXTEND = 1500
+    MAX_EXTEND = 700
 
     _PATTERN = re.compile(
         '[\t ]*<Item type="CEntityDef">' +
@@ -145,13 +146,14 @@ class Clustering:
 
             # create scatter of these samples
             pyplot.scatter(X[row_ix, 0], X[row_ix, 1], color=cmap(i))
+            annotate = pyplot.annotate(cluster + 1, xy=(np.mean(X[row_ix, 0]), np.mean(X[row_ix, 1])), ha='center', va='center')
+            annotate.set_path_effects([PathEffects.withStroke(linewidth=4, foreground='w')])
 
             i += 1
 
         pyplot.gca().set_aspect('equal')
 
-        # show the plot
-        pyplot.show()
+        pyplot.show(block=False)
 
     # adapt extents and set current datetime
     def fixMapExtents(self):

@@ -5,6 +5,8 @@ import re
 import shutil
 import sys
 
+from matplotlib import pyplot
+
 from worker.EntropyCreator import EntropyCreator
 from worker.vegetation_creator.VegetationCreator import VegetationCreator
 from worker.clustering.Clustering import Clustering
@@ -197,6 +199,8 @@ def main(argv):
     #    no need to duplicate the input dir
     #    copyDirectory(nextInputDir, outputDir + "/maps")
     shutil.rmtree(tempOutputDir)
+
+    pyplot.show(block=True)
 
 
 if __name__ == "__main__":
