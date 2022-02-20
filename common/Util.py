@@ -73,6 +73,7 @@ class Util:
     @staticmethod
     def performClustering(points: list[list[float]], maxPoints: int, maxFurthestDistance: float) -> (Any, list[float]):
         X = np.array(points)
+        numPoints = len(points)
 
         largestNonValidNumClusters = 0
         smallestValidNumClusters = None
@@ -83,7 +84,14 @@ class Util:
         while largestNonValidNumClusters + 1 != smallestValidNumClusters:
             clusters, maxClusterSize, furthestDistances = Util._performClustering(X, numClusters)
 
-            exceededLimits = 0 < maxPoints < maxClusterSize or max(furthestDistances) > maxFurthestDistance
+            furthestDistanceWeightedMean = 0
+            for cluster in np.unique(clusters):
+                clusterEntries = np.where(clusters == cluster)
+                clusterSize = len(clusterEntries[0])
+                furthestDistanceWeightedMean += clusterSize * furthestDistances[cluster]
+            furthestDistanceWeightedMean /= max(1, numPoints)
+
+            exceededLimits = 0 < maxPoints < maxClusterSize or furthestDistanceWeightedMean > maxFurthestDistance
             if exceededLimits:
                 largestNonValidNumClusters = numClusters
                 if smallestValidNumClusters is None:
