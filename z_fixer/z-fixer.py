@@ -66,6 +66,7 @@ trees = {
     "prop_tree_maple_03": Tree(0.35, 0.05),
     "prop_tree_mquite_01": Tree(0.45, -0.03),
     "prop_tree_oak_01": Tree(2.68, -0.07),
+    "prop_tree_olive_01": Tree(1.6, 0.1),
     "prop_tree_pine_01": Tree(0.82, 0.44),
     "prop_tree_pine_02": Tree(0.80, -0.04),
     "prop_tree_stump_01": Tree(0.70, 0.02),
