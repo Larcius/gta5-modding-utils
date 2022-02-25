@@ -104,7 +104,7 @@ class Clustering:
 
         numClusters = len(np.unique(clusters))
 
-        numDigitsMapIndices = math.ceil(math.log(numClusters, 10))
+        numDigitsMapIndices = math.ceil(math.log(numClusters + 1, 10))
 
         outputFiles = {}
         mapPrefix = Util.determinePrefixBundles(mapNames)[0]
