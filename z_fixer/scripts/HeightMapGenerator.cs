@@ -55,7 +55,7 @@ namespace HeightMap
 					return;
 				}
 				filenameInput = newFilenameInput;
-				string filenameOutput = filenameInput + ".hmap";
+				string filenameOutput = "hmap.txt";
 				try {
 					reader = new StreamReader(filenameInput);
 				} catch (IOException ex) {
