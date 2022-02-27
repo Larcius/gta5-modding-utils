@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 from natsort import natsorted
 from matplotlib import pyplot
@@ -32,11 +33,12 @@ class Clustering:
         '\\s*</Item>[\r\n]+'
     )
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: int):
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: int, clusteringPrefix: Optional[str]):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
         self.numCluster = numCluster
+        self.clusteringPrefix = clusteringPrefix
 
     def run(self):
         print("running clustering...")
@@ -107,7 +109,7 @@ class Clustering:
         numDigitsMapIndices = math.ceil(math.log(numClusters + 1, 10))
 
         outputFiles = {}
-        mapPrefix = Util.determinePrefixBundles(mapNames)[0]
+        mapPrefix = self.getMapPrefix(mapNames)
         for cluster in np.unique(clusters):
             outputFiles[cluster] = open(os.path.join(self.outputDir, mapPrefix + "_" + str(cluster + 1).zfill(numDigitsMapIndices) + ".ymap.xml"), 'w')
             outputFiles[cluster].write(contentPreEntities)
@@ -154,6 +156,16 @@ class Clustering:
         pyplot.gca().set_aspect('equal')
 
         pyplot.show(block=False)
+
+    def getMapPrefix(self, mapNames: list[str]):
+        if self.clusteringPrefix is not None:
+            return self.clusteringPrefix
+
+        prefixes = Util.determinePrefixBundles(mapNames)
+        if len(prefixes) == 1:
+            return prefixes[0]
+        else:
+            return self.prefix
 
     # adapt extents and set current datetime
     def fixMapExtents(self):

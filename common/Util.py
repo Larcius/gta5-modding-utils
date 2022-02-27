@@ -206,8 +206,11 @@ class Util:
                 candidate = name
 
             parts = [candidate.rstrip("_"), "", ""]
-            while not (name == parts[0] or name.startswith(parts[0] + "_")):
-                parts = parts[0].rpartition("_")
+            while not (parts[0] == "" or name == parts[0] or name.startswith(parts[0] + "_")):
+                if "_" not in parts[0]:
+                    parts = [""]
+                else:
+                    parts = parts[0].rpartition("_")
 
             newCandidate = parts[0]
 

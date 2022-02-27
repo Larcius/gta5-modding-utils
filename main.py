@@ -17,6 +17,9 @@ from worker.static_col_creator.StaticCollisionCreator import StaticCollisionCrea
 from worker.statistics.StatisticsPrinter import StatisticsPrinter
 
 
+PATTERN_MAP_NAME = "[a-z][a-z0-9_]*[a-z0-9]"
+
+
 def moveDirectory(src: str, dest: str):
     for filename in os.listdir(src):
         shutil.move(os.path.join(src, filename), dest)
@@ -33,6 +36,7 @@ def main(argv):
     vegetationCreator = False
     clustering = False
     numClusters = -1
+    clusteringPrefix = None
     lodModel = False
     staticCol = False
     lodMap = False
@@ -41,12 +45,13 @@ def main(argv):
     statistics = False
     prefix = None
 
-    usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> --clustering=<on|off> --numClusters=<integer> --lodModel=<on|off> " \
+    usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> " \
+               "--clustering=<on|off> --numClusters=<integer> --clusteringPrefix=<CLUSTERING_PREFIX> --lodModel=<on|off> " \
                "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off> "
 
     try:
-        opts, args = getopt.getopt(argv, "h?i:o:",
-            ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "lodModel=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
+        opts, args = getopt.getopt(argv, "h?i:o:", ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "clusteringPrefix=",
+            "lodModel=", "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
     except getopt.GetoptError:
         print("ERROR: Unknown argument. Please see below for usage.")
         print(usageMsg)
@@ -66,6 +71,8 @@ def main(argv):
             vegetationCreator = bool(distutils.util.strtobool(arg))
         elif opt == "--clustering":
             clustering = bool(distutils.util.strtobool(arg))
+        elif opt == "--clusteringPrefix":
+            clusteringPrefix = arg
         elif opt == "--numClusters":
             numClusters = int(arg)
         elif opt == "--lodModel":
@@ -89,8 +96,12 @@ def main(argv):
     if not prefix:
         prefix = input("Prefix of this project?")
 
-    if not re.match("[a-z][a-z0-9_]*[a-z0-9]", prefix):
+    if not re.match(PATTERN_MAP_NAME, prefix):
         print("ERROR: prefix must contain only a-z 0-9 _ and must start with a letter and must not end in _")
+        sys.exit(2)
+
+    if clusteringPrefix is not None and not re.match(PATTERN_MAP_NAME, clusteringPrefix):
+        print("ERROR: clusteringPrefix must contain only a-z 0-9 _ and must start with a letter and must not end in _")
         sys.exit(2)
 
     if not inputDir:
@@ -139,7 +150,7 @@ def main(argv):
         nextInputDir = entropyCreator.outputDir
 
     if clustering:
-        clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix, numClusters)
+        clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix, numClusters, clusteringPrefix)
         clusteringWorker.run()
 
         nextInputDir = clusteringWorker.outputDir
@@ -195,7 +206,7 @@ def main(argv):
     os.makedirs(outputMapsDir)
     if not os.path.samefile(nextInputDir, inputDir):
         moveDirectory(nextInputDir, outputMapsDir)
-    #else:
+    # else:
     #    no need to duplicate the input dir
     #    copyDirectory(nextInputDir, outputDir + "/maps")
     shutil.rmtree(tempOutputDir)
