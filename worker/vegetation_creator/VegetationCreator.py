@@ -34,21 +34,21 @@ class VegetationCreator:
         "prop_tree_pine_02",
         #"prop_tree_stump_01",
         "prop_w_r_cedar_01",
-        "prop_w_r_cedar_dead",
         "test_tree_cedar_trunk_001",
         #"prop_bush_lrg_04b",
         #"prop_bush_lrg_04c",
         #"prop_bush_lrg_04d",
     }
 
-    CANDIDATES_LOW_PROPABILITY = {
+    CANDIDATES_LOW_PROBABILITY = {
+        "prop_w_r_cedar_dead",
         "prop_tree_fallen_pine_01",
         "prop_s_pine_dead_01",
     }
 
     TRIANGLE_MIN_ANGLE = math.pi / 8
 
-    MAP_NAME = "forest_trees_n_add"
+    MAP_NAME = "vegetation_creator"
 
 
     inputDir: str
@@ -144,8 +144,8 @@ class VegetationCreator:
     def createYmap(self, points: list[list[float]]):
         contentEntities = ""
         for point in points:
-            if random.random() < 0.5:
-                props = set().union(VegetationCreator.CANDIDATES).union(VegetationCreator.CANDIDATES_LOW_PROPABILITY)
+            if random.random() < 0.1:
+                props = set().union(VegetationCreator.CANDIDATES).union(VegetationCreator.CANDIDATES_LOW_PROBABILITY)
             else:
                 props = VegetationCreator.CANDIDATES
 
