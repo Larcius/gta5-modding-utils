@@ -1,9 +1,11 @@
 # TODO refactoring needed
 import os
+import getopt
 import random
 import re
 import shutil
 import struct
+import sys
 from typing import Optional
 
 import transforms3d
@@ -21,10 +23,6 @@ class Tree:
         maxOffsetZ = self.offsetZ if (DISABLE_INCREASE_OF_Z or self.maxOffsetZ is None or self.maxOffsetZ > self.offsetZ) else self.maxOffsetZ
         return random.uniform(maxOffsetZ, self.offsetZ)
 
-
-# True means extract x, y coordinates
-# False means fix z coordinates
-ENABLE_MODE_EXTRACT = True
 
 # if True then z coordinate will not be changed if calculated value is greater than original value
 DISABLE_INCREASE_OF_Z = False
@@ -107,20 +105,76 @@ trees = {
     "prop_palm_huge_01b": Tree(0.95, -0.08, -1.2),
 }
 
-generatedDir = os.path.join(os.path.dirname(__file__), "generated")
-if os.path.exists(generatedDir):
-    shutil.rmtree(generatedDir)
-os.mkdir(generatedDir)
 
-if ENABLE_MODE_EXTRACT:
-    outCoords = open(os.path.join(generatedDir, "coords.txt"), 'w')
-else:
-    heightmap = open(os.path.join(os.path.dirname(__file__), 'heights', 'hmap.txt'), 'r')
+def main(argv):
+    # True means extract x, y coordinates
+    # False means fix z coordinates
+    enableModeExtract = True
+
+    usageMsg = "z-fixer.py [--extract|--fix]"
+
+    try:
+        opts, args = getopt.getopt(argv, "h?e:f:", ["help", "extract", "fix"])
+    except getopt.GetoptError:
+        print("ERROR: Unknown argument. Please see below for usage.")
+        print(usageMsg)
+        sys.exit(2)
+
+    if len(opts) == 0:
+        print("ERROR: Neither --extract nor --fix argument was given. Please see below for usage.")
+        print(usageMsg)
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt in ('-h', '-?', '--help'):
+            print(usageMsg)
+            sys.exit(0)
+        elif opt in ("-e", "--extract"):
+            enableModeExtract = True
+        elif opt in ("-f", "--fix"):
+            enableModeExtract = False
+
+    generatedDir = os.path.join(os.path.dirname(__file__), "generated")
+    if os.path.exists(generatedDir):
+        shutil.rmtree(generatedDir)
+    os.mkdir(generatedDir)
+
+    outCoords = heightmap = None
+    if enableModeExtract:
+        outCoords = open(os.path.join(generatedDir, "coords.txt"), 'w')
+    else:
+        heightmap = open(os.path.join(os.path.dirname(__file__), 'heights', 'hmap.txt'), 'r')
+
+    # create high quality files
+    for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "maps"))):
+        if not filename.endswith(".ymap.xml") or filename.endswith("_lod.ymap.xml"):
+            continue
+
+        f = open(os.path.join(os.path.dirname(__file__), "maps", filename), 'r')
+        content = f.read()
+        f.close()
+
+        content_new = re.sub('(<Item type="CEntityDef">' +
+                             '\\s*<archetypeName>([^<]+)</archetypeName>' +
+                             '(?:\\s*<[^/].*>)*' +
+                             '\\s*<position x="([^>]+)" y="([^>]+)" z=")([^"]+)("\\s*/>' +
+                             '\\s*<rotation x="([^>]+)" y="([^>]+)" z="([^"]+)" w="([^"]+)"\\s*/>' +
+                             '(?:\\s*<[^/].*>)*' +
+                             '\\s*<scaleXY\\s+value="([^"]+)"\\s*/>' +
+                             '\\s*<scaleZ\\s+value="([^"]+)"\\s*/>' +
+                             '(?:\\s*<[^/].*>)*' +
+                             '\\s*</Item>\\s*)', lambda match: repl(match, outCoords, heightmap), content, flags=re.M)
+
+        if not enableModeExtract:
+            f = open(os.path.join(os.path.dirname(__file__), "generated", filename), 'w')
+            f.write(content_new)
+            f.close()
+
+    if heightmap is not None:
+        heightmap.close()
 
 
-def getMinHeight() -> [float, float]:
-    global heightmap
-
+def getMinHeight(heightmap) -> [float, float]:
     heightmapEntry = heightmap.readline().rstrip("\n")
     if not heightmapEntry:
         print("ERROR: cannot get entry in heightmap")
@@ -144,7 +198,7 @@ def hashFloat(val: float) -> int:
     return hash(struct.pack("f", val))
 
 
-def repl(matchobj):
+def repl(matchobj, outCoords, heightmap):
     global trees
 
     prop = matchobj.group(2).lower()
@@ -166,7 +220,7 @@ def repl(matchobj):
 
     transformed = transforms3d.quaternions.rotate_vector([0, 0, -offsetZ * scaleZ], origQuat)
 
-    if ENABLE_MODE_EXTRACT:
+    if outCoords is not None:
         for i in range(3):
             coords[i] += transformed[i]
 
@@ -175,7 +229,7 @@ def repl(matchobj):
                         "," + str(tree.trunkRadius * scaleXY) + "\n")
         return matchobj.group(0)
 
-    minHeight, distanceToStreet = getMinHeight()
+    minHeight, distanceToStreet = getMinHeight(heightmap)
 
     calcZCoord = minHeight - transformed[2]
 
@@ -195,30 +249,5 @@ def repl(matchobj):
     return matchobj.group(1) + floatToStr(calcZCoord) + matchobj.group(6)
 
 
-# create high quality files
-for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "maps"))):
-    if not filename.endswith(".ymap.xml") or filename.endswith("_lod.ymap.xml"):
-        continue
-
-    f = open(os.path.join(os.path.dirname(__file__), "maps", filename), 'r')
-    content = f.read()
-    f.close()
-
-    content_new = re.sub('(<Item type="CEntityDef">' +
-                         '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                         '(?:\\s*<[^/].*>)*' +
-                         '\\s*<position x="([^>]+)" y="([^>]+)" z=")([^"]+)("\\s*/>' +
-                         '\\s*<rotation x="([^>]+)" y="([^>]+)" z="([^"]+)" w="([^"]+)"\\s*/>' +
-                         '(?:\\s*<[^/].*>)*' +
-                         '\\s*<scaleXY\\s+value="([^"]+)"\\s*/>' +
-                         '\\s*<scaleZ\\s+value="([^"]+)"\\s*/>' +
-                         '(?:\\s*<[^/].*>)*' +
-                         '\\s*</Item>\\s*)', repl, content, flags=re.M)
-
-    if not ENABLE_MODE_EXTRACT:
-        f = open(os.path.join(os.path.dirname(__file__), "generated", filename), 'w')
-        f.write(content_new)
-        f.close()
-
-if not ENABLE_MODE_EXTRACT:
-    heightmap.close()
+if __name__ == "__main__":
+    main(sys.argv[1:])
