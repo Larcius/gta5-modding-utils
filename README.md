@@ -75,6 +75,12 @@ OpenIV automatically converts these openFormats files back to binary files on im
 Note: The directories `_lod_meshes` and `_slod_meshes` are used when importing the files from directory `<PREFIX>_lod` and `<PREFIX>_slod`. 
 
 
+## Video tutorial
+
+Thanks to Xotiic for making a tutorial video:
+https://www.youtube.com/watch?v=KDduBaZEdeQ
+
+
 ## Used Python packages
 
 * https://github.com/scikit-learn/scikit-learn
