@@ -574,15 +574,15 @@ class LodMapCreator:
         hdEntities = ""
         orphanHdEntites = ""
         for match in re.finditer('(\\s*<Item type="CEntityDef">' +
-                                 '(?:\\s*<[^/].*>)*' +
+                                 '(?:\\s*<[^/].*>)*?' +
                                  '\\s*<flags value=")([^"]+)("\\s*/>' +
-                                 '(?:\\s*<[^/].*>)*' +
+                                 '(?:\\s*<[^/].*>)*?' +
                                  '\\s*<parentIndex value="([^"]+)"\\s*/>' +
-                                 '(?:\\s*<[^/].*>)*' +
+                                 '(?:\\s*<[^/].*>)*?' +
                                  '\\s*<lodLevel>)[^<]+(</lodLevel>' +
-                                 '(?:\\s*<[^/].*>)*' +
+                                 '(?:\\s*<[^/].*>)*?' +
                                  '\\s*<priorityLevel>)([^<]+)(</priorityLevel>' +
-                                 '(?:\\s*<[^/].*>)*' +
+                                 '(?:\\s*<[^/].*>)*?' +
                                  '\\s*</Item>)', content):
 
             isOrphanHd = (match.group(4) == "-1")
@@ -678,11 +678,11 @@ class LodMapCreator:
 
             pattern = re.compile('[\t ]*<Item type="CEntityDef">' +
                                  '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                                 '(?:\\s*<[^/].*>)*' +
+                                 '(?:\\s*<[^/].*>)*?' +
                                  '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"\\s*/>' +
-                                 '(?:\\s*<[^/].*>)*' +
+                                 '(?:\\s*<[^/].*>)*?' +
                                  '\\s*<lodDist value="([^"]+)"\\s*/>' +
-                                 '(?:\\s*<[^/].*>)*' +
+                                 '(?:\\s*<[^/].*>)*?' +
                                  '\\s*</Item>[\r\n]+')
 
             lodCoords = []
@@ -725,7 +725,7 @@ class LodMapCreator:
             contentLod = re.sub('(\\s*<Item type="CEntityDef">' +
                                 '\\s*<archetypeName>)([^<]+)(</archetypeName>' +
                                 '\\s*<flags value=")([^"]+)("\\s*/>' +
-                                '(?:\\s*<[^/].*>)*' +
+                                '(?:\\s*<[^/].*>)*?' +
                                 '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"\\s*/>' +
                                 '\\s*<rotation x="([^"]+)" y="([^"]+)" z="([^"]+)" w="([^"]+)"\\s*/>' +
                                 '\\s*<scaleXY value="([^"]+)"\\s*/>' +
@@ -736,7 +736,7 @@ class LodMapCreator:
                                 '\\s*<lodLevel>)[^<]+(</lodLevel>' +
                                 '\\s*<numChildren value=")[^"]+("\\s*/>' +
                                 '\\s*<priorityLevel>)[^<]+(</priorityLevel>' +
-                                '(?:\\s*<[^/].*>)*' +
+                                '(?:\\s*<[^/].*>)*?' +
                                 '\\s*</Item>)', self.replLod, contentNoLod, flags=re.M)
 
             contentLod = Ymap.replaceName(contentLod, mapNameLod)
@@ -821,9 +821,9 @@ class LodMapCreator:
 
             contentNoLod = re.sub('(\\s*<Item type="CEntityDef">' +
                                   '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                                  '(?:\\s*<[^/].*>)*' +
+                                  '(?:\\s*<[^/].*>)*?' +
                                   '\\s*<parentIndex value=")[^"]+("\\s*/>' +
-                                  '(?:\\s*<[^/].*>)*' +
+                                  '(?:\\s*<[^/].*>)*?' +
                                   '\\s*</Item>)', self.replParentIndex, contentNoLod, flags=re.M)
             # -->
 
@@ -846,9 +846,9 @@ class LodMapCreator:
 
                 content_new = re.sub('(\\s*<Item type="CEntityDef">' +
                                      '\\s*<archetypeName>[^<]+_(?i:slod)1</archetypeName>' +
-                                     '(?:\\s*<[^/].*>)*' +
+                                     '(?:\\s*<[^/].*>)*?' +
                                      '\\s*<parentIndex value=")([^"]+)("\\s*/>' +
-                                     '(?:\\s*<[^/].*>)*' +
+                                     '(?:\\s*<[^/].*>)*?' +
                                      '\\s*</Item>)',
                     lambda match: match.group(0) if int(match.group(2)) < 0 else match.group(1) + str(int(match.group(2)) + slod3Index) + match.group(3),
                     content_new, flags=re.M)

@@ -49,14 +49,14 @@ class StaticCollisionCreator:
         return '\\s*<Item type="CEntityDef">' + \
                '\\s*<archetypeName>([^<]+)</archetypeName>' + \
                '\\s*<flags value="([^"]+)"\\s*/>' + \
-               '(?:\\s*<[^/].*>)' + \
+               '(?:\\s*<[^/].*>)*?' + \
                '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"\\s*/>' + \
                '\\s*<rotation x="([^"]+)" y="([^"]+)" z="([^"]+)" w="([^"]+)"\\s*/>' + \
                '\\s*<scaleXY value="([^"]+)"\\s*/>' + \
                '\\s*<scaleZ value="([^"]+)"\\s*/>' + \
-               '(?:\\s*<[^/].*>)*' + \
+               '(?:\\s*<[^/].*>)*?' + \
                '\\s*<lodLevel>LODTYPES_DEPTH_(?:ORPHAN)?HD</lodLevel>' + \
-               '(?:\\s*<[^/].*>)*' + \
+               '(?:\\s*<[^/].*>)*?' + \
                '\\s*</Item>'
 
     def __init__(self, inputDir: str, outputDir: str):
@@ -586,14 +586,14 @@ class StaticCollisionCreator:
         pattern = re.compile('[\t ]*<Item type="CEntityDef">' +
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
                              '\\s*<flags value="([^"]+)"\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<position x="([^"]+)" y="([^"]+)" z="[^"]+"\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<scaleXY value="([^"]+)"/>' +
                              '\\s*<scaleZ value="([^"]+)"/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<lodLevel>LODTYPES_DEPTH_(?:ORPHAN)?HD</lodLevel>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>[\r\n]+')
 
         coords = []

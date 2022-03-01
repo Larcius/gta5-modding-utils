@@ -46,14 +46,14 @@ class Ymap:
     def calculateAndReplaceLodDistanceForEntitiesWithLod(contentNoLod: str, ytypItems: dict[str, YtypItem]) -> str:
         pattern = re.compile('(\\s*<Item type="CEntityDef">' +
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<scaleXY value="([^"]+)"\\s*/>' +
                              '\\s*<scaleZ value="([^"]+)"\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<lodDist value=")([^"]+)("\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<priorityLevel>)[^<]*(</priorityLevel>'
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>)', flags=re.M)
 
         return pattern.sub(lambda match: Ymap._replCalculateAndReplaceLodDistance(match, ytypItems, True), contentNoLod)
@@ -62,14 +62,14 @@ class Ymap:
     def calculateAndReplaceLodDistance(contentNoLod: str, ytypItems: dict[str, YtypItem]) -> str:
         pattern = re.compile('(\\s*<Item type="CEntityDef">' +
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<scaleXY value="([^"]+)"\\s*/>' +
                              '\\s*<scaleZ value="([^"]+)"\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<lodDist value=")([^"]+)("\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<priorityLevel>)[^<]*(</priorityLevel>'
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>)', flags=re.M)
 
         return pattern.sub(lambda match: Ymap._replCalculateAndReplaceLodDistance(match, ytypItems, False), contentNoLod)

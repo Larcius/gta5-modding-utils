@@ -126,11 +126,11 @@ class Sanitizer:
         content_new = re.sub('(<Item type="CEntityDef">' +
                              '\\s*<archetypeName>)([^<]+)(</archetypeName>' +
                              '\\s*<flags value=")([^"]+)("\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<rotation )x="([^"]+)" y="([^"]+)" z="([^"]+)" w="([^"]+)"(/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<childLodDist value=")[^"]+("/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>)', lambda match: self.repl(match, fixedArchetypeNames), content, flags=re.M)
 
         for fixed in natsorted(fixedArchetypeNames):

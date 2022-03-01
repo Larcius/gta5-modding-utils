@@ -17,14 +17,14 @@ class Extents:
     def getExpressionForCalculateExtents() -> str:
         return '<Item type="CEntityDef">' + \
                '\\s*<archetypeName>([^<]+)</archetypeName>' + \
-               '(?:\\s*<[^/].*>)*' + \
+               '(?:\\s*<[^/].*>)*?' + \
                '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"/>' + \
                '\\s*<rotation x="([^"]+)" y="([^"]+)" z="([^"]+)" w="([^"]+)"/>' + \
                '\\s*<scaleXY value="([^"]+)"/>' + \
                '\\s*<scaleZ value="([^"]+)"/>' + \
-               '(?:\\s*<[^/].*>)*' + \
+               '(?:\\s*<[^/].*>)*?' + \
                '\\s*<lodDist value="([^"]+)"/>' + \
-               '(?:\\s*<[^/].*>)*' + \
+               '(?:\\s*<[^/].*>)*?' + \
                '\\s*</Item>'
 
     @staticmethod

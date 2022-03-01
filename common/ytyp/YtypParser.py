@@ -11,12 +11,12 @@ class YtypParser:
     def getExpressionYtypItem() -> str:
         return '\\s*<Item type="CBaseArchetypeDef">' + \
                '\\s*<lodDist value="([^"]+)"/>' + \
-               '(?:\\s*<[^/].*>){2}' + \
+               '(?:\\s*<[^/].*>)*?' + \
                '\\s*<bbMin x="([^"]+)" y="([^"]+)" z="([^"]+)"/>' + \
                '\\s*<bbMax x="([^"]+)" y="([^"]+)" z="([^"]+)"/>' + \
                '\\s*<bsCentre x="([^"]+)" y="([^"]+)" z="([^"]+)"/>' + \
                '\\s*<bsRadius value="([^"]+)"/>' + \
-               '(?:\\s*<[^/].*>)*' + \
+               '(?:\\s*<[^/].*>)*?' + \
                '\\s*<name>([^<]+)</name>'
 
     @staticmethod

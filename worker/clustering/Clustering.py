@@ -27,9 +27,9 @@ class Clustering:
     _PATTERN = re.compile(
         '[\t ]*<Item type="CEntityDef">' +
         '\\s*<archetypeName>[^<]+</archetypeName>' +
-        '(?:\\s*<[^/].*>)*' +
+        '(?:\\s*<[^/].*>)*?' +
         '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"\\s*/>' +
-        '(?:\\s*<[^/].*>)*' +
+        '(?:\\s*<[^/].*>)*?' +
         '\\s*</Item>[\r\n]+'
     )
 

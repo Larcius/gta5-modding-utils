@@ -178,9 +178,9 @@ class VegetationCreator:
 
         for match in re.finditer('<Item type="CEntityDef">' +
                              '\\s*<archetypeName>(?:prop_tree|prop_s_pine|prop_w_r_cedar|test_tree)[^<]*</archetypeName>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>', content):
 
             points.append([float(match.group(1)), float(match.group(2)), float(match.group(3))])

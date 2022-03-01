@@ -195,11 +195,11 @@ class EntropyCreator:
 
         content_new = re.sub('(<Item type="CEntityDef">' +
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<rotation )x="([^"]+)" y="([^"]+)" z="([^"]+)" w="([^"]+)"(/>' +
                              '\\s*<scaleXY value=")([^"]+)("/>' +
                              '\\s*<scaleZ value=")([^"]+)("/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>)', self.repl, content, flags=re.M)
 
         content_new = Ymap.fixMapExtents(content_new, self.ytypItems)

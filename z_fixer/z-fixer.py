@@ -156,13 +156,13 @@ def main(argv):
 
         content_new = re.sub('(<Item type="CEntityDef">' +
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<position x="([^>]+)" y="([^>]+)" z=")([^"]+)("\\s*/>' +
                              '\\s*<rotation x="([^>]+)" y="([^>]+)" z="([^"]+)" w="([^"]+)"\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*<scaleXY\\s+value="([^"]+)"\\s*/>' +
                              '\\s*<scaleZ\\s+value="([^"]+)"\\s*/>' +
-                             '(?:\\s*<[^/].*>)*' +
+                             '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>\\s*)', lambda match: repl(match, outCoords, heightmap), content, flags=re.M)
 
         if not enableModeExtract:

@@ -258,14 +258,14 @@ for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "ma
 
     content_new = re.sub('(<Item type="CEntityDef">' +
                          '\\s*<archetypeName>)(test_tree_forest_trunk_01)(</archetypeName>' +
-                         '(?:\\s*<[^/].*>)*' +
+                         '(?:\\s*<[^/].*>)*?' +
                          '\\s*<position[^>]*\\s+z=")([^"]+)("\\s*/>' +
-                         '(?:\\s*<[^/].*>)*' +
+                         '(?:\\s*<[^/].*>)*?' +
                          '\\s*<scaleXY\\s+value=")[^"]+("\\s*/>' +
                          '\\s*<scaleZ\\s+value=")([^"]*)("\\s*/>' +
-                         '(?:\\s*<[^/].*>)*' +
+                         '(?:\\s*<[^/].*>)*?' +
                          '\\s*<lodDist value=")[^"]+("\\s*/>' +
-                         '(?:\\s*<[^/].*>)*' +
+                         '(?:\\s*<[^/].*>)*?' +
                          '\\s*</Item>)', repl, content, flags=re.M)
 
     f = open(os.path.join(os.path.dirname(__file__), "generated", filename), 'w')
