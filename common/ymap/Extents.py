@@ -9,6 +9,9 @@ from common.ytyp.YtypItem import YtypItem
 
 
 class Extents:
+    CARGEN_LOD_DISTANCE = 200
+    CARGEN_BBOX = Box.createUnitBox().getScaled([10] * 3)
+
     @staticmethod
     def createReversedInfinityExtents() -> "Extents":
         return Extents(Box.createReversedInfinityBox(), Box.createReversedInfinityBox())
@@ -24,6 +27,15 @@ class Extents:
                '\\s*<scaleZ value="([^"]+)"/>' + \
                '(?:\\s*<[^/].*>)*?' + \
                '\\s*<lodDist value="([^"]+)"/>' + \
+               '(?:\\s*<[^/].*>)*?' + \
+               '\\s*</Item>'
+
+    @staticmethod
+    def getExpressionForCalculateExtentsCarGen() -> str:
+        return '<Item>' + \
+               '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"/>' + \
+               '(?:\\s*<[^/].*>)*?' + \
+               '\\s*<carModel>([^<]+)</carModel>' + \
                '(?:\\s*<[^/].*>)*?' + \
                '\\s*</Item>'
 
@@ -47,6 +59,15 @@ class Extents:
             bbox = ytypItems[archetypeName].boundingBox
 
             extents.adaptExtents(position, rotationQuat, scale, lodDistance, bbox)
+
+        for match in re.finditer(Extents.getExpressionForCalculateExtentsCarGen(), ymapContent):
+            carModel = match.group(4).lower()
+
+            print("INFO: found carGenerator for car model " + carModel + ". Using 200 as lodDistance and a cubic boundingBox of side length 10")
+
+            position = [float(match.group(1)), float(match.group(2)), float(match.group(3))]
+
+            extents.adaptExtents(position, [0, 0, 0, 1], [1, 1, 1], Extents.CARGEN_LOD_DISTANCE, Extents.CARGEN_BBOX)
 
         return extents
 

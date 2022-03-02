@@ -9,6 +9,10 @@ class Box:
     def createReversedInfinityBox() -> "Box":
         return Box([math.inf] * 3, [-math.inf] * 3)
 
+    @staticmethod
+    def createUnitBox() -> "Box":
+        return Box([-0.5] * 3, [0.5] * 3)
+
     min: list[float]
     max: list[float]
 
