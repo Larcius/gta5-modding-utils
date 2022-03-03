@@ -201,7 +201,7 @@ class StaticCollisionCreator:
 			{
 				Material 0
 				{
-""" + match.group(4) + """
+					""" + match.group(4).replace("\n", "\n\t") + """
 				}
 			}
 			MaterialColors null
@@ -235,7 +235,7 @@ class StaticCollisionCreator:
 			{
 				Material 0
 				{
-""" + match.group(4) + """
+					""" + match.group(4).replace("\n", "\n\t") + """
 				}
 			}
 			MaterialColors null
@@ -266,7 +266,7 @@ class StaticCollisionCreator:
 			{
 				Material 0
 				{
-""" + match.group(3) + """
+					""" + match.group(3).replace("\n", "\n\t") + """
 				}
 			}
 			MaterialColors null
@@ -300,7 +300,7 @@ class StaticCollisionCreator:
 			{
 				Material 0
 				{
-""" + match.group(8) + """
+					""" + match.group(8).replace("\n", "\n\t") + """
 				}
 			}
 			MaterialColors null
@@ -349,6 +349,46 @@ class StaticCollisionCreator:
         boundContent = boundFile.read()
         boundFile.close()
 
+        if not boundContent.startswith("Version 43 31\n{\n\tType BoundComposite\n"):
+            start = boundContent.index("{") + 1
+            end = boundContent.rindex("}")
+            boundMiddle = boundContent[start:end].strip().replace("\n", "\n\t\t")
+            boundContent = """Version 43 31
+{
+	Type BoundComposite
+	Radius 0.00000000
+	AABBMax 0.00000000 0.00000000 0.00000000
+	AABBMin 0.00000000 0.00000000 0.00000000
+	Centroid 0.00000000 0.00000000 0.00000000
+	CG 0.00000000 0.00000000 0.00000000
+	Children 1
+	{
+		phBound
+		{
+			""" + boundMiddle + """
+		}
+	}
+	ChildTransforms 1
+	{
+		Matrix 0
+		{
+			1.00000000 0.00000000 0.00000000
+			0.00000000 1.00000000 0.00000000
+			0.00000000 0.00000000 1.00000000
+			0.00000000 0.00000000 0.00000000
+		}
+	}
+	ChildFlags 1
+	{
+		Item
+		{
+			Flags1 MAP_WEAPON MAP_DYNAMIC MAP_ANIMAL MAP_COVER MAP_VEHICLE
+			Flags2 VEHICLE_NOT_BVH VEHICLE_BVH PED RAGDOLL ANIMAL ANIMAL_RAGDOLL OBJECT PLANT PROJECTILE EXPLOSION FORKLIFT_FORKS TEST_WEAPON TEST_CAMERA TEST_AI TEST_SCRIPT TEST_VEHICLE_WHEEL GLASS
+		}
+	}
+}
+"""
+
         # special case: replace bounds of Type BoundCapsule by Type BoundBVH with Capsule as Polygons
         boundContent = re.sub('\\s*{' +
                               '\\s*Type BoundCapsule(' +
@@ -361,7 +401,7 @@ class StaticCollisionCreator:
                               '\\s*Margin \\S+' +
                               '\\s*Material' +
                               '\\s*{' +
-                              '([^}]+)' +
+                              '\\s*([^}]+?)' +
                               '\\s*}' +
                               '\\s*}', self.replaceBoundCapsule, boundContent, flags=re.M)
 
@@ -376,7 +416,7 @@ class StaticCollisionCreator:
                               '\\s*Margin \\S+' +
                               '\\s*Material' +
                               '\\s*{' +
-                              '([^}]+)' +
+                              '\\s*([^}]+?)' +
                               '\\s*}' +
                               '\\s*}', self.replaceBoundCylinder, boundContent, flags=re.M)
 
@@ -391,7 +431,7 @@ class StaticCollisionCreator:
                               '\\s*Margin \\S+' +
                               '\\s*Material' +
                               '\\s*{' +
-                              '([^}]+)' +
+                              '\\s*([^}]+?)' +
                               '\\s*}' +
                               '\\s*}', self.replaceBoundSphere, boundContent, flags=re.M)
 
@@ -406,9 +446,14 @@ class StaticCollisionCreator:
                               '\\s*Margin \\S+' +
                               '\\s*Material' +
                               '\\s*{' +
-                              '([^}]+)' +
+                              '\\s*([^}]+?)' +
                               '\\s*}' +
                               '\\s*}', self.replaceBoundBox, boundContent, flags=re.M)
+
+        numChildren = 0
+        childTransforms = ""
+        children = []
+        childFlags = []
 
         mode = 0  # 0: no relevant block; 1: in Children block; 2: in ChildTransforms block; 3: in ChildFlags block
         for line in boundContent.splitlines(keepends=True):
@@ -418,15 +463,12 @@ class StaticCollisionCreator:
                     continue
             elif line.startswith("	Children "):
                 numChildren = int(line[10:-1])
-                children = []
                 mode = 1
                 continue
             elif line.startswith("	ChildTransforms "):
-                childTransforms = ""
                 mode = 2
                 continue
             elif line.startswith("	ChildFlags "):
-                childFlags = []
                 mode = 3
                 continue
 
