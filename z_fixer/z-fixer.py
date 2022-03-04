@@ -29,7 +29,7 @@ DISABLE_INCREASE_OF_Z = False
 
 IGNORE_BUSHES = True
 
-DELETE_IF_ON_STREET = True
+DELETE_IF_ON_STREET = False
 
 
 # trees can be found at x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\
