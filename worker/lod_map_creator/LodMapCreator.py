@@ -133,9 +133,10 @@ class LodMapCreator:
     NUM_CHILDREN_MAX_VALUE = 255  # TODO confirm following claim: must be <= 255 since numChildren is of size 1 byte
     ENTITIES_EXTENTS_MAX_DIAGONAL = 420
 
+    unitBox = Box.createUnitBox()
+    unitSphere = Sphere.createUnitSphere()
+
     # only entities with a lodDistance (according to hd entity) greater or equal this value are considered for SLOD1 to 3 model
-    unitBox = Box([-0.5] * 3, [0.5] * 3)
-    unitSphere = Sphere([0] * 3, 1)
     MIN_HD_LOD_DISTANCE_FOR_SLOD1 = Util.calculateLodDistance(unitBox, unitSphere, [4] * 3, True)  # 180
     MIN_HD_LOD_DISTANCE_FOR_SLOD2 = Util.calculateLodDistance(unitBox, unitSphere, [8] * 3, True)  # 240
     MIN_HD_LOD_DISTANCE_FOR_SLOD3 = Util.calculateLodDistance(unitBox, unitSphere, [13] * 3, True)  # 290

@@ -1,3 +1,4 @@
+from typing import Optional
 from common.texture.UV import UV
 
 
@@ -5,11 +6,11 @@ class UVMap:
     diffuseSamplerSuffix: str
     frontMin: UV
     frontMax: UV
-    topMin: UV
-    topMax: UV
-    topZ: float
+    topMin: Optional[UV]
+    topMax: Optional[UV]
+    topZ: Optional[float]
 
-    def __init__(self, diffuseSamplerSuffix: str, frontMin: UV, frontMax: UV, topMin: UV = None, topMax: UV = None, topZ: float = None):
+    def __init__(self, diffuseSamplerSuffix: str, frontMin: UV, frontMax: UV, topMin: Optional[UV] = None, topMax: Optional[UV] = None, topZ: Optional[float] = None):
         self.diffuseSamplerSuffix = diffuseSamplerSuffix
         self.frontMin = frontMin
         self.frontMax = frontMax

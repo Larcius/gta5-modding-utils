@@ -5,6 +5,10 @@ from common.Ellipsoid import Ellipsoid
 
 # TODO extends Ellipsoid
 class Sphere:
+    @staticmethod
+    def createUnitSphere():
+        return Sphere([0] * 3, 1)
+
     center: list[float]
     radius: float
 
