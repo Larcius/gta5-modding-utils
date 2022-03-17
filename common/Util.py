@@ -2,7 +2,7 @@ import math
 import os
 import random
 import shutil
-from typing import Any
+from typing import Any, Callable, Optional
 
 import numpy as np
 from natsort import natsorted
@@ -167,16 +167,16 @@ class Util:
         return random.uniform(math.radians(result * 0.85), math.radians(result * 1.15))
 
     @staticmethod
-    def getListOfFiles(inputDir: str, filter):
+    def getListOfFiles(inputDir: str, filter: Optional[Callable[[str], bool]]):
         result = []
         for filename in natsorted(os.listdir(inputDir)):
-            if os.path.isfile(os.path.join(inputDir, filename)) and filter(filename):
+            if os.path.isfile(os.path.join(inputDir, filename)) and (filter is None or filter(filename)):
                 result.append(filename)
 
         return result
 
     @staticmethod
-    def copyFiles(inputDir: str, outputDir: str, filter):
+    def copyFiles(inputDir: str, outputDir: str, filter: Optional[Callable[[str], bool]]):
         for filename in Util.getListOfFiles(inputDir, filter):
             shutil.copyfile(os.path.join(inputDir, filename), os.path.join(outputDir, filename))
 

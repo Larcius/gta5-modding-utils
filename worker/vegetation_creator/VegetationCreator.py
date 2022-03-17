@@ -48,7 +48,7 @@ class VegetationCreator:
 
     TRIANGLE_MIN_ANGLE = math.pi / 8
 
-    MAP_NAME = "vegetation_creator"
+    MAP_NAME_SUFFIX = "_vegetation_creator"
 
 
     inputDir: str
@@ -70,6 +70,7 @@ class VegetationCreator:
         print("running vegetation creator...")
         self.readTemplates()
         self.createOutputDir()
+        self.copyInput()
         self.processFiles()
         print("vegetation creator DONE")
 
@@ -93,9 +94,11 @@ class VegetationCreator:
 
 
     def processFiles(self):
+        mapNames = []
         points = []
         for filename in natsorted(os.listdir(self.inputDir)):
             if filename.endswith(".ymap.xml"):
+                mapNames.append(filename[:-9])
                 self.processFile(filename, points)
 
         if len(points) == 0:
@@ -133,7 +136,8 @@ class VegetationCreator:
                 newPoints.append(center)
                 points.append(center)
 
-        self.createYmap(newPoints)
+        newMapName = self.getNewMapName(mapNames)
+        self.createYmap(newMapName, newPoints)
 
         pyplot.gca().set_aspect('equal')
         pyplot.plot(np.array(newPoints)[:, 0], np.array(newPoints)[:, 1], 'ro')
@@ -141,7 +145,7 @@ class VegetationCreator:
         pyplot.show()
 
 
-    def createYmap(self, points: list[list[float]]):
+    def createYmap(self, mapName: str, points: list[list[float]]):
         contentEntities = ""
         for point in points:
             if random.random() < 0.1:
@@ -161,10 +165,10 @@ class VegetationCreator:
                 .replace("${POSITION.Z}", Util.floatToStr(point[2]))
 
         map = self.contentTemplateMap \
-            .replace("${NAME}", VegetationCreator.MAP_NAME) \
+            .replace("${NAME}", mapName) \
             .replace("${ENTITIES}\n", contentEntities)
 
-        fileMap = open(os.path.join(self.outputDir, VegetationCreator.MAP_NAME + ".ymap.xml"), 'w')
+        fileMap = open(os.path.join(self.outputDir, mapName + ".ymap.xml"), 'w')
         fileMap.write(map)
         fileMap.close()
 
@@ -184,3 +188,21 @@ class VegetationCreator:
                              '\\s*</Item>', content):
 
             points.append([float(match.group(1)), float(match.group(2)), float(match.group(3))])
+
+    def getNewMapName(self, mapNames: list[str]):
+        prefixes = Util.determinePrefixBundles(mapNames)
+        if len(prefixes) == 1:
+            mapName = prefixes[0] + VegetationCreator.MAP_NAME_SUFFIX
+        else:
+            mapName = self.prefix + VegetationCreator.MAP_NAME_SUFFIX
+
+        idx = 1
+        finalMapName = mapName
+        while finalMapName in mapNames:
+            finalMapName = mapName + "_" + str(idx)
+            idx += 1
+
+        return finalMapName
+
+    def copyInput(self):
+        Util.copyFiles(self.inputDir, self.outputDir, None)
