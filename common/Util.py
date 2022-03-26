@@ -5,6 +5,7 @@ import shutil
 from typing import Any, Callable, Optional
 
 import numpy as np
+from datetime import datetime
 from natsort import natsorted
 from scipy.spatial import ConvexHull
 from scipy.spatial.distance import pdist
@@ -100,9 +101,6 @@ class Util:
                         nextNumClusters = max(nextNumClusters, numClusters + math.ceil(maxClusterSize / maxPoints))
                     if max(furthestDistances) > maxFurthestDistance:
                         ratio = max(furthestDistances) / maxFurthestDistance
-                        if numClusters == 1:
-                            # assuming that the points are more likely being distributed on a plane than on a line raise this to the power of 2
-                            ratio **= 2
                         nextNumClusters = max(nextNumClusters, math.ceil(numClusters * ratio))
                     # ensure that there are at most as many clusters as points
                     numClusters = min(len(points), nextNumClusters)
@@ -234,3 +232,7 @@ class Util:
             bundlePrefixes.append(candidate)
 
         return bundlePrefixes
+
+    @staticmethod
+    def getNowInIsoFormat() -> str:
+        return datetime.now().astimezone().replace(microsecond=0).isoformat()

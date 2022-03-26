@@ -1,6 +1,5 @@
 import math
 import re
-from datetime import datetime
 from re import Match
 from typing import Optional
 
@@ -99,7 +98,7 @@ class Ymap:
 
     @staticmethod
     def replaceParent(content: str, parent: Optional[str]) -> str:
-        if parent == "" or parent is None:
+        if parent is None or parent == "":
             newParent = "<parent/>"
         else:
             newParent = "<parent>" + parent + "</parent>"
@@ -115,5 +114,4 @@ class Ymap:
             else:
                 result = content
 
-            nowLocalIso = datetime.now().astimezone().replace(microsecond=0).isoformat()
-            return Ymap.replaceDatetime(result, nowLocalIso)
+            return Ymap.replaceDatetime(result, Util.getNowInIsoFormat())
