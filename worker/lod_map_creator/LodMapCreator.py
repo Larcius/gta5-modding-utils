@@ -333,12 +333,13 @@ class LodMapCreator:
 
         return matchobj.group(1) + str(parentIndex) + matchobj.group(3)
 
-    def replacePlaceholders(self, template: str, name: str, textureDictionary: str, bbox: Box, hdDistance: float, lodDistance: float) -> str:
+    def replacePlaceholders(self, template: str, name: str, textureDictionary: str, drawableDictionary: str, bbox: Box, hdDistance: float, lodDistance: float) -> str:
         bsphere = bbox.getEnclosingSphere()
 
         return template \
             .replace("${NAME}", name) \
             .replace("${TEXTURE_DICTIONARY}", textureDictionary) \
+            .replace("${DRAWABLE_DICTIONARY}", drawableDictionary) \
             .replace("${LOD_DISTANCE}", Util.floatToStr(lodDistance)) \
             .replace("${HD_TEXTURE_DISTANCE}", Util.floatToStr(hdDistance)) \
             .replace("${BSPHERE.CENTER.X}", Util.floatToStr(bsphere.center[0])) \
@@ -437,7 +438,7 @@ class LodMapCreator:
                 indices += [x + offset for x in indicesTemplateTop]
         return indices
 
-    def createLodModel(self, lodName: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
+    def createLodModel(self, lodName: str, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
         archetypeToBbox = {}
         archetypeToNumEntities = {}
         archetypeToVertices = {}
@@ -558,10 +559,10 @@ class LodMapCreator:
             .replace("${BSPHERE.CENTER.Y}", Util.floatToStr(sphere.center[1])) \
             .replace("${BSPHERE.CENTER.Z}", Util.floatToStr(sphere.center[2])) \
             .replace("${BSPHERE.RADIUS}", Util.floatToStr(sphere.radius)) \
-            .replace("${MESH_FILENAME}", os.path.join(os.path.relpath(self.getOutputDirMeshes(), self.getOutputDirModels()), lodName.lower() + ".mesh")) \
+            .replace("${MESH_FILENAME}", lodName.lower() + ".mesh") \
             .replace("${SHADERS}\n", shaders)
 
-        fileModelOdr = open(os.path.join(self.getOutputDirModels(), lodName.lower() + ".odr"), 'w')
+        fileModelOdr = open(os.path.join(self.getOutputDirMeshes(), lodName.lower() + ".odr"), 'w')
         fileModelOdr.write(contentModelOdr)
         fileModelOdr.close()
 
@@ -575,11 +576,26 @@ class LodMapCreator:
           <extensions/>
           <archetypes>
         """)
-        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", totalBbox, itemHdDistance, itemLodDistance))
+        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", drawableDictionary, totalBbox, itemHdDistance, itemLodDistance))
 
         return EntityItem(lodName, translation, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, LodLevel.LOD, Flag.FLAGS_LOD)
 
-    def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, entities: list[EntityItem], parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
+    def createDrawableDictionary(self, name: str, entities: list[EntityItem]):
+        if len(entities) == 0:
+            return
+
+        relPath = os.path.relpath(self.getOutputDirMeshes(), self.getOutputDirModels())
+
+        file = open(os.path.join(self.getOutputDirModels(), name.lower() + ".odd"), 'w')
+        file.write("Version 165 32\n{\n")
+        for entity in entities:
+            file.write("\t")
+            file.write(os.path.join(relPath, entity.archetypeName.lower() + ".odr"))
+            file.write("\n")
+        file.write("}\n")
+        file.close()
+
+    def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
         name = nameWithoutSlodLevel + str(slodLevel)
 
         normalAndColorsFront = " / 0.00000000 -1.00000000 0.00000000 / 255 29 0 255 / 0 255 0 0 / "
@@ -735,10 +751,10 @@ class LodMapCreator:
             .replace("${BSPHERE.CENTER.Y}", Util.floatToStr(sphere.center[1])) \
             .replace("${BSPHERE.CENTER.Z}", Util.floatToStr(sphere.center[2])) \
             .replace("${BSPHERE.RADIUS}", Util.floatToStr(sphere.radius)) \
-            .replace("${MESH_FILENAME}", os.path.join(os.path.relpath(self.getOutputDirMeshes(), self.getOutputDirModels()), name.lower() + ".mesh")) \
+            .replace("${MESH_FILENAME}", name.lower() + ".mesh") \
             .replace("${SHADERS}\n", shaders)
 
-        fileModelOdr = open(os.path.join(self.getOutputDirModels(), name.lower() + ".odr"), 'w')
+        fileModelOdr = open(os.path.join(self.getOutputDirMeshes(), name.lower() + ".odr"), 'w')
         fileModelOdr.write(contentModelOdr)
         fileModelOdr.close()
 
@@ -764,7 +780,7 @@ class LodMapCreator:
   <extensions/>
   <archetypes>
 """)
-        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, self.getYtypName(), totalBbox, itemHdDistance, itemLodDistance))
+        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, self.getYtypName(), drawableDictionary, totalBbox, itemHdDistance, itemLodDistance))
 
         return EntityItem(name, translation, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, lodLevel, flags)
 
@@ -943,6 +959,10 @@ class LodMapCreator:
                     entitiesForSlod3Models[h[3]] = []
                 entitiesForSlod3Models[h[3]].append(hdEntity)
 
+        lodDrawableDictionary = mapPrefix.lower() + "_lod_children"
+        slod1DrawableDictionary = mapPrefix.lower() + "_slod1_children"
+        slod2DrawableDictionary = mapPrefix.lower() + "_slod2_children"
+
         lodEntities = []
         slod1Entities = []
         slod2Entities = []
@@ -953,7 +973,7 @@ class LodMapCreator:
         for key in sorted(entitiesForSlod3Models):
             slodName = mapPrefix.lower() + "_" + str(index) + "_slod"
             slod3Entities.append(self.createSlodModel(
-                slodName, 3,
+                slodName, 3, slod2DrawableDictionary,
                 entitiesForSlod3Models[key],
                 -1, slod3NumChildren[key],
                 LodLevel.SLOD3, Flag.FLAGS_SLOD3
@@ -967,7 +987,7 @@ class LodMapCreator:
             slodName = mapPrefix.lower() + "_" + str(index) + "_slod"
             parentIndex = self.getParentIndexForKey(key, slod2ToSlod3, slod3KeyToIndex, 0)
             slod2Entities.append(self.createSlodModel(
-                slodName, 2,
+                slodName, 2, slod2DrawableDictionary,
                 entitiesForSlod2Models[key],
                 parentIndex, slod2NumChildren[key],
                 LodLevel.SLOD2, Flag.FLAGS_SLOD2
@@ -982,7 +1002,7 @@ class LodMapCreator:
             slodName = mapPrefix.lower() + "_" + str(index) + "_slod"
             parentIndex = self.getParentIndexForKey(key, slod1ToSlod2, slod2KeyToIndex, parentIndexOffset)
             slod1Entities.append(self.createSlodModel(
-                slodName, 1,
+                slodName, 1, slod1DrawableDictionary,
                 entitiesForSlod1Models[key],
                 parentIndex, slod1NumChildren[key],
                 LodLevel.SLOD1, Flag.FLAGS_SLOD1
@@ -995,7 +1015,7 @@ class LodMapCreator:
             parentIndex = self.getParentIndexForKey(key, lodToSlod1, slod1KeyToIndex, 0)
             if self.USE_SLOD_AS_LOD_MODEL:
                 lodEntities.append(self.createSlodModel(
-                    lodName, 0,
+                    lodName, 0, lodDrawableDictionary,
                     entitiesForLodModels[key],
                     parentIndex, lodNumChildren[key],
                     LodLevel.LOD, Flag.FLAGS_LOD
@@ -1003,9 +1023,14 @@ class LodMapCreator:
             else:
                 lodEntities.append(self.createLodModel(
                     lodName,
+                    lodDrawableDictionary,
                     entitiesForLodModels[key],
                     parentIndex, lodNumChildren[key]
                 ))
+
+        self.createDrawableDictionary(lodDrawableDictionary, lodEntities)
+        self.createDrawableDictionary(slod1DrawableDictionary, slod1Entities)
+        self.createDrawableDictionary(slod2DrawableDictionary, slod2Entities + slod3Entities)
 
         if len(slod2Entities) == 0:
             slod2MapName = None

@@ -10,7 +10,7 @@
       <name>${NAME}</name>
       <textureDictionary>${TEXTURE_DICTIONARY}</textureDictionary>
       <clipDictionary/>
-      <drawableDictionary/>
+      <drawableDictionary>${DRAWABLE_DICTIONARY}</drawableDictionary>
       <physicsDictionary/>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
       <assetName>${NAME}</assetName>
