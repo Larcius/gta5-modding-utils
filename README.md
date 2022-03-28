@@ -65,7 +65,7 @@ python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix=
 
 For example if you want to run sanitizing, static collision model creator, lod model creator and lod/slod map creator use this command:
 ````commandline
-python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --lodModel=on --sanitizer=on --staticCol=on --lodMap=on
+python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --sanitizer=on --staticCol=on --lodMap=on
 ````
 
 After that you will see the output in the given directory (if not explicitly stated then it's in a subdirectory `generated` in the provided input directory).
