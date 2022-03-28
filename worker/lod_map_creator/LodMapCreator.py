@@ -1,13 +1,10 @@
 import shutil
-from re import Match
-from typing import Any, IO, Optional
-
-import numpy as np
-import transforms3d
-from natsort import natsorted
-
 import os
 import re
+import numpy as np
+from re import Match
+from typing import IO, Optional
+from natsort import natsorted
 
 from common.Box import Box
 from common.Sphere import Sphere
@@ -223,6 +220,8 @@ class LodMapCreator:
     ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD2 = 800
     ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD3 = 1600
 
+    USE_SLOD_AS_LOD_MODEL = False
+
     unitBox = Box.createUnitBox()
     unitSphere = Sphere.createUnitSphere()
 
@@ -334,12 +333,12 @@ class LodMapCreator:
 
         return matchobj.group(1) + str(parentIndex) + matchobj.group(3)
 
-    def replacePlaceholders(self, template: str, name: str, bbox: Box, hdDistance: float, lodDistance: float) -> str:
+    def replacePlaceholders(self, template: str, name: str, textureDictionary: str, bbox: Box, hdDistance: float, lodDistance: float) -> str:
         bsphere = bbox.getEnclosingSphere()
 
         return template \
             .replace("${NAME}", name) \
-            .replace("${TEXTURE_DICTIONARY}", self.getYtypName()) \
+            .replace("${TEXTURE_DICTIONARY}", textureDictionary) \
             .replace("${LOD_DISTANCE}", Util.floatToStr(lodDistance)) \
             .replace("${HD_TEXTURE_DISTANCE}", Util.floatToStr(hdDistance)) \
             .replace("${BSPHERE.CENTER.X}", Util.floatToStr(bsphere.center[0])) \
@@ -404,6 +403,182 @@ class LodMapCreator:
             .replace("${BBOX.MAX.Y}", Util.floatToStr(bbox.max[1])) \
             .replace("${BBOX.MAX.Z}", Util.floatToStr(bbox.max[2]))
 
+    def createLodModelVertexStr(self, entity: EntityItem, boundingBox: Box, vertex: list[float], normal: list[float], uv: list[float]):
+        vertex = entity.applyTransformationTo(vertex)
+        boundingBox.extendByPoint(vertex)
+
+        normal = Util.normalize(Util.applyRotation(normal, entity.rotation))
+        return "				" + Util.floatToStr(vertex[0]) + " " + Util.floatToStr(vertex[1]) + " " + Util.floatToStr(vertex[2]) + " / " + Util.floatToStr(normal[0]) + " " + Util.floatToStr(normal[1]) + " " + Util.floatToStr(normal[2]) + " / 255 29 0 255 / 0 0 0 0 / " + Util.floatToStr(uv[0]) + " " + Util.floatToStr(uv[1]) + "\n"
+
+    def createIndicesStr(self, indices: list[int]) -> str:
+        indicesStr = ""
+        i = 0
+        for index in indices:
+            if i % 15 == 0:
+                if i > 0:
+                    indicesStr += "\n"
+                indicesStr += "				"
+            else:
+                indicesStr += " "
+            indicesStr += str(index)
+            i += 1
+
+        return indicesStr
+
+    def createIndicesForLod(self, numEntities: int, withTop: bool) -> list[int]:
+        indicesTemplate = [0, 1, 2, 0, 1, 2, 2, 3, 0, 2, 3, 0, 4, 5, 6, 4, 5, 6, 6, 7, 4, 6, 7, 4, 8, 11, 10, 8, 11, 10, 10, 9, 8, 10, 9, 8, 12, 15, 14, 12, 15, 14, 14, 13, 12, 14, 13, 12]
+        indicesTemplateTop = [16, 17, 18, 16, 18, 19, 16, 19, 20, 16, 20, 17]
+        indices = []
+        verticesPerEntity = 21 if withTop else 16
+        for i in range(numEntities):
+            offset = i * verticesPerEntity
+            indices += [x + offset for x in indicesTemplate]
+            if withTop:
+                indices += [x + offset for x in indicesTemplateTop]
+        return indices
+
+    def createLodModel(self, lodName: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
+        archetypeToBbox = {}
+        archetypeToNumEntities = {}
+        archetypeToVertices = {}
+
+        for entity in entities:
+            lodCandidate = self.lodCandidates[entity.archetypeName]
+            name = lodCandidate.name
+            if name not in archetypeToVertices:
+                archetypeToBbox[name] = Box.createReversedInfinityBox()
+                archetypeToNumEntities[name] = 0
+                archetypeToVertices[name] = ""
+
+            archetypeToNumEntities[name] += 1
+            bbox = self.ytypItems[entity.archetypeName].boundingBox
+            sizes = bbox.getSizes()
+            planeIntersection = [bbox.min[0] + sizes[0] * lodCandidate.texture_origin, bbox.min[1] + sizes[1] * lodCandidate.textureOriginSide()]
+
+            geomBbox = archetypeToBbox[name]
+
+            uvFrontMin = lodCandidate.getUvFrontMin()
+            uvFrontMax = lodCandidate.getUvFrontMax()
+            uvSideMin = lodCandidate.getUvSideMin()
+            uvSideMax = lodCandidate.getUvSideMax()
+
+            archetypeToVertices[name] += \
+                self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, -1, 0], [uvFrontMin.u, uvFrontMax.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, -1, 0], [uvFrontMax.u, uvFrontMax.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, -1, 1], [uvFrontMax.u, uvFrontMin.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, -1, 1], [uvFrontMin.u, uvFrontMin.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.min[2]], [1, -1, 0], [uvSideMin.u, uvSideMax.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.min[2]], [1, 1, 0], [uvSideMax.u, uvSideMax.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.max[2]], [1, 1, 1], [uvSideMax.u, uvSideMin.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.max[2]], [1, -1, 1], [uvSideMin.u, uvSideMin.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, 1, 0], [uvFrontMin.u, uvFrontMax.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, 1, 0], [uvFrontMax.u, uvFrontMax.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, 1, 1], [uvFrontMax.u, uvFrontMin.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, 1, 1], [uvFrontMin.u, uvFrontMin.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.min[2]], [-1, -1, 0], [uvSideMin.u, uvSideMax.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.min[2]], [-1, 1, 0], [uvSideMax.u, uvSideMax.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.max[2]], [-1, 1, 1], [uvSideMax.u, uvSideMin.v]) + \
+                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.max[2]], [-1, -1, 1], [uvSideMin.u, uvSideMin.v])
+
+            if lodCandidate.hasTop():
+                uvTopMin = lodCandidate.getUvTopMin()
+                uvTopMax = lodCandidate.getUvTopMax()
+                uvTopCenter = lodCandidate.getUvTopCenter()
+
+                planeTopMinZ = bbox.min[2] + (bbox.max[2] - bbox.min[2]) * (1 - lodCandidate.planeZ)
+                if lodCandidate.uvTopCenterZ is None:
+                    planeTopMaxZ = min(bbox.max[2] - min(sizes) * 0.1, planeTopMinZ + sizes[0] / 2)
+                else:
+                    planeTopMaxZ = bbox.min[2] + sizes[2] * (1 - lodCandidate.uvTopCenterZ)
+
+                archetypeToVertices[name] += \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], planeIntersection[1], planeTopMaxZ], [0, 0, 1], [uvTopCenter.u, uvTopCenter.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], bbox.min[1], planeTopMinZ], [-1, -1, 1], [uvTopMin.u, uvTopMax.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], bbox.min[1], planeTopMinZ], [1, -1, 1], [uvTopMax.u, uvTopMax.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], bbox.max[1], planeTopMinZ], [1, 1, 1], [uvTopMax.u, uvTopMin.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], bbox.max[1], planeTopMinZ], [-1, 1, 1], [uvTopMin.u, uvTopMin.v])
+
+        totalBbox = Box.createReversedInfinityBox()
+
+        for archetype in archetypeToBbox:
+            totalBbox.extendByPoint(archetypeToBbox[archetype].min)
+            totalBbox.extendByPoint(archetypeToBbox[archetype].max)
+
+        translation = totalBbox.getCenter()
+
+        totalBbox = totalBbox.getTranslated(np.multiply(translation, [-1]).tolist())
+
+        bounds = self.createAabb(totalBbox)
+
+        shaders = ""
+        geometries = ""
+        shaderIndex = 0
+        for archetype in archetypeToBbox:
+            lodCandidate = self.lodCandidates[archetype]
+            numEntities = archetypeToNumEntities[archetype]
+            withTop = lodCandidate.hasTop()
+            verticesPerEntity = 21 if withTop else 16
+
+            indices = self.createIndicesForLod(numEntities, withTop)
+
+            archetypeToBbox[archetype] = archetypeToBbox[archetype].getTranslated(np.multiply(translation, [-1]).tolist())
+            archetypeToVertices[archetype] = re.sub('(?<=\t\t\t\t)(\\S+) (\\S+) (\\S+)', lambda match: self.replTranslateVertex(match, translation), archetypeToVertices[archetype])
+
+            shaders += self.contentTemplateOdrShaderTreeLod.replace("${DIFFUSE_SAMPLER}", lodCandidate.texture())
+
+            bounds += self.createAabb(archetypeToBbox[archetype])
+
+            geometries += self.contentTemplateMeshGeometry \
+                .replace("${SHADER_INDEX}", str(shaderIndex)) \
+                .replace("${VERTEX_DECLARATION}", "NCE8F80C8") \
+                .replace("${INDICES.NUM}", str(len(indices))) \
+                .replace("${INDICES}", self.createIndicesStr(indices)) \
+                .replace("${VERTICES.NUM}", str(verticesPerEntity * numEntities)) \
+                .replace("${VERTICES}\n", archetypeToVertices[archetype])
+            shaderIndex += 1
+
+        contentModelMesh = self.contentTemplateMesh \
+            .replace("${BOUNDS}\n", bounds) \
+            .replace("${GEOMETRIES}\n", geometries)
+
+        fileModelMesh = open(os.path.join(self.getOutputDirMeshes(), lodName.lower() + ".mesh"), 'w')
+        fileModelMesh.write(contentModelMesh)
+        fileModelMesh.close()
+
+        sphere = totalBbox.getEnclosingSphere()
+
+        contentModelOdr = self.contentTemplateOdr \
+            .replace("${BBOX.MIN.X}", Util.floatToStr(totalBbox.min[0])) \
+            .replace("${BBOX.MIN.Y}", Util.floatToStr(totalBbox.min[1])) \
+            .replace("${BBOX.MIN.Z}", Util.floatToStr(totalBbox.min[2])) \
+            .replace("${BBOX.MAX.X}", Util.floatToStr(totalBbox.max[0])) \
+            .replace("${BBOX.MAX.Y}", Util.floatToStr(totalBbox.max[1])) \
+            .replace("${BBOX.MAX.Z}", Util.floatToStr(totalBbox.max[2])) \
+            .replace("${BSPHERE.CENTER.X}", Util.floatToStr(sphere.center[0])) \
+            .replace("${BSPHERE.CENTER.Y}", Util.floatToStr(sphere.center[1])) \
+            .replace("${BSPHERE.CENTER.Z}", Util.floatToStr(sphere.center[2])) \
+            .replace("${BSPHERE.RADIUS}", Util.floatToStr(sphere.radius)) \
+            .replace("${MESH_FILENAME}", os.path.join(os.path.relpath(self.getOutputDirMeshes(), self.getOutputDirModels()), lodName.lower() + ".mesh")) \
+            .replace("${SHADERS}\n", shaders)
+
+        fileModelOdr = open(os.path.join(self.getOutputDirModels(), lodName.lower() + ".odr"), 'w')
+        fileModelOdr.write(contentModelOdr)
+        fileModelOdr.close()
+
+        itemHdDistance = 350
+        itemLodDistance = LodMapCreator.LOD_DISTANCE
+
+        if not os.path.exists(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml")):
+            self.slodYtypItems = open(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml"), 'w')
+            self.slodYtypItems.write("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        <CMapTypes>
+          <extensions/>
+          <archetypes>
+        """)
+        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", totalBbox, itemHdDistance, itemLodDistance))
+
+        return EntityItem(lodName, translation, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, LodLevel.LOD, Flag.FLAGS_LOD)
+
     def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, entities: list[EntityItem], parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
         name = nameWithoutSlodLevel + str(slodLevel)
 
@@ -440,7 +615,7 @@ class LodMapCreator:
             sizeZStr = Util.floatToStr(sizeZ)
 
             center = bboxEntity.getCenter()
-            centerTransformed = np.add(np.multiply(transforms3d.quaternions.rotate_vector(center, entity.rotation), entity.scale), entity.position).tolist()
+            centerTransformed = entity.applyTransformationTo(center)
 
             transformedBboxEntityMin = np.subtract(centerTransformed, [sizeXY / 2, sizeXY / 2, sizeZ / 2]).tolist()
             transformedBboxEntityMax = np.add(centerTransformed, [sizeXY / 2, sizeXY / 2, sizeZ / 2]).tolist()
@@ -589,7 +764,7 @@ class LodMapCreator:
   <extensions/>
   <archetypes>
 """)
-        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, totalBbox, itemHdDistance, itemLodDistance))
+        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, self.getYtypName(), totalBbox, itemHdDistance, itemLodDistance))
 
         return EntityItem(name, translation, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, lodLevel, flags)
 
@@ -655,10 +830,10 @@ class LodMapCreator:
 
         if self.slodYtypItems is not None:
             self.slodYtypItems.write("""  </archetypes>
-      <name>""" + self.getYtypName() + """</name>
-      <dependencies/>
-      <compositeEntityTypes/>
-    </CMapTypes>""")
+  <name>""" + self.getYtypName() + """</name>
+  <dependencies/>
+  <compositeEntityTypes/>
+</CMapTypes>""")
 
             self.slodYtypItems.close()
 
@@ -707,7 +882,7 @@ class LodMapCreator:
                     continue
 
                 position = [float(matchobj.group(2)), float(matchobj.group(3)), float(matchobj.group(4))]
-                rotation = [float(matchobj.group(8)), float(matchobj.group(5)), float(matchobj.group(6)), float(matchobj.group(7))]
+                rotation = [float(matchobj.group(8)), -float(matchobj.group(5)), -float(matchobj.group(6)), -float(matchobj.group(7))]  # order is w, -x, -y, -z
                 scale = [float(matchobj.group(9)), float(matchobj.group(9)), float(matchobj.group(10))]
                 lodDistance = float(matchobj.group(11))
                 entity = EntityItem(archetypeName, position, scale, rotation, lodDistance)
@@ -818,12 +993,19 @@ class LodMapCreator:
         for key in sorted(entitiesForLodModels):
             lodName = mapPrefix.lower() + "_" + str(key) + "_lod"
             parentIndex = self.getParentIndexForKey(key, lodToSlod1, slod1KeyToIndex, 0)
-            lodEntities.append(self.createSlodModel(
-                lodName, 0,
-                entitiesForLodModels[key],
-                parentIndex, lodNumChildren[key],
-                LodLevel.LOD, Flag.FLAGS_LOD
-            ))
+            if self.USE_SLOD_AS_LOD_MODEL:
+                lodEntities.append(self.createSlodModel(
+                    lodName, 0,
+                    entitiesForLodModels[key],
+                    parentIndex, lodNumChildren[key],
+                    LodLevel.LOD, Flag.FLAGS_LOD
+                ))
+            else:
+                lodEntities.append(self.createLodModel(
+                    lodName,
+                    entitiesForLodModels[key],
+                    parentIndex, lodNumChildren[key]
+                ))
 
         if len(slod2Entities) == 0:
             slod2MapName = None

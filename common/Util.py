@@ -5,6 +5,7 @@ import shutil
 from typing import Any, Callable, Optional
 
 import numpy as np
+import transforms3d
 from datetime import datetime
 from natsort import natsorted
 from scipy.spatial import ConvexHull
@@ -187,12 +188,18 @@ class Util:
 
     @staticmethod
     def calculateAngle(vertexMiddle: list[float], vertex1: list[float], vertex2: list[float]) -> float:
-        vector1 = np.subtract(vertex1, vertexMiddle)
-        vector2 = np.subtract(vertex2, vertexMiddle)
+        unitVector1 = Util.normalize(np.subtract(vertex1, vertexMiddle))
+        unitVector2 = Util.normalize(np.subtract(vertex2, vertexMiddle))
 
-        unitVector1 = vector1 / np.linalg.norm(vector1)
-        unitVector2 = vector2 / np.linalg.norm(vector2)
         return np.arccos(np.dot(unitVector1, unitVector2))
+
+    @staticmethod
+    def normalize(vector: list[float]) -> list[float]:
+        norm = np.linalg.norm(vector)
+        if abs(norm) < 1e-8:
+            return vector
+        else:
+            return vector / norm
 
     @staticmethod
     def determinePrefixBundles(names: list[str]) -> list[str]:
@@ -236,3 +243,11 @@ class Util:
     @staticmethod
     def getNowInIsoFormat() -> str:
         return datetime.now().astimezone().replace(microsecond=0).isoformat()
+
+    @staticmethod
+    def applyRotation(vertex: list[float], rotation: list[float]) -> list[float]:
+        return transforms3d.quaternions.rotate_vector(vertex, rotation)
+
+    @staticmethod
+    def applyTransformation(vertex: list[float], rotation: list[float], scaling: list[float], translation: list[float]) -> list[float]:
+        return np.add(np.multiply(Util.applyRotation(vertex, rotation), scaling), translation).tolist()

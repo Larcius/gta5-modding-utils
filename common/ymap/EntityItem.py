@@ -1,5 +1,7 @@
 from typing import Optional
 
+from common.Util import Util
+
 
 class EntityItem:
     archetypeName: str
@@ -25,3 +27,6 @@ class EntityItem:
         self.numChildren = numChildren
         self.lodLevel = lodLevel
         self.flags = flags
+
+    def applyTransformationTo(self, vertex: list[float]) -> list[float]:
+        return Util.applyTransformation(vertex, self.rotation, self.scale, self.position)
