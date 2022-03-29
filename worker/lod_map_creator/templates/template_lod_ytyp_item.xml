@@ -12,7 +12,7 @@
       <clipDictionary/>
       <drawableDictionary>${DRAWABLE_DICTIONARY}</drawableDictionary>
       <physicsDictionary/>
-      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetType>ASSET_TYPE_DRAWABLEDICTIONARY</assetType>
       <assetName>${NAME}</assetName>
       <extensions/>
     </Item>

@@ -45,6 +45,8 @@ class LodMapCreator:
 
     lodCandidates: dict[str, LodCandidate]
 
+    MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY = 63
+
     def prepareLodCandidates(self):
         lodCandidates = {
             # trees
@@ -566,7 +568,7 @@ class LodMapCreator:
         fileModelOdr.write(contentModelOdr)
         fileModelOdr.close()
 
-        itemHdDistance = 350
+        itemHdDistance = 300
         itemLodDistance = LodMapCreator.LOD_DISTANCE
 
         if not os.path.exists(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml")):
@@ -963,8 +965,8 @@ class LodMapCreator:
         slod1DrawableDictionary = mapPrefix.lower() + "_slod1_children"
         slod2DrawableDictionary = mapPrefix.lower() + "_slod2_children"
 
-        lodEntities = []
-        slod1Entities = []
+        lodEntities = [[]]
+        slod1Entities = [[]]
         slod2Entities = []
         slod3Entities = []
 
@@ -1001,8 +1003,12 @@ class LodMapCreator:
         for key in sorted(entitiesForSlod1Models):
             slodName = mapPrefix.lower() + "_" + str(index) + "_slod"
             parentIndex = self.getParentIndexForKey(key, slod1ToSlod2, slod2KeyToIndex, parentIndexOffset)
-            slod1Entities.append(self.createSlodModel(
-                slodName, 1, slod1DrawableDictionary,
+
+            if len(slod1Entities[-1]) >= LodMapCreator.MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY:
+                slod1Entities.append([])
+
+            slod1Entities[-1].append(self.createSlodModel(
+                slodName, 1, slod1DrawableDictionary + "_" + str(len(slod1Entities) - 1),
                 entitiesForSlod1Models[key],
                 parentIndex, slod1NumChildren[key],
                 LodLevel.SLOD1, Flag.FLAGS_SLOD1
@@ -1013,23 +1019,29 @@ class LodMapCreator:
         for key in sorted(entitiesForLodModels):
             lodName = mapPrefix.lower() + "_" + str(key) + "_lod"
             parentIndex = self.getParentIndexForKey(key, lodToSlod1, slod1KeyToIndex, 0)
+
+            if len(lodEntities[-1]) >= LodMapCreator.MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY:
+                lodEntities.append([])
+
             if self.USE_SLOD_AS_LOD_MODEL:
-                lodEntities.append(self.createSlodModel(
-                    lodName, 0, lodDrawableDictionary,
+                lodEntities[-1].append(self.createSlodModel(
+                    lodName, 0, lodDrawableDictionary + "_" + str(len(lodEntities) - 1),
                     entitiesForLodModels[key],
                     parentIndex, lodNumChildren[key],
                     LodLevel.LOD, Flag.FLAGS_LOD
                 ))
             else:
-                lodEntities.append(self.createLodModel(
+                lodEntities[-1].append(self.createLodModel(
                     lodName,
-                    lodDrawableDictionary,
+                    lodDrawableDictionary + "_" + str(len(lodEntities) - 1),
                     entitiesForLodModels[key],
                     parentIndex, lodNumChildren[key]
                 ))
 
-        self.createDrawableDictionary(lodDrawableDictionary, lodEntities)
-        self.createDrawableDictionary(slod1DrawableDictionary, slod1Entities)
+        for lodEntitiesIndex in range(len(lodEntities)):
+            self.createDrawableDictionary(lodDrawableDictionary + "_" + str(lodEntitiesIndex), lodEntities[lodEntitiesIndex])
+        for slod1EntitiesIndex in range(len(slod1Entities)):
+            self.createDrawableDictionary(slod1DrawableDictionary + "_" + str(slod1EntitiesIndex), slod1Entities[slod1EntitiesIndex])
         self.createDrawableDictionary(slod2DrawableDictionary, slod2Entities + slod3Entities)
 
         if len(slod2Entities) == 0:
@@ -1037,9 +1049,17 @@ class LodMapCreator:
         else:
             slod2MapName = mapPrefix.lower() + "_slod2"
             self.writeLodOrSlodMap(slod2MapName, None, ContentFlag.SLOD + ContentFlag.SLOD2, slod3Entities + slod2Entities)
-        self.writeLodOrSlodMap(mapPrefix.lower() + "_lod", slod2MapName, ContentFlag.LOD + ContentFlag.SLOD, slod1Entities + lodEntities)
 
-        self.adaptHdMapsForPrefix(mapPrefix, hdToLod, len(slod1Entities))
+        slod1AndLodEntities = []
+        numSlod1Entities = 0
+        for slod1s in slod1Entities:
+            slod1AndLodEntities += slod1s
+            numSlod1Entities += len(slod1s)
+        for lods in lodEntities:
+            slod1AndLodEntities += lods
+        self.writeLodOrSlodMap(mapPrefix.lower() + "_lod", slod2MapName, ContentFlag.LOD + ContentFlag.SLOD, slod1AndLodEntities)
+
+        self.adaptHdMapsForPrefix(mapPrefix, hdToLod, numSlod1Entities)
 
     def getParentIndexForKey(self, key: int, keyToParentKey: dict[int, int], parentKeyToIndex: dict[int, int], parentIndexOffset: int):
         if key not in keyToParentKey:
