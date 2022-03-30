@@ -10,7 +10,7 @@ from datetime import datetime
 from natsort import natsorted
 from scipy.spatial import ConvexHull
 from scipy.spatial.distance import pdist
-from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 
 from common import Box, Sphere
 
@@ -53,7 +53,7 @@ class Util:
     @staticmethod
     def _performClustering(X: np.ndarray, numClusters: int) -> (Any, float, list[float]):
         print("\t\tcalculating clustering of " + str(numClusters) + " clusters")
-        model = KMeans(n_clusters=numClusters, n_init=200, max_iter=5000, random_state=0, algorithm="full")
+        model = MiniBatchKMeans(n_clusters=numClusters, random_state=0)
         clusters = model.fit_predict(X)
 
         maxClusterSize = -1
