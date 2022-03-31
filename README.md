@@ -58,10 +58,13 @@ Then select all of your ymap files and export them in openFormats (right click a
 I recommend exporting them into another subdirectory so that the directory you state as input directory only contains these .ymap.xml files.
 
 Now that you have your Python environment prepared and provided the necessary files you can finally apply the scripts.
-For example if you want to perform clustering (read entities from all ymaps, perform clustering and create new ymaps each containing one cluster) with 12 clusters use this command:
+For example if you want to perform clustering (read entities from all ymaps, perform clustering and create new ymaps each containing one cluster) use this command:
 ````commandline
-python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --clustering=on --numClusters=12
+python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --clustering=on
 ````
+This will automatically detect the number of clusters so that the extends of each map is reasonable.
+However, if you want a specific number here please add `--numClusters=<NUMBER>` to the command.
+But please keep in mind that having too large map extends may have a huge impact on performance and stability, so only use a specific value here if you are aware of that.
 
 For example if you want to run sanitizing, static collision model creator, lod model creator and lod/slod map creator use this command:
 ````commandline
@@ -72,7 +75,7 @@ After that you will see the output in the given directory (if not explicitly sta
 Finally, you need to import these files in your dlc.rpf (please have a look at GTA V Remastered: Enhanced for an example structure).
 OpenIV automatically converts these openFormats files back to binary files on importing.
 
-Note: The directories `_lod_meshes` and `_slod_meshes` are used when importing the files from directory `<PREFIX>_lod` and `<PREFIX>_slod`. 
+Note: The directory `_slod_meshes` is used when importing the files from directory `<PREFIX>_slod`.
 
 
 ## Video tutorial

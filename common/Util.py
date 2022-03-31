@@ -11,6 +11,7 @@ from natsort import natsorted
 from scipy.spatial import ConvexHull
 from scipy.spatial.distance import pdist
 from sklearn.cluster import MiniBatchKMeans
+from sklearn.cluster import AgglomerativeClustering
 
 from common import Box, Sphere
 
@@ -51,9 +52,12 @@ class Util:
         return maxDistance
 
     @staticmethod
-    def _performClustering(X: np.ndarray, numClusters: int) -> (Any, float, list[float]):
+    def _performClustering(X: np.ndarray, numClusters: int, unevenClusters: bool) -> (Any, float, list[float]):
         print("\t\tcalculating clustering of " + str(numClusters) + " clusters")
-        model = MiniBatchKMeans(n_clusters=numClusters, random_state=0)
+        if unevenClusters:
+            model = AgglomerativeClustering(n_clusters=numClusters, linkage="average")
+        else:
+            model = MiniBatchKMeans(n_clusters=numClusters, random_state=0)
         clusters = model.fit_predict(X)
 
         maxClusterSize = -1
@@ -68,12 +72,12 @@ class Util:
         return clusters, maxClusterSize, furthestDistances
 
     @staticmethod
-    def performClusteringFixedNumClusters(points: list[list[float]], numClusters: int) -> (Any, float, list[float]):
+    def performClusteringFixedNumClusters(points: list[list[float]], numClusters: int, unevenClusters: bool = False) -> (Any, float, list[float]):
         X = np.array(points)
-        return Util._performClustering(X, numClusters)
+        return Util._performClustering(X, numClusters, unevenClusters)
 
     @staticmethod
-    def performClustering(points: list[list[float]], maxPoints: int, maxFurthestDistance: float) -> (Any, list[float]):
+    def performClustering(points: list[list[float]], maxPoints: int, maxFurthestDistance: float, unevenClusters: bool = False) -> (Any, list[float]):
         X = np.array(points)
         numPoints = len(points)
 
@@ -84,7 +88,7 @@ class Util:
 
         numClusters = 1 if maxPoints <= 0 else math.ceil(len(points) / maxPoints)
         while largestNonValidNumClusters + 1 != smallestValidNumClusters:
-            clusters, maxClusterSize, furthestDistances = Util._performClustering(X, numClusters)
+            clusters, maxClusterSize, furthestDistances = Util._performClustering(X, numClusters, unevenClusters)
 
             furthestDistanceWeightedMean = 0
             for cluster in np.unique(clusters):

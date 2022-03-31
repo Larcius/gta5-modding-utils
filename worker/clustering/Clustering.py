@@ -3,7 +3,6 @@ import numpy as np
 from natsort import natsorted
 from matplotlib import pyplot
 import matplotlib.patheffects as PathEffects
-import math
 import os
 import re
 
@@ -22,6 +21,7 @@ class Clustering:
     prefix: str
     numCluster: int
 
+    GROUP_MAX_EXTEND = 2100
     MAX_EXTEND = 700
 
     _PATTERN = re.compile(
@@ -64,6 +64,48 @@ class Clustering:
         self.defaultPostEntities = f.read()
         f.close()
 
+    def _calculateMapHierarchy(self, points: list[list[float]], hierarchy: list[list[int]]) -> list[list[int]]:
+        level = len(hierarchy[0])
+        if level == 0:
+            maxExtends = Clustering.GROUP_MAX_EXTEND
+            unevenClusters = False
+        elif level == 1:
+            maxExtends = Clustering.MAX_EXTEND
+            unevenClusters = False
+        else:
+            return hierarchy
+
+        absIndices = []
+        pointsOfParent = []
+        for i in range(len(points)):
+            parentIndex = 0 if len(hierarchy[i]) == 0 else hierarchy[i][0]
+
+            while parentIndex >= len(pointsOfParent):
+                absIndices.append([])
+                pointsOfParent.append([])
+
+            absIndices[parentIndex].append(i)
+            pointsOfParent[parentIndex].append(points[i])
+
+        for parentIndex in range(len(pointsOfParent)):
+            clustering, unused = Util.performClustering(pointsOfParent[parentIndex], -1, maxExtends, unevenClusters)
+
+            for c in range(len(clustering)):
+                i = absIndices[parentIndex][c]
+                hierarchy[i].insert(0, clustering[c])
+
+        return self._calculateMapHierarchy(points, hierarchy)
+
+    def calculateMapHierarchy(self, points: list[list[float]]) -> list[list[int]]:
+        if len(points) == 0:
+            return []
+
+        hierarchy = []
+        for i in range(len(points)):
+            hierarchy.append([])
+
+        return self._calculateMapHierarchy(points, hierarchy)
+
     def processFiles(self):
         coords = []
         customPostEntities = []
@@ -101,18 +143,21 @@ class Clustering:
 
         if self.numCluster > 0:
             clusters, unused, furthestDistances = Util.performClusteringFixedNumClusters(coords, self.numCluster)
+            hierarchy = [[i, 0] for i in clusters]
         else:
-            clusters, furthestDistances = Util.performClustering(coords, -1, Clustering.MAX_EXTEND)
-
-        numClusters = len(np.unique(clusters))
-
-        numDigitsMapIndices = math.ceil(math.log(numClusters + 1, 10))
+            hierarchy = self.calculateMapHierarchy(coords)
 
         outputFiles = {}
         mapPrefix = self.getMapPrefix(mapNames)
-        for cluster in np.unique(clusters):
-            outputFiles[cluster] = open(os.path.join(self.outputDir, mapPrefix + "_" + str(cluster + 1).zfill(numDigitsMapIndices) + ".ymap.xml"), 'w')
-            outputFiles[cluster].write(contentPreEntities)
+        for h in hierarchy:
+            cluster = h[0]
+            group = h[1]
+            if group not in outputFiles:
+                outputFiles[group] = {}
+
+            if cluster not in outputFiles[group]:
+                outputFiles[group][cluster] = open(os.path.join(self.outputDir, mapPrefix + "_" + chr(97 + group) + "_" + str(cluster) + ".ymap.xml"), 'w')
+                outputFiles[group][cluster].write(contentPreEntities)
 
         i = 0
         for filename in natsorted(os.listdir(self.inputDir)):
@@ -124,34 +169,55 @@ class Clustering:
             f.close()
 
             for matchobj in re.finditer(Clustering._PATTERN, content):
-                cluster = clusters[i]
-                outputFiles[cluster].write(matchobj.group(0))
+                cluster = hierarchy[i][0]
+                group = hierarchy[i][1]
+                outputFiles[group][cluster].write(matchobj.group(0))
                 i += 1
 
-        for cluster in np.unique(clusters):
-            outputFiles[cluster].write(contentPostEntities)
-            outputFiles[cluster].close()
+        for g in outputFiles:
+            groups = outputFiles[g]
+            for c in groups:
+                file = groups[c]
+                file.write(contentPostEntities)
+                file.close()
 
         for custom in customPostEntities:
             print("custom content after </entities> in file " + custom)
 
-        self.plotClusterResult(coords, clusters)
+        self.plotClusterResult(coords, hierarchy)
 
-    def plotClusterResult(self, coords: list[list[float]], clusters):
+    def plotClusterResult(self, coords: list[list[float]], hierarchy: list[list[int]]):
+        groups = {}
+        numClusters = 0
+        i = 0
+        for h in hierarchy:
+            cluster = h[0]
+            group = h[1]
+            if group not in groups:
+                groups[group] = {}
+
+            if cluster not in groups[group]:
+                groups[group][cluster] = []
+                numClusters += 1
+
+            groups[group][cluster].append(i)
+            i += 1
+
         # create scatter plot for samples from each cluster
-        cmap = pyplot.cm.get_cmap("gist_ncar", len(np.unique(clusters)) + 1)
+        cmap = pyplot.cm.get_cmap("gist_ncar", numClusters + 1)
         X = np.array(coords)
         i = 0
-        for cluster in np.unique(clusters):
-            # get row indexes for samples with this cluster
-            row_ix = np.where(clusters == cluster)
+        for group in groups:
+            for cluster in groups[group]:
+                # get row indexes for samples with this cluster
+                row_ix = groups[group][cluster]
 
-            # create scatter of these samples
-            pyplot.scatter(X[row_ix, 0], X[row_ix, 1], color=cmap(i))
-            annotate = pyplot.annotate(cluster + 1, xy=(np.mean(X[row_ix, 0]), np.mean(X[row_ix, 1])), ha='center', va='center')
-            annotate.set_path_effects([PathEffects.withStroke(linewidth=4, foreground='w')])
+                # create scatter of these samples
+                pyplot.scatter(X[row_ix, 0], X[row_ix, 1], color=cmap(i))
+                annotate = pyplot.annotate(chr(97 + group) + "_" + str(cluster), xy=(np.mean(X[row_ix, 0]), np.mean(X[row_ix, 1])), ha='center', va='center')
+                annotate.set_path_effects([PathEffects.withStroke(linewidth=4, foreground='w')])
 
-            i += 1
+                i += 1
 
         pyplot.gca().set_aspect('equal')
 
