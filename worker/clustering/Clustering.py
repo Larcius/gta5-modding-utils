@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 import numpy as np
 from natsort import natsorted
@@ -106,6 +107,42 @@ class Clustering:
 
         return self._calculateMapHierarchy(points, hierarchy)
 
+    def getClusterName(self, group: int, cluster: int, numGroups: int, numClusters: int) -> str:
+        letters = ""
+        if numGroups > 1:
+            numLetters = math.ceil(math.log(numGroups, 26))
+            n = group
+            while n > 0:
+                letters = chr(97 + (n % 26)) + letters
+                n = math.floor(n / 26)
+            letters = letters.rjust(numLetters, "a")
+
+        if numClusters > 1:
+            numDigits = math.ceil(math.log(numClusters, 10))
+            digits = str(cluster).zfill(numDigits)
+        else:
+            digits = ""
+
+        return letters + ("_" if letters and digits else "") + digits
+
+    def getNumGroupsAndNumClusters(self, hierarchy: list[list[int]]) -> (int, int):
+        numGroups = 0
+        numClusters = {}
+        clustersCounted = {}
+        for h in hierarchy:
+            cluster = h[0]
+            group = h[1]
+            if group not in numClusters:
+                clustersCounted[group] = set()
+                numClusters[group] = 0
+                numGroups += 1
+
+            if cluster not in clustersCounted[group]:
+                clustersCounted[group].add(cluster)
+                numClusters[group] += 1
+
+        return numGroups, numClusters
+
     def processFiles(self):
         coords = []
         customPostEntities = []
@@ -147,6 +184,8 @@ class Clustering:
         else:
             hierarchy = self.calculateMapHierarchy(coords)
 
+        numGroups, numClusters = self.getNumGroupsAndNumClusters(hierarchy)
+
         outputFiles = {}
         mapPrefix = self.getMapPrefix(mapNames)
         for h in hierarchy:
@@ -156,7 +195,8 @@ class Clustering:
                 outputFiles[group] = {}
 
             if cluster not in outputFiles[group]:
-                outputFiles[group][cluster] = open(os.path.join(self.outputDir, mapPrefix + "_" + chr(97 + group) + "_" + str(cluster) + ".ymap.xml"), 'w')
+                clusterName = self.getClusterName(group, cluster, numGroups, numClusters[group])
+                outputFiles[group][cluster] = open(os.path.join(self.outputDir, mapPrefix + ("_" if clusterName else "") + clusterName + ".ymap.xml"), 'w')
                 outputFiles[group][cluster].write(contentPreEntities)
 
         i = 0
@@ -187,8 +227,12 @@ class Clustering:
         self.plotClusterResult(coords, hierarchy)
 
     def plotClusterResult(self, coords: list[list[float]], hierarchy: list[list[int]]):
+        numGroups, numClusters = self.getNumGroupsAndNumClusters(hierarchy)
+        numTotalClusters = 0
+        for c in numClusters:
+            numTotalClusters += numClusters[c]
+
         groups = {}
-        numClusters = 0
         i = 0
         for h in hierarchy:
             cluster = h[0]
@@ -198,13 +242,12 @@ class Clustering:
 
             if cluster not in groups[group]:
                 groups[group][cluster] = []
-                numClusters += 1
 
             groups[group][cluster].append(i)
             i += 1
 
         # create scatter plot for samples from each cluster
-        cmap = pyplot.cm.get_cmap("gist_ncar", numClusters + 1)
+        cmap = pyplot.cm.get_cmap("gist_ncar", numTotalClusters + 1)
         X = np.array(coords)
         i = 0
         for group in groups:
@@ -214,7 +257,8 @@ class Clustering:
 
                 # create scatter of these samples
                 pyplot.scatter(X[row_ix, 0], X[row_ix, 1], color=cmap(i))
-                annotate = pyplot.annotate(chr(97 + group) + "_" + str(cluster), xy=(np.mean(X[row_ix, 0]), np.mean(X[row_ix, 1])), ha='center', va='center')
+                clusterName = self.getClusterName(group, cluster, numGroups, numClusters[group])
+                annotate = pyplot.annotate(clusterName, xy=(np.mean(X[row_ix, 0]), np.mean(X[row_ix, 1])), ha='center', va='center')
                 annotate.set_path_effects([PathEffects.withStroke(linewidth=4, foreground='w')])
 
                 i += 1
