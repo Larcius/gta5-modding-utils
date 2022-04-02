@@ -22,8 +22,8 @@ class Clustering:
     prefix: str
     numCluster: int
 
-    GROUP_MAX_EXTEND = 2100
-    MAX_EXTEND = 700
+    GROUP_MAX_EXTEND = 2000
+    MAX_EXTEND = 600
 
     _PATTERN = re.compile(
         '[\t ]*<Item type="CEntityDef">' +
