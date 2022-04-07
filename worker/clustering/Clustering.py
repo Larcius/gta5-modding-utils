@@ -17,7 +17,8 @@ class Clustering:
     inputDir: str
     outputDir: str
 
-    defaultPostEntities: str
+    defaultYmapPart: str
+    ymapTemplate: str
     ytypItems: dict[str, YtypItem]
     prefix: str
     numCluster: int
@@ -44,7 +45,7 @@ class Clustering:
     def run(self):
         print("running clustering...")
         self.readYtyps()
-        self.readTemplateDefaultPostEntities()
+        self.readYmapTemplate()
         self.createOutputDir()
         self.processFiles()
         self.fixMapExtents()
@@ -60,10 +61,31 @@ class Clustering:
 
         os.makedirs(self.outputDir)
 
-    def readTemplateDefaultPostEntities(self):
-        f = open(os.path.join(os.path.dirname(__file__), "default_post_entities.xml"), 'r')
-        self.defaultPostEntities = f.read()
+    def readYmapTemplate(self):
+        f = open(os.path.join(os.path.dirname(__file__), "templates", "template.ymap.xml"), 'r')
+        self.ymapTemplate = f.read()
         f.close()
+
+        self.defaultYmapPart = self.getYmapPartAfterEntitiesAndBeforeBlock(self.ymapTemplate)
+        if self.defaultYmapPart is None or not self.defaultYmapPart:
+            raise Exception("invalid ymap template")
+
+    def getYmapPartAfterEntitiesAndBeforeBlock(self, ymap: str):
+        startIndex = ymap.find("\n  </entities>")
+        if startIndex < 0:
+            startIndex = ymap.find("\n  <entities/>")
+
+        if startIndex < 0:
+            return None
+
+        endIndex = ymap.rfind("\n  <block>")
+        if endIndex < 0:
+            endIndex = ymap.rfind("\n  <block/>")
+
+        if endIndex < 0:
+            return None
+
+        return ymap[startIndex + 14:endIndex]
 
     def _calculateMapHierarchy(self, points: list[list[float]], hierarchy: list[list[int]]) -> list[list[int]]:
         level = len(hierarchy[0])
@@ -125,27 +147,9 @@ class Clustering:
 
         return letters + ("_" if letters and digits else "") + digits
 
-    def getNumGroupsAndNumClusters(self, hierarchy: list[list[int]]) -> (int, int):
-        numGroups = 0
-        numClusters = {}
-        clustersCounted = {}
-        for h in hierarchy:
-            cluster = h[0]
-            group = h[1]
-            if group not in numClusters:
-                clustersCounted[group] = set()
-                numClusters[group] = 0
-                numGroups += 1
-
-            if cluster not in clustersCounted[group]:
-                clustersCounted[group].add(cluster)
-                numClusters[group] += 1
-
-        return numGroups, numClusters
-
     def processFiles(self):
         coords = []
-        customPostEntities = []
+        mapsHavingNotOnlyEntities = []
         mapNames = []
         for filename in natsorted(os.listdir(self.inputDir)):
             if not filename.endswith(".ymap.xml"):
@@ -153,22 +157,16 @@ class Clustering:
 
             print("\treading " + filename)
 
-            mapNames.append(filename[:-9])
+            mapName = filename[:-9]
+            mapNames.append(mapName)
 
             f = open(os.path.join(self.inputDir, filename), 'r')
             content = f.read()
             f.close()
 
-            indexEntitiesStart = content.find("  <entities>")
-            if indexEntitiesStart < 0:
-                continue
-            indexEntitiesEnd = content.index("  </entities>")
-
-            contentPreEntities = content[:indexEntitiesStart + 13]
-            contentPostEntities = content[indexEntitiesEnd:]
-
-            if not contentPostEntities.startswith(self.defaultPostEntities):
-                customPostEntities.append(filename)
+            ymapPartAfterEntitiesAndBeforeBlock = self.getYmapPartAfterEntitiesAndBeforeBlock(content)
+            if ymapPartAfterEntitiesAndBeforeBlock != self.defaultYmapPart:
+                mapsHavingNotOnlyEntities.append(mapName)
 
             for matchobj in re.finditer(Clustering._PATTERN, content):
                 coords.append([float(matchobj.group(1)), float(matchobj.group(2)), float(matchobj.group(3))])
@@ -184,8 +182,6 @@ class Clustering:
         else:
             hierarchy = self.calculateMapHierarchy(coords)
 
-        numGroups, numClusters = self.getNumGroupsAndNumClusters(hierarchy)
-
         outputFiles = {}
         mapPrefix = self.getMapPrefix(mapNames)
         for h in hierarchy:
@@ -195,9 +191,7 @@ class Clustering:
                 outputFiles[group] = {}
 
             if cluster not in outputFiles[group]:
-                clusterName = self.getClusterName(group, cluster, numGroups, numClusters[group])
-                outputFiles[group][cluster] = open(os.path.join(self.outputDir, mapPrefix + ("_" if clusterName else "") + clusterName + ".ymap.xml"), 'w')
-                outputFiles[group][cluster].write(contentPreEntities)
+                outputFiles[group][cluster] = ""
 
         i = 0
         for filename in natsorted(os.listdir(self.inputDir)):
@@ -211,27 +205,56 @@ class Clustering:
             for matchobj in re.finditer(Clustering._PATTERN, content):
                 cluster = hierarchy[i][0]
                 group = hierarchy[i][1]
-                outputFiles[group][cluster].write(matchobj.group(0))
+                outputFiles[group][cluster] += matchobj.group(0)
                 i += 1
 
-        for g in outputFiles:
-            groups = outputFiles[g]
-            for c in groups:
-                file = groups[c]
-                file.write(contentPostEntities)
-                file.close()
+        self.writeClusteredYmap(mapPrefix, outputFiles)
 
-        for custom in customPostEntities:
-            print("custom content after </entities> in file " + custom)
+        for mapName in mapsHavingNotOnlyEntities:
+            content = Util.readFile(os.path.join(self.inputDir, mapName + ".ymap.xml"))
+
+            newMapName = mapName
+            if os.path.exists(os.path.join(self.outputDir, newMapName + ".ymap.xml")):
+                newMapName = re.sub("_no_entities\\d*$", "", newMapName) + "_no_entities"
+                i = -1
+                while os.path.exists(os.path.join(self.outputDir, newMapName + ("" if i < 0 else str(i)) + ".ymap.xml")):
+                    i += 1
+                if i >= 0:
+                    newMapName += str(i)
+
+            content = Ymap.replaceParent(content, None)
+            content = Ymap.replaceName(content, newMapName)
+            content = re.sub("<entities>[\\S\\s]*</entities>", "<entities/>", content)
+
+            Util.writeFile(os.path.join(self.outputDir, newMapName + ".ymap.xml"), content)
 
         self.plotClusterResult(coords, hierarchy)
 
-    def plotClusterResult(self, coords: list[list[float]], hierarchy: list[list[int]]):
-        numGroups, numClusters = self.getNumGroupsAndNumClusters(hierarchy)
-        numTotalClusters = 0
-        for c in numClusters:
-            numTotalClusters += numClusters[c]
+    def writeClusteredYmap(self, mapPrefix: str, clusteredEntities: dict[int, dict[int, str]]):
+        numGroups = len(clusteredEntities)
+        for group in clusteredEntities:
+            clustersInGroup = clusteredEntities[group]
+            numClusters = len(clustersInGroup)
+            for cluster in clustersInGroup:
+                clusterName = self.getClusterName(group, cluster, numGroups, numClusters)
+                mapName = mapPrefix + ("_" if clusterName else "") + clusterName
 
+                entities = clustersInGroup[cluster]
+                ymapContent = self.createYmapContent(mapName, entities)
+
+                file = open(os.path.join(self.outputDir, mapName + ".ymap.xml"), 'w')
+                file.write(ymapContent)
+                file.close()
+
+    def createYmapContent(self, mapName: str, entities: str) -> str:
+        return self.ymapTemplate \
+            .replace("${NAME}", mapName) \
+            .replace("${TIMESTAMP}", Util.getNowInIsoFormat()) \
+            .replace("${ENTITIES}\n", entities)
+
+
+    def plotClusterResult(self, coords: list[list[float]], hierarchy: list[list[int]]):
+        numTotalClusters = 0
         groups = {}
         i = 0
         for h in hierarchy:
@@ -242,22 +265,26 @@ class Clustering:
 
             if cluster not in groups[group]:
                 groups[group][cluster] = []
+                numTotalClusters += 1
 
             groups[group][cluster].append(i)
             i += 1
+
+        numGroups = len(groups)
 
         # create scatter plot for samples from each cluster
         cmap = pyplot.cm.get_cmap("gist_ncar", numTotalClusters + 1)
         X = np.array(coords)
         i = 0
         for group in groups:
+            numClusters = len(groups[group])
             for cluster in groups[group]:
                 # get row indexes for samples with this cluster
                 row_ix = groups[group][cluster]
 
                 # create scatter of these samples
                 pyplot.scatter(X[row_ix, 0], X[row_ix, 1], color=cmap(i))
-                clusterName = self.getClusterName(group, cluster, numGroups, numClusters[group])
+                clusterName = self.getClusterName(group, cluster, numGroups, numClusters)
                 annotate = pyplot.annotate(clusterName, xy=(np.mean(X[row_ix, 0]), np.mean(X[row_ix, 1])), ha='center', va='center')
                 annotate.set_path_effects([PathEffects.withStroke(linewidth=4, foreground='w')])
 

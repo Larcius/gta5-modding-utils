@@ -191,6 +191,12 @@ class Util:
         return content
 
     @staticmethod
+    def writeFile(path: str, content: str):
+        file = open(path, 'w')
+        file.write(content)
+        file.close()
+
+    @staticmethod
     def calculateAngle(vertexMiddle: list[float], vertex1: list[float], vertex2: list[float]) -> float:
         unitVector1 = Util.normalize(np.subtract(vertex1, vertexMiddle))
         unitVector2 = Util.normalize(np.subtract(vertex2, vertexMiddle))
