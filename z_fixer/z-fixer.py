@@ -1,4 +1,5 @@
 # TODO refactoring needed
+import math
 import os
 import getopt
 import random
@@ -8,6 +9,7 @@ import struct
 import sys
 from typing import Optional
 
+import numpy as np
 import transforms3d
 from dataclasses import dataclass
 from natsort import natsorted
@@ -30,6 +32,9 @@ DISABLE_INCREASE_OF_Z = False
 IGNORE_BUSHES = True
 
 DELETE_IF_ON_STREET = False
+
+DELETE_IF_TOO_STEEP = False
+DELETE_IF_TOO_STEEP_ANGLE = math.pi / 3.6   # 50°
 
 
 # trees can be found at x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\
@@ -178,7 +183,7 @@ def main(argv):
         heightmap.close()
 
 
-def getMinHeight(heightmap) -> [float, float]:
+def getMinHeight(heightmap) -> [float, [float, float, float], float]:
     heightmapEntry = heightmap.readline().rstrip("\n")
     if not heightmapEntry:
         print("ERROR: cannot get entry in heightmap")
@@ -186,12 +191,12 @@ def getMinHeight(heightmap) -> [float, float]:
 
     parts = heightmapEntry.split(",")
 
-    if len(parts) < 5:
+    if len(parts) < 8:
         print("ERROR: invalid line in heightmap entry:")
         print(heightmapEntry)
         quit()
 
-    return float(parts[3]), float(parts[4])
+    return float(parts[3]), [float(parts[4]), float(parts[5]), float(parts[6])], float(parts[7])
 
 
 def floatToStr(val):
@@ -233,7 +238,7 @@ def repl(matchobj, outCoords, heightmap):
                         "," + str(tree.trunkRadius * scaleXY) + "\n")
         return matchobj.group(0)
 
-    minHeight, distanceToStreet = getMinHeight(heightmap)
+    minHeight, normal, distanceToStreet = getMinHeight(heightmap)
 
     calcZCoord = minHeight - transformed[2]
 
@@ -250,7 +255,27 @@ def repl(matchobj, outCoords, heightmap):
         print("INFO: removing", prop, "at position", position, "because it is placed on a street or path")
         return ""
 
+    if DELETE_IF_TOO_STEEP:
+        if calculateAngle([0, 0, 0], [0, 0, 1], normal) > DELETE_IF_TOO_STEEP_ANGLE:
+            print("INFO: removing", prop, "at position", position, "because it is placed on a steep spot")
+            return ""
+
     return matchobj.group(1) + floatToStr(calcZCoord) + matchobj.group(6)
+
+
+def calculateAngle(vertexMiddle: list[float], vertex1: list[float], vertex2: list[float]) -> float:
+    unitVector1 = normalize(np.subtract(vertex1, vertexMiddle))
+    unitVector2 = normalize(np.subtract(vertex2, vertexMiddle))
+
+    return np.arccos(np.dot(unitVector1, unitVector2))
+
+
+def normalize(vector: list[float]) -> list[float]:
+    norm = np.linalg.norm(vector)
+    if abs(norm) < 1e-8:
+        return vector
+    else:
+        return vector / norm
 
 
 if __name__ == "__main__":

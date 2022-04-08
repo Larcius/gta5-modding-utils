@@ -15,12 +15,11 @@ namespace HeightMap
 		// resolution (distance in meters between two samples)
 		private const float resolution = 0.1f;
 
-		private static Vector2[] epsHexagon = new Vector2[6];
+		private static Vector2[] unitHexagon = new Vector2[6];
 		static HeightMapGenerator() {
-			const float eps = 0.025f;
-			double angleStep = 2d * Math.PI / epsHexagon.Length;
-			for (int i = 0; i < epsHexagon.Length; i++) {
-				epsHexagon[i] = new Vector2((float) Math.Sin(angleStep * i) * eps, (float) Math.Cos(angleStep * i) * eps);
+			double angleStep = 2d * Math.PI / unitHexagon.Length;
+			for (int i = 0; i < unitHexagon.Length; i++) {
+				unitHexagon[i] = new Vector2((float) Math.Sin(angleStep * i), (float) Math.Cos(angleStep * i));
 			}
 		}
 
@@ -129,12 +128,37 @@ namespace HeightMap
 			writer = null;
 		}
 
+		private Vector3 getSurfaceNormalAt(float x, float y, float radius) {
+			Vector3 center = new Vector3(x, y, getHeightEpsHexagon(x, y));
+			Vector3[] hexagon = new Vector3[unitHexagon.Length];
+
+			for (int i = 0; i < unitHexagon.Length; i++) {
+				float xh = x + unitHexagon[i].X * radius;
+				float yh = y + unitHexagon[i].Y * radius;
+				hexagon[i] = new Vector3(xh, yh, getHeightEpsHexagon(xh, yh));
+			}
+
+			Vector3 normal = new Vector3(0f, 0f, 0f);
+			for (int i = 0; i < hexagon.Length; i++) {
+				Vector3 triangleNormal = getNormalOfTriangle(hexagon[i], center, hexagon[(i + 1) % hexagon.Length]); // must be in counter-clockwise order
+				normal += triangleNormal;
+			}
+
+			return Vector3.Normalize(normal);
+		}
+
+		private Vector3 getNormalOfTriangle(Vector3 a, Vector3 b, Vector3 c) {
+			Vector3 normal = Vector3.Cross(b - a, c - a);
+			return Vector3.Normalize(normal);
+		}
+
 		// unfortunately checking only exactly that point is not reliable because you may hit a small hole in the surface.
 		// So check not only a single point but also points on an eps hexagon around it
 		private float getHeightEpsHexagon(float x, float y) {
+			const float eps = 0.025f;
 			float result = World.GetGroundHeight(new Vector2(x, y));
-			for (int i = 0; i < epsHexagon.Length; i++) {
-				float z = getHeight(x + epsHexagon[i].X, y + epsHexagon[i].Y);
+			for (int i = 0; i < unitHexagon.Length; i++) {
+				float z = getHeight(x + unitHexagon[i].X * eps, y + unitHexagon[i].Y * eps);
 				if (!Single.IsNaN(z)) {
 					result = Math.Max(result, z);
 				}
@@ -270,6 +294,14 @@ namespace HeightMap
 				}
 
 				writer.Write(minZ.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+				Vector3 normal = getSurfaceNormalAt(coords.X, coords.Y, radius * 2f);
+				writer.Write(",");
+				writer.Write(normal.X.ToString(System.Globalization.CultureInfo.InvariantCulture));
+				writer.Write(",");
+				writer.Write(normal.Y.ToString(System.Globalization.CultureInfo.InvariantCulture));
+				writer.Write(",");
+				writer.Write(normal.Z.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
 				Vector3 position = new Vector3(coords.X, coords.Y, z);
 				Vector3 nextPositionOnStreet = getNearestPositionOnStreet(position);
