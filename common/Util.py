@@ -10,6 +10,7 @@ from datetime import datetime
 from natsort import natsorted
 from scipy.spatial import ConvexHull
 from scipy.spatial.distance import pdist
+from scipy.spatial.qhull import QhullError
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import AgglomerativeClustering
 
@@ -41,13 +42,21 @@ class Util:
         # also don't use pdist here since we are only interested in the maximum distances and hence there is no need to
         # actually create a list of size n*(n-1)/2 (where n is the number of vertices of the convex hull)
         points = np.array(coords)
-        hull = ConvexHull(points)
-        maxDistance = -1
-        for index1 in hull.vertices:
-            point1 = points[index1]
-            for index2 in hull.vertices:
-                point2 = points[index2]
-                maxDistance = max(maxDistance, np.linalg.norm(point1 - point2))
+        try:
+            hull = ConvexHull(points)
+            vertices = hull.vertices
+        except QhullError:
+            vertices = range(len(coords))
+
+        maxDistance = 0
+        for index1 in vertices:
+            point1 = coords[index1]
+            for index2 in vertices:
+                if index1 >= index2:
+                    continue
+
+                point2 = coords[index2]
+                maxDistance = max(maxDistance, math.dist(point1, point2))
 
         return maxDistance
 
