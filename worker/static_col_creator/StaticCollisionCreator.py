@@ -629,7 +629,7 @@ class StaticCollisionCreator:
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
                              '\\s*<flags value="([^"]+)"\\s*/>' +
                              '(?:\\s*<[^/].*>)*?' +
-                             '\\s*<position x="([^"]+)" y="([^"]+)" z="[^"]+"\\s*/>' +
+                             '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"\\s*/>' +
                              '(?:\\s*<[^/].*>)*?' +
                              '\\s*<scaleXY value="([^"]+)"/>' +
                              '\\s*<scaleZ value="([^"]+)"/>' +
@@ -640,8 +640,8 @@ class StaticCollisionCreator:
 
         coords = []
         for matchobj in re.finditer(pattern, mapContent):
-            if self.shouldEntityBeUsedInStaticCol(matchobj.group(1).lower(), int(matchobj.group(2)), [float(matchobj.group(5)), float(matchobj.group(6))]):
-                coords.append([float(matchobj.group(3)), float(matchobj.group(4))])
+            if self.shouldEntityBeUsedInStaticCol(matchobj.group(1).lower(), int(matchobj.group(2)), [float(matchobj.group(6)), float(matchobj.group(7))]):
+                coords.append([float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))])
 
         foundScolModel = len(coords) > 0
 
