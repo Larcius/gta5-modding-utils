@@ -69,6 +69,8 @@ class Util:
             model = MiniBatchKMeans(n_clusters=numClusters, random_state=0)
         clusters = model.fit_predict(X)
 
+        clusters = Util._fixClusterLabels(clusters)
+
         maxClusterSize = -1
         furthestDistances = [0] * numClusters
         for cluster in np.unique(clusters):
@@ -79,6 +81,30 @@ class Util:
             furthestDistances[cluster] = Util.calculateFurthestDistance(X[clusterEntries[0]])
 
         return clusters, maxClusterSize, furthestDistances
+
+    @staticmethod
+    def _fixClusterLabels(clusters):
+        uniqueClusters = sorted(np.unique(clusters))
+
+        needToFixLabels = False
+        mapping = {}
+        i = 0
+        for c in uniqueClusters:
+            if i != c:
+                needToFixLabels = True
+            mapping[c] = i
+            i += 1
+
+        if not needToFixLabels:
+            return clusters
+
+        # there are gaps in the labeling, so we have to fix them
+        newClusters = []
+        for i in range(len(clusters)):
+            origCluster = clusters[i]
+            newClusters.append(mapping[origCluster])
+
+        return newClusters
 
     @staticmethod
     def performClusteringFixedNumClusters(points: list[list[float]], numClusters: int, unevenClusters: bool = False) -> (Any, float, list[float]):

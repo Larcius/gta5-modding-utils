@@ -1135,6 +1135,7 @@ class LodMapCreator:
         return self._calculateLodHierarchy(points, hierarchy)
 
     def _calculateLodHierarchy(self, points: list[list[float]], hierarchy: list[list[int]]) -> list[list[int]]:
+        numMaxChildren = -1
         level = len(hierarchy[0])
         if level == 0:
             maxExtends = LodMapCreator.ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD3
@@ -1144,6 +1145,7 @@ class LodMapCreator:
             maxExtends = LodMapCreator.ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD1
         elif level == 3:
             maxExtends = LodMapCreator.ENTITIES_EXTENTS_MAX_DIAGONAL_LOD
+            numMaxChildren = LodMapCreator.NUM_CHILDREN_MAX_VALUE
         else:
             return hierarchy
 
@@ -1161,7 +1163,7 @@ class LodMapCreator:
 
         clusterOffset = 0
         for parentIndex in range(len(pointsOfParent)):
-            clustering, unused = Util.performClustering(pointsOfParent[parentIndex], LodMapCreator.NUM_CHILDREN_MAX_VALUE if level == 3 else -1, maxExtends)
+            clustering, unused = Util.performClustering(pointsOfParent[parentIndex], numMaxChildren, maxExtends)
 
             for c in range(len(clustering)):
                 i = absIndices[parentIndex][c]
