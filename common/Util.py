@@ -11,7 +11,7 @@ from natsort import natsorted
 from scipy.spatial import ConvexHull
 from scipy.spatial.distance import pdist
 from scipy.spatial.qhull import QhullError
-from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import AgglomerativeClustering
 
 from common import Box, Sphere
@@ -66,7 +66,7 @@ class Util:
         if unevenClusters:
             model = AgglomerativeClustering(n_clusters=numClusters, linkage="average")
         else:
-            model = KMeans(n_clusters=numClusters, random_state=0, algorithm="full", n_init=25)
+            model = MiniBatchKMeans(n_clusters=numClusters, random_state=0, reassignment_ratio=0, n_init=10)
         clusters = model.fit_predict(X)
 
         clusters = Util._fixClusterLabels(clusters)
