@@ -209,7 +209,7 @@ class LodMapCreator:
 
         self.slodCandidates = slodCandidates
 
-    LOD_DISTANCE = 750  # the actual lodDistance for a lod entity is obtained by adding the furthest distance of all lod entities sharing the same slod model
+    LOD_DISTANCE = 750
     SLOD_DISTANCE = 1500  # somehow arbitrary and not that important because SLOD1 and SLOD2 are actually the same models.
     # however, reducing this results in smaller streaming extents of LOD/SLOD1 maps
     SLOD2_DISTANCE = 3000  # using 3000 because max height in game is 2600 and therefore until that height (plus a bit to allow slight xy offset)
@@ -856,6 +856,8 @@ class LodMapCreator:
             self.slodYtypItems.close()
 
     def processFilesWithPrefix(self, mapPrefix: str):
+        lodCandidateNames = list(self.lodCandidates.keys())
+
         hdEntitiesWithLod = []
         lodCoords = []
         for filename in natsorted(os.listdir(self.inputDir)):
@@ -876,7 +878,7 @@ class LodMapCreator:
 
             contentNoLod = self.resetParentIndexAndNumChildren(contentNoLod)
             contentNoLod = Ymap.replaceName(contentNoLod, mapName)
-            contentNoLod = Ymap.calculateAndReplaceLodDistanceForEntitiesWithLod(contentNoLod, self.ytypItems)
+            contentNoLod = Ymap.calculateAndReplaceLodDistance(contentNoLod, self.ytypItems, archetypes=lodCandidateNames, forceHasParent=True)
 
             fileNoLod = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
             fileNoLod.write(contentNoLod)

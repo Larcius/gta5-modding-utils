@@ -11,27 +11,21 @@ from common.ytyp.YtypItem import YtypItem
 
 class Ymap:
     @staticmethod
-    def _replCalculateAndReplaceLodDistance(match: Match, ytypItems: dict[str, YtypItem], onlyIfLodModelExists: bool):
+    def _replCalculateAndReplaceLodDistance(match: Match, ytypItems: dict[str, YtypItem], archetypes: Optional[list[str]], forceHasParent: bool):
         archetypeName = match.group(2).lower()
-        archetypeNameLod = archetypeName + "_lod"
 
-        # TODO do not just check for onlyIfLodModelExists but more generally by looking at parentIndex
-        hasParent = onlyIfLodModelExists
-
-        if onlyIfLodModelExists and archetypeNameLod not in ytypItems:
+        if archetypes is not None and archetypeName not in archetypes:
             return match.group(0)
+
+        hasParent = True if forceHasParent else int(match.group(5)) >= 0
 
         scale = [float(match.group(3)), float(match.group(3)), float(match.group(4))]
 
         if archetypeName in ytypItems:
-            lodDistance = ytypItems[archetypeName].getLodDistance(scale, hasParent)
-            lodDistance = math.ceil(lodDistance)
-        elif archetypeNameLod in ytypItems:
-            lodDistance = ytypItems[archetypeNameLod].getLodDistance(scale, hasParent)
-            lodDistance = math.ceil(lodDistance)
+            lodDistance = math.ceil(ytypItems[archetypeName].getLodDistance(scale, hasParent))
         else:
             print("WARNING: could not find archetype " + archetypeName + " in any of the provided ytyp files. Leaving lodDistance for those unchanged.")
-            lodDistance = float(match.group(5))
+            lodDistance = float(match.group(6))
 
         priorityLevel = PriorityLevel.getLevel(lodDistance, hasParent)
         if priorityLevel != PriorityLevel.REQUIRED or lodDistance < 100:
@@ -39,15 +33,16 @@ class Ymap:
             # (as seen in original Rockstar ymap files)
             lodDistance = -1
 
-        return match.group(1) + Util.floatToStr(lodDistance) + match.group(6) + priorityLevel + match.group(7)
+        return match.group(1) + Util.floatToStr(lodDistance) + match.group(7) + priorityLevel + match.group(8)
 
     @staticmethod
-    def calculateAndReplaceLodDistanceForEntitiesWithLod(contentNoLod: str, ytypItems: dict[str, YtypItem]) -> str:
+    def calculateAndReplaceLodDistance(contentNoLod: str, ytypItems: dict[str, YtypItem], archetypes=None, forceHasParent=False) -> str:
         pattern = re.compile('(\\s*<Item type="CEntityDef">' +
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
                              '(?:\\s*<[^/].*>)*?' +
                              '\\s*<scaleXY value="([^"]+)"\\s*/>' +
                              '\\s*<scaleZ value="([^"]+)"\\s*/>' +
+                             '\\s*<parentIndex value="([^"]+)"/>' +
                              '(?:\\s*<[^/].*>)*?' +
                              '\\s*<lodDist value=")([^"]+)("\\s*/>' +
                              '(?:\\s*<[^/].*>)*?' +
@@ -55,23 +50,7 @@ class Ymap:
                              '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>)', flags=re.M)
 
-        return pattern.sub(lambda match: Ymap._replCalculateAndReplaceLodDistance(match, ytypItems, True), contentNoLod)
-
-    @staticmethod
-    def calculateAndReplaceLodDistance(contentNoLod: str, ytypItems: dict[str, YtypItem]) -> str:
-        pattern = re.compile('(\\s*<Item type="CEntityDef">' +
-                             '\\s*<archetypeName>([^<]+)</archetypeName>' +
-                             '(?:\\s*<[^/].*>)*?' +
-                             '\\s*<scaleXY value="([^"]+)"\\s*/>' +
-                             '\\s*<scaleZ value="([^"]+)"\\s*/>' +
-                             '(?:\\s*<[^/].*>)*?' +
-                             '\\s*<lodDist value=")([^"]+)("\\s*/>' +
-                             '(?:\\s*<[^/].*>)*?' +
-                             '\\s*<priorityLevel>)[^<]*(</priorityLevel>'
-                             '(?:\\s*<[^/].*>)*?' +
-                             '\\s*</Item>)', flags=re.M)
-
-        return pattern.sub(lambda match: Ymap._replCalculateAndReplaceLodDistance(match, ytypItems, False), contentNoLod)
+        return pattern.sub(lambda match: Ymap._replCalculateAndReplaceLodDistance(match, ytypItems, archetypes, forceHasParent), contentNoLod)
 
     @staticmethod
     def replaceDatetime(content: str, nowIso: str) -> str:
