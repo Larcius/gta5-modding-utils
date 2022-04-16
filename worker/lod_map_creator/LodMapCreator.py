@@ -42,6 +42,8 @@ class LodMapCreator:
     ytypItems: dict[str, YtypItem]
     slodYtypItems: Optional[IO]
     slodCandidates: dict[str, UVMap]
+    foundLod: bool
+    foundSlod: bool
 
     lodCandidates: dict[str, LodCandidate]
 
@@ -239,6 +241,8 @@ class LodMapCreator:
         self.outputDir = outputDir
         self.prefix = prefix
         self.slodYtypItems = None
+        self.foundLod = False
+        self.foundSlod = False
 
     def run(self):
         print("running lod map creator...")
@@ -1059,7 +1063,11 @@ class LodMapCreator:
             numSlod1Entities += len(slod1s)
         for lods in lodEntities:
             slod1AndLodEntities += lods
-        self.writeLodOrSlodMap(mapPrefix.lower() + "_lod", slod2MapName, ContentFlag.LOD + ContentFlag.SLOD, slod1AndLodEntities)
+        if len(slod1AndLodEntities) > 0:
+            self.foundLod = True
+            if numSlod1Entities > 0:
+                self.foundSlod = True
+            self.writeLodOrSlodMap(mapPrefix.lower() + "_lod", slod2MapName, ContentFlag.LOD + ContentFlag.SLOD, slod1AndLodEntities)
 
         self.adaptHdMapsForPrefix(mapPrefix, hdToLod, numSlod1Entities)
 
@@ -1203,5 +1211,7 @@ class LodMapCreator:
 
     def copyTextureDictionaries(self):
         texturesDir = os.path.join(os.path.dirname(__file__), "textures")
-        for filename in os.listdir(texturesDir):
-            shutil.copyfile(os.path.join(texturesDir, filename), os.path.join(self.getOutputDirModels(), self.prefix + "_" + filename))
+        if self.foundLod:
+            shutil.copyfile(os.path.join(texturesDir, "lod.ytd"), os.path.join(self.getOutputDirModels(), self.prefix + "_lod.ytd"))
+        if self.foundSlod:
+            shutil.copyfile(os.path.join(texturesDir, "slod.ytd"), os.path.join(self.getOutputDirModels(), self.prefix + "_slod.ytd"))
