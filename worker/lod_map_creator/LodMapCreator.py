@@ -942,30 +942,31 @@ class LodMapCreator:
                 entitiesForLodModels[h[0]] = []
             entitiesForLodModels[h[0]].append(hdEntity)
 
-            if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD1:
-                if h[0] not in lodToSlod1:
-                    lodToSlod1[h[0]] = h[1]
-                    slod1NumChildren[h[1]] = slod1NumChildren.get(h[1], 0) + 1
+            if hdEntity.archetypeName in self.slodCandidates:
+                if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD1:
+                    if h[0] not in lodToSlod1:
+                        lodToSlod1[h[0]] = h[1]
+                        slod1NumChildren[h[1]] = slod1NumChildren.get(h[1], 0) + 1
 
-                if h[1] not in entitiesForSlod1Models:
-                    entitiesForSlod1Models[h[1]] = []
-                entitiesForSlod1Models[h[1]].append(hdEntity)
-            if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD2:
-                if h[1] not in slod1ToSlod2:
-                    slod1ToSlod2[h[1]] = h[2]
-                    slod2NumChildren[h[2]] = slod2NumChildren.get(h[2], 0) + 1
+                    if h[1] not in entitiesForSlod1Models:
+                        entitiesForSlod1Models[h[1]] = []
+                    entitiesForSlod1Models[h[1]].append(hdEntity)
+                if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD2:
+                    if h[1] not in slod1ToSlod2:
+                        slod1ToSlod2[h[1]] = h[2]
+                        slod2NumChildren[h[2]] = slod2NumChildren.get(h[2], 0) + 1
 
-                if h[2] not in entitiesForSlod2Models:
-                    entitiesForSlod2Models[h[2]] = []
-                entitiesForSlod2Models[h[2]].append(hdEntity)
-            if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD3:
-                if h[2] not in slod2ToSlod3:
-                    slod2ToSlod3[h[2]] = h[3]
-                    slod3NumChildren[h[3]] = slod3NumChildren.get(h[3], 0) + 1
+                    if h[2] not in entitiesForSlod2Models:
+                        entitiesForSlod2Models[h[2]] = []
+                    entitiesForSlod2Models[h[2]].append(hdEntity)
+                if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD3:
+                    if h[2] not in slod2ToSlod3:
+                        slod2ToSlod3[h[2]] = h[3]
+                        slod3NumChildren[h[3]] = slod3NumChildren.get(h[3], 0) + 1
 
-                if h[3] not in entitiesForSlod3Models:
-                    entitiesForSlod3Models[h[3]] = []
-                entitiesForSlod3Models[h[3]].append(hdEntity)
+                    if h[3] not in entitiesForSlod3Models:
+                        entitiesForSlod3Models[h[3]] = []
+                    entitiesForSlod3Models[h[3]].append(hdEntity)
 
         lodDrawableDictionary = mapPrefix.lower() + "_lod_children"
         slod1DrawableDictionary = mapPrefix.lower() + "_slod1_children"
