@@ -283,7 +283,33 @@ class Util:
         if candidate != "" and numMatches > 0:
             bundlePrefixes.append(candidate)
 
-        return bundlePrefixes
+        bundlePrefixes = natsorted(bundlePrefixes)
+
+        # remove prefixes of prefixes
+        removedPrefix = False
+        i = 0
+        while i + 1 < len(bundlePrefixes):
+            if bundlePrefixes[i + 1].startswith(bundlePrefixes[i]):
+                removedPrefix = True
+                bundlePrefixes.pop(i)
+            else:
+                i += 1
+
+        if not removedPrefix:
+            return bundlePrefixes
+
+        # add names that are no longer covered by any prefix
+        for name in names:
+            foundSuitablePrefix = False
+            for prefix in bundlePrefixes:
+                if name.startswith(prefix):
+                    foundSuitablePrefix = True
+                    break
+
+            if not foundSuitablePrefix:
+                bundlePrefixes.append(name)
+
+        return natsorted(bundlePrefixes)
 
     @staticmethod
     def getNowInIsoFormat() -> str:
