@@ -13,29 +13,6 @@ from common.ytyp.YtypParser import YtypParser
 
 
 class Sanitizer:
-    # REMOVE_ENTITIES = [
-    #    "prop_rub_binbag.*",
-    #    "prop_rub_boxpile.*",
-    #    "prop_rub_cardpile.*",
-    #    "prop_rub_flotsam.*",
-    #    "prop_rub_litter.*",
-    #    # "prop_boxpile.*",
-    #    "ng_proc_binbag.*",
-    #    "bkr_prop_fakeid_binbag.*",
-    #    "hei_prop_heist_binbag.*",
-    #    "prop_cs_rub_binbag.*",
-    #    "prop_cs_street_binbag.*",
-    #    "prop_ld_binbag.*",
-    #    "prop_ld_rub_binbag.*",
-    #    # "prop_shrub_rake",
-    #    # "prop_rub_bike_02",
-    #    # "prop_rub_cabinet02",
-    #    # "prop_rub_scrap_05",
-    #    # "prop_rub_tyre_01",
-    #    # "prop_rub_stool"
-    # ]
-    # removeEntitiesPattern = re.compile("(?:" + ")|(?:".join(REMOVE_ENTITIES) + ")", re.IGNORECASE)
-
     identityQuaternion = [1, -0, -0, -0]
 
     inputDir: str
@@ -74,9 +51,6 @@ class Sanitizer:
             fixedArchetypeNames.add("changing archetypeName from " + archetypeName + " to " + fixedArchetypeName)
         else:
             fixedArchetypeName = archetypeName
-
-        # if Sanitizer.removeEntitiesPattern.match(fixedArchetypeName):
-        #    return ""
 
         flags = int(match.group(4))
         origQuat = [float(match.group(9)), -float(match.group(6)), -float(match.group(7)), -float(match.group(8))]
