@@ -34,7 +34,8 @@ IGNORE_BUSHES = True
 DELETE_IF_ON_STREET = False
 
 DELETE_IF_TOO_STEEP = False
-DELETE_IF_TOO_STEEP_ANGLE = math.pi / 3.6   # 50°
+DELETE_IF_TOO_STEEP_ANGLE_MIN = math.pi / 4   # 45°
+DELETE_IF_TOO_STEEP_ANGLE_MAX = math.pi / 3.6   # 50°
 
 
 # trees can be found at x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\
@@ -256,7 +257,7 @@ def repl(matchobj, outCoords, heightmap):
         return ""
 
     if DELETE_IF_TOO_STEEP:
-        if calculateAngle([0, 0, 0], [0, 0, 1], normal) > DELETE_IF_TOO_STEEP_ANGLE:
+        if calculateAngle([0, 0, 0], [0, 0, 1], normal) > random.uniform(DELETE_IF_TOO_STEEP_ANGLE_MIN, DELETE_IF_TOO_STEEP_ANGLE_MAX):
             print("INFO: removing", prop, "at position", position, "because it is placed on a steep spot")
             return ""
 

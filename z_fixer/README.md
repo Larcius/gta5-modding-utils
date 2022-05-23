@@ -10,7 +10,7 @@ Please perform the following steps:
 4. copy the file `gta5-modding-utils\z_fixer\scripts\HeightMapGenerator.cs` to `<Grand Theft Auto V game folder>\scripts`
 5. start the game (but without using these ymap files because otherwise the z coordinates are incorrect due to these ymaps)
 6. in story mode press `F10` and type in the absolute path to the `hmap.txt` and press enter (your character will jump around the map and the heights are recorded; if you want to abort just press `F10` again)
-7. as soon as your character stops jumping around you are done and there is a new file hmap.txt (in the same folder as coords.txt)
+7. as soon as your character stops jumping around you are done and there is a new file `<Grand Theft Auto V game folder>\hmap.txt`
 8. move that file to `gta5-modding-utils\z_fixer\heights\`
 9. now run this command: ```python z-fixer.py --fix```
 10. in `gta5-modding-utils\z_fixer\generated` there are now your fixed ymaps.
