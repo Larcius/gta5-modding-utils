@@ -93,22 +93,21 @@ class LodMapCreator:
                 UV(1, 0.8125)),
             "test_tree_forest_trunk_01": LodCandidate("test_tree_forest_trunk_01", 0.515625, 0.3894231, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125),
                 UV(1, 1)),
-            "test_tree_forest_trunk_04": LodCandidate("test_tree_forest_trunk_04", 0.453125, 1, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0),
-                UV(0.78125, 0.5546875), 0.6484375),
+            "test_tree_forest_trunk_04": LodCandidate("test_tree_forest_trunk_04", 0.453125),
             # trees2
             "prop_tree_lficus_02": LodCandidate("prop_tree_lficus_02", 0.4453125, 0.55, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "prop_tree_lficus_03": LodCandidate("prop_tree_lficus_03", 0.46875, 0.359375, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "prop_tree_lficus_05": LodCandidate("prop_tree_lficus_05", 0.46875, 0.3125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "prop_tree_lficus_06": LodCandidate("prop_tree_lficus_06", 0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), None, 0.15),
+            "prop_tree_lficus_06": LodCandidate("prop_tree_lficus_06", 0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "prop_tree_mquite_01": LodCandidate("prop_tree_mquite_01", 0.46875),
             "prop_rio_del_01": LodCandidate("prop_rio_del_01", 0.53125),
             "prop_rus_olive": LodCandidate("prop_rus_olive", 0.484375, 0.53125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             # bushes
-            "prop_bush_lrg_04b": LodCandidate("prop_bush_lrg_04b", 0.37333333, 0.40625, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None, None,
+            "prop_bush_lrg_04b": LodCandidate("prop_bush_lrg_04b", 0.37333333, 0.40625, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None,
                 UV(0.5859375, 0), UV(1, 0.5), 0.45283018867),
-            "prop_bush_lrg_04c": LodCandidate("prop_bush_lrg_04c", 0.37333333, 0.4375, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None, None,
+            "prop_bush_lrg_04c": LodCandidate("prop_bush_lrg_04c", 0.37333333, 0.4375, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None,
                 UV(0.5859375, 0), UV(1, 0.5), 0.5660377358),
-            "prop_bush_lrg_04d": LodCandidate("prop_bush_lrg_04d", 0.4, 0.421875, UV(0, 0), UV(0.5078125, 0.5), UV(0, 0.5), UV(0.75, 1), None, None,
+            "prop_bush_lrg_04d": LodCandidate("prop_bush_lrg_04d", 0.4, 0.421875, UV(0, 0), UV(0.5078125, 0.5), UV(0, 0.5), UV(0.75, 1), None,
                 UV(0.5078125, 0), UV(1, 0.484375), 0.47619047619),
             # palms
             "prop_palm_fan_02_b": LodCandidate("prop_palm_fan_02_b", 0.515625, 0.25625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
@@ -162,7 +161,7 @@ class LodMapCreator:
             "prop_tree_cedar_02": UVMap("trees", UV(4 / 16, 11 / 16), UV(6 / 16, 16 / 16), UV(6 / 16, 6 / 16), UV(9 / 16, 9 / 16)),
             "prop_tree_cedar_03": UVMap("trees", UV(6 / 16, 10 / 16), UV(8 / 16, 16 / 16), UV(9 / 16, 6 / 16), UV(12 / 16, 9 / 16)),
             "prop_tree_cedar_04": UVMap("trees", UV(8 / 16, 10 / 16), UV(10 / 16, 16 / 16), UV(12 / 16, 6 / 16), UV(15 / 16, 9 / 16)),
-            "prop_tree_cedar_s_01": UVMap("trees", UV(6 / 16, 6 / 16), UV(8 / 16, 10 / 16), UV(0 / 16, 6 / 16), UV(3 / 16, 9 / 16)),
+            "prop_tree_cedar_s_01": UVMap("trees", UV(6 / 16, 6 / 16), UV(8 / 16, 10 / 16)),
             "prop_tree_cedar_s_04": UVMap("trees", UV(3 / 16, 8 / 16), UV(4 / 16, 12 / 16), UV(3 / 16, 6 / 16), UV(3 / 16, 6 / 16)),
             "prop_tree_cedar_s_05": UVMap("trees", UV(3 / 16, 8 / 16), UV(4 / 16, 12 / 16)),
             "prop_tree_cedar_s_06": UVMap("trees", UV(6 / 16, 0 / 16), UV(7 / 16, 3 / 16)),
@@ -182,7 +181,7 @@ class LodMapCreator:
             "prop_w_r_cedar_dead": UVMap("trees", UV(14 / 16, 3 / 16), UV(16 / 16, 8 / 16), UV(3 / 16, 12 / 16), UV(6 / 16, 15 / 16)),
             "test_tree_cedar_trunk_001": UVMap("trees", UV(12 / 16, 8 / 16), UV(14 / 16, 16 / 16), UV(9 / 16, 9 / 16), UV(12 / 16, 12 / 16)),
             "test_tree_forest_trunk_01": UVMap("trees", UV(14 / 16, 8 / 16), UV(16 / 16, 16 / 16), UV(12 / 16, 9 / 16), UV(15 / 16, 12 / 16)),
-            "test_tree_forest_trunk_04": UVMap("trees", UV(2 / 16, 5 / 16), UV(4 / 16, 8 / 16), UV(12 / 16, 3 / 16), UV(15 / 16, 6 / 16)),
+            "test_tree_forest_trunk_04": UVMap("trees", UV(2 / 16, 5 / 16), UV(4 / 16, 8 / 16)),
             # bushes
             "prop_bush_lrg_04b": UVMap("bushes", UV(0.5, 0), UV(1, 0.5), UV(0.5, 0), UV(1, 0.5)),
             "prop_bush_lrg_04c": UVMap("bushes", UV(0, 0.5), UV(0.5, 1), UV(0, 0.5), UV(0.5, 1)),
@@ -210,13 +209,14 @@ class LodMapCreator:
         self.slodCandidates = slodCandidates
 
     LOD_DISTANCE = 750
-    SLOD_DISTANCE = 1500  # somehow arbitrary and not that important because SLOD1 and SLOD2 are actually the same models.
+    SLOD_DISTANCE = 1500  # somehow arbitrary and not that important because SLOD1 and SLOD2 are almost the same models.
     # however, reducing this results in smaller streaming extents of LOD/SLOD1 maps
     SLOD2_DISTANCE = 3000  # using 3000 because max height in game is 2600 and therefore until that height (plus a bit to allow slight xy offset)
     # a model with xy plane is needed so that objects don't vanish when above (SLOD2 models do contain such a xy plane)
     SLOD3_DISTANCE = 15000  # that seems to be the default value from Rockstars (in fact the whole map is not that large anyway)
 
     NUM_CHILDREN_MAX_VALUE = 255  # TODO confirm following claim: must be <= 255 since numChildren is of size 1 byte
+    LOD_DISTANCES_MAX_DIFFERENCE_LOD = 60
     ENTITIES_EXTENTS_MAX_DIAGONAL_LOD = 100
     ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD1 = 400
     ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD2 = 800
@@ -408,12 +408,18 @@ class LodMapCreator:
             .replace("${BBOX.MAX.Y}", Util.floatToStr(bbox.max[1])) \
             .replace("${BBOX.MAX.Z}", Util.floatToStr(bbox.max[2]))
 
+    @staticmethod
+    def createVectorStr(vector: list[float], normalize: bool = False) -> str:
+        if normalize:
+            vector = Util.normalize(vector)
+        return Util.floatToStr(vector[0]) + " " + Util.floatToStr(vector[1]) + " " + Util.floatToStr(vector[2])
+
     def createLodModelVertexStr(self, entity: EntityItem, boundingBox: Box, vertex: list[float], normal: list[float], uv: list[float]):
         vertex = entity.applyTransformationTo(vertex)
         boundingBox.extendByPoint(vertex)
 
-        normal = Util.normalize(Util.applyRotation(normal, entity.rotation))
-        return "				" + Util.floatToStr(vertex[0]) + " " + Util.floatToStr(vertex[1]) + " " + Util.floatToStr(vertex[2]) + " / " + Util.floatToStr(normal[0]) + " " + Util.floatToStr(normal[1]) + " " + Util.floatToStr(normal[2]) + " / 255 29 0 255 / 0 0 0 0 / " + Util.floatToStr(uv[0]) + " " + Util.floatToStr(uv[1]) + "\n"
+        normal = Util.applyRotation(normal, entity.rotation)
+        return "				" + LodMapCreator.createVectorStr(vertex) + " / " + LodMapCreator.createVectorStr(normal, True) + " / 255 29 0 255 / " + Util.floatToStr(uv[0]) + " " + Util.floatToStr(uv[1]) + "\n"
 
     def createIndicesStr(self, indices: list[int]) -> str:
         indicesStr = ""
@@ -491,17 +497,14 @@ class LodMapCreator:
                 uvTopCenter = lodCandidate.getUvTopCenter()
 
                 planeTopMinZ = bbox.min[2] + (bbox.max[2] - bbox.min[2]) * (1 - lodCandidate.planeZ)
-                if lodCandidate.uvTopCenterZ is None:
-                    planeTopMaxZ = min(bbox.max[2] - min(sizes) * 0.1, planeTopMinZ + sizes[0] / 2)
-                else:
-                    planeTopMaxZ = bbox.min[2] + sizes[2] * (1 - lodCandidate.uvTopCenterZ)
+                planeTopMaxZ = min(bbox.max[2] - min(sizes) * 0.1, planeTopMinZ + min(sizes[0], sizes[1]) / 4)
 
                 archetypeToVertices[name] += \
                     self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], planeIntersection[1], planeTopMaxZ], [0, 0, 1], [uvTopCenter.u, uvTopCenter.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], bbox.min[1], planeTopMinZ], [-1, -1, 1], [uvTopMin.u, uvTopMax.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], bbox.min[1], planeTopMinZ], [1, -1, 1], [uvTopMax.u, uvTopMax.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], bbox.max[1], planeTopMinZ], [1, 1, 1], [uvTopMax.u, uvTopMin.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], bbox.max[1], planeTopMinZ], [-1, 1, 1], [uvTopMin.u, uvTopMin.v])
+                    self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], bbox.min[1], planeTopMinZ], [-1, -1, 0.1], [uvTopMin.u, uvTopMax.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], bbox.min[1], planeTopMinZ], [1, -1, 0.1], [uvTopMax.u, uvTopMax.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], bbox.max[1], planeTopMinZ], [1, 1, 0.1], [uvTopMax.u, uvTopMin.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], bbox.max[1], planeTopMinZ], [-1, 1, 0.1], [uvTopMin.u, uvTopMin.v])
 
         totalBbox = Box.createReversedInfinityBox()
 
@@ -535,7 +538,7 @@ class LodMapCreator:
 
             geometries += self.contentTemplateMeshGeometry \
                 .replace("${SHADER_INDEX}", str(shaderIndex)) \
-                .replace("${VERTEX_DECLARATION}", "NCE8F80C8") \
+                .replace("${VERTEX_DECLARATION}", "N209731BE") \
                 .replace("${INDICES.NUM}", str(len(indices))) \
                 .replace("${INDICES}", self.createIndicesStr(indices)) \
                 .replace("${VERTICES.NUM}", str(verticesPerEntity * numEntities)) \
@@ -602,8 +605,8 @@ class LodMapCreator:
     def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
         name = nameWithoutSlodLevel + str(slodLevel)
 
-        normalAndColorsFront = " / 0.00000000 -1.00000000 0.00000000 / 255 29 0 255 / 0 255 0 0 / "
-        normalAndColorsTop = " / 0.00000000 0.00000000 1.00000000 / 255 29 0 255 / 0 0 0 0 / "
+        colors = " / 255 29 0 255 / "
+        normalAndColorsFront = " / 0.00000000 -0.98058068 0.19611614" + colors + "0 255 0 0 / "
         verticesFront = {}
         verticesTop = {}
         numFrontPlanes = {}
@@ -665,24 +668,29 @@ class LodMapCreator:
             if slodLevel < 3 and uvTopMin is not None and uvTopMax is not None:
                 numTopPlanes[diffuseSampler] += 1
                 if uvMap.topZ is None:
-                    topZ = centerTransformed[2]
+                    topZ = self.lodCandidates[entity.archetypeName].planeZ
                 else:
-                    topZ = (transformedBboxEntityMax[2] - transformedBboxEntityMin[2]) * (1 - uvMap.topZ) + transformedBboxEntityMin[2]
-                topZStr = Util.floatToStr(topZ)
+                    topZ = uvMap.topZ
+                planeZ = (transformedBboxEntityMax[2] - transformedBboxEntityMin[2]) * (1 - topZ) + transformedBboxEntityMin[2]
+                topZStr = Util.floatToStr(planeZ)
                 if verticesTop[diffuseSampler] != "":
                     verticesTop[diffuseSampler] += "\n"
-                verticesTop[diffuseSampler] += "				" + Util.floatToStr(transformedBboxEntityMin[0]) + " " + Util.floatToStr(
-                    transformedBboxEntityMin[1]) + \
-                                               " " + topZStr + normalAndColorsTop + Util.floatToStr(uvTopMin.u) + " " + Util.floatToStr(uvTopMin.v)
-                verticesTop[diffuseSampler] += "\n				" + Util.floatToStr(transformedBboxEntityMax[0]) + " " + Util.floatToStr(
-                    transformedBboxEntityMin[1]) + \
-                                               " " + topZStr + normalAndColorsTop + Util.floatToStr(uvTopMax.u) + " " + Util.floatToStr(uvTopMin.v)
-                verticesTop[diffuseSampler] += "\n				" + Util.floatToStr(transformedBboxEntityMax[0]) + " " + Util.floatToStr(
-                    transformedBboxEntityMax[1]) + \
-                                               " " + topZStr + normalAndColorsTop + Util.floatToStr(uvTopMax.u) + " " + Util.floatToStr(uvTopMax.v)
-                verticesTop[diffuseSampler] += "\n				" + Util.floatToStr(transformedBboxEntityMin[0]) + " " + Util.floatToStr(
-                    transformedBboxEntityMax[1]) + \
-                                               " " + topZStr + normalAndColorsTop + Util.floatToStr(uvTopMin.u) + " " + Util.floatToStr(uvTopMax.v)
+                verticesTop[diffuseSampler] += "				" + \
+                                               Util.floatToStr(transformedBboxEntityMin[0]) + " " + Util.floatToStr(transformedBboxEntityMin[1]) + " " + \
+                                               topZStr + " / " + LodMapCreator.createVectorStr([-1, -1, 0.1], True) + colors + \
+                                               Util.floatToStr(uvTopMin.u) + " " + Util.floatToStr(uvTopMin.v)
+                verticesTop[diffuseSampler] += "\n				" + \
+                                               Util.floatToStr(transformedBboxEntityMax[0]) + " " + Util.floatToStr(transformedBboxEntityMin[1]) + " " + \
+                                               topZStr + " / " + LodMapCreator.createVectorStr([1, -1, 0.1], True) + colors + \
+                                               Util.floatToStr(uvTopMax.u) + " " + Util.floatToStr(uvTopMin.v)
+                verticesTop[diffuseSampler] += "\n				" + \
+                                               Util.floatToStr(transformedBboxEntityMax[0]) + " " + Util.floatToStr(transformedBboxEntityMax[1]) + " " + \
+                                               topZStr + " / " + LodMapCreator.createVectorStr([1, 1, 0.1], True) + colors + \
+                                               Util.floatToStr(uvTopMax.u) + " " + Util.floatToStr(uvTopMax.v)
+                verticesTop[diffuseSampler] += "\n				" +\
+                                               Util.floatToStr(transformedBboxEntityMin[0]) + " " + Util.floatToStr(transformedBboxEntityMax[1]) + " " + \
+                                               topZStr + " / " + LodMapCreator.createVectorStr([-1, 1, 0.1], True) + colors + \
+                                               Util.floatToStr(uvTopMin.u) + " " + Util.floatToStr(uvTopMax.v)
 
         totalBbox = Box.createReversedInfinityBox()
 
@@ -727,7 +735,7 @@ class LodMapCreator:
 
                 geometries += self.contentTemplateMeshGeometry \
                     .replace("${SHADER_INDEX}", str(shaderIndex)) \
-                    .replace("${VERTEX_DECLARATION}", "NCE8F80C8") \
+                    .replace("${VERTEX_DECLARATION}", "N209731BE") \
                     .replace("${INDICES.NUM}", str(numTopPlanes[diffuseSampler] * 6)) \
                     .replace("${INDICES}", indicesTopStr) \
                     .replace("${VERTICES.NUM}", str(numTopPlanes[diffuseSampler] * 4)) \
@@ -862,6 +870,7 @@ class LodMapCreator:
 
         hdEntitiesWithLod = []
         lodCoords = []
+        lodDistances = []
         for filename in natsorted(os.listdir(self.inputDir)):
             if not filename.endswith(".ymap.xml") or not (filename.startswith(mapPrefix.lower() + "_") or filename == mapPrefix.lower() + ".ymap.xml"):
                 continue
@@ -912,8 +921,9 @@ class LodMapCreator:
                 hdEntitiesWithLod.append(entity)
 
                 lodCoords.append(position)
+                lodDistances.append(lodDistance)
 
-        hierarchy = self.calculateLodHierarchy(lodCoords)
+        hierarchy = self.calculateLodHierarchy(lodCoords, lodDistances)
 
         entitiesForLodModels = {}
         entitiesForSlod1Models = {}
@@ -943,28 +953,28 @@ class LodMapCreator:
             if hdEntity.archetypeName in self.slodCandidates:
                 if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD1:
                     if h[0] not in lodToSlod1:
-                        lodToSlod1[h[0]] = h[1]
-                        slod1NumChildren[h[1]] = slod1NumChildren.get(h[1], 0) + 1
+                        lodToSlod1[h[0]] = h[2]
+                        slod1NumChildren[h[2]] = slod1NumChildren.get(h[2], 0) + 1
 
-                    if h[1] not in entitiesForSlod1Models:
-                        entitiesForSlod1Models[h[1]] = []
-                    entitiesForSlod1Models[h[1]].append(hdEntity)
+                    if h[2] not in entitiesForSlod1Models:
+                        entitiesForSlod1Models[h[2]] = []
+                    entitiesForSlod1Models[h[2]].append(hdEntity)
                 if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD2:
-                    if h[1] not in slod1ToSlod2:
-                        slod1ToSlod2[h[1]] = h[2]
-                        slod2NumChildren[h[2]] = slod2NumChildren.get(h[2], 0) + 1
+                    if h[2] not in slod1ToSlod2:
+                        slod1ToSlod2[h[2]] = h[3]
+                        slod2NumChildren[h[3]] = slod2NumChildren.get(h[3], 0) + 1
 
-                    if h[2] not in entitiesForSlod2Models:
-                        entitiesForSlod2Models[h[2]] = []
-                    entitiesForSlod2Models[h[2]].append(hdEntity)
+                    if h[3] not in entitiesForSlod2Models:
+                        entitiesForSlod2Models[h[3]] = []
+                    entitiesForSlod2Models[h[3]].append(hdEntity)
                 if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD3:
-                    if h[2] not in slod2ToSlod3:
-                        slod2ToSlod3[h[2]] = h[3]
-                        slod3NumChildren[h[3]] = slod3NumChildren.get(h[3], 0) + 1
+                    if h[3] not in slod2ToSlod3:
+                        slod2ToSlod3[h[3]] = h[4]
+                        slod3NumChildren[h[4]] = slod3NumChildren.get(h[4], 0) + 1
 
-                    if h[3] not in entitiesForSlod3Models:
-                        entitiesForSlod3Models[h[3]] = []
-                    entitiesForSlod3Models[h[3]].append(hdEntity)
+                    if h[4] not in entitiesForSlod3Models:
+                        entitiesForSlod3Models[h[4]] = []
+                    entitiesForSlod3Models[h[4]].append(hdEntity)
 
         lodDrawableDictionary = mapPrefix.lower() + "_lod_children"
         slod1DrawableDictionary = mapPrefix.lower() + "_slod1_children"
@@ -1133,7 +1143,7 @@ class LodMapCreator:
                 .replace("${FLAGS}", str(entity.flags))
         return contentEntities
 
-    def calculateLodHierarchy(self, points: list[list[float]]) -> list[list[int]]:
+    def calculateLodHierarchy(self, points: list[list[float]], lodDistances: list[float]) -> list[list[int]]:
         if len(points) == 0:
             return []
 
@@ -1141,10 +1151,11 @@ class LodMapCreator:
         for i in range(len(points)):
             hierarchy.append([])
 
-        return self._calculateLodHierarchy(points, hierarchy)
+        return self._calculateLodHierarchy(points, lodDistances, hierarchy)
 
-    def _calculateLodHierarchy(self, points: list[list[float]], hierarchy: list[list[int]]) -> list[list[int]]:
+    def _calculateLodHierarchy(self, points: list[list[float]], lodDistances: list[float], hierarchy: list[list[int]]) -> list[list[int]]:
         numMaxChildren = -1
+        clusterWithRespectToPosition = True
         level = len(hierarchy[0])
         if level == 0:
             maxExtends = LodMapCreator.ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD3
@@ -1153,6 +1164,9 @@ class LodMapCreator:
         elif level == 2:
             maxExtends = LodMapCreator.ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD1
         elif level == 3:
+            maxExtends = LodMapCreator.LOD_DISTANCES_MAX_DIFFERENCE_LOD
+            clusterWithRespectToPosition = False
+        elif level == 4:
             maxExtends = LodMapCreator.ENTITIES_EXTENTS_MAX_DIAGONAL_LOD
             numMaxChildren = LodMapCreator.NUM_CHILDREN_MAX_VALUE
         else:
@@ -1168,11 +1182,16 @@ class LodMapCreator:
                 pointsOfParent.append([])
 
             absIndices[parentIndex].append(i)
-            pointsOfParent[parentIndex].append(points[i])
+            pointsOfParent[parentIndex].append(points[i] if clusterWithRespectToPosition else lodDistances[i])
+
+        if not clusterWithRespectToPosition:
+            for i in range(len(points)):
+                parentIndex = 0 if len(hierarchy[i]) == 0 else hierarchy[i][0]
+                pointsOfParent[parentIndex] = np.array(pointsOfParent[parentIndex]).reshape(-1, 1)
 
         clusterOffset = 0
         for parentIndex in range(len(pointsOfParent)):
-            clustering, unused = Util.performClustering(pointsOfParent[parentIndex], numMaxChildren, maxExtends)
+            clustering, unused = Util.performClustering(pointsOfParent[parentIndex], numMaxChildren, maxExtends, not clusterWithRespectToPosition)
 
             for c in range(len(clustering)):
                 i = absIndices[parentIndex][c]
@@ -1180,7 +1199,7 @@ class LodMapCreator:
 
             clusterOffset += max(clustering) + 1
 
-        return self._calculateLodHierarchy(points, hierarchy)
+        return self._calculateLodHierarchy(points, lodDistances, hierarchy)
 
     def copyOthers(self):
         # copy other files

@@ -8,20 +8,19 @@ class LodCandidate:
 
     name: str
     texture_origin: float
-    planeZ: Optional[float]
+    planeZ: float
     uvFrontMin: UV
     uvFrontMax: UV
     uvTopMin: Optional[UV]
     uvTopMax: Optional[UV]
     uvTopCenter: Optional[UV]
-    uvTopCenterZ: Optional[float]
     uvSideMin: Optional[UV]
     uvSideMax: Optional[UV]
     _textureOriginSide: Optional[float]
 
     def __init__(self, name: str, texture_origin: float = 0.5, planeZ: Optional[float] = 0.5,
             uvFrontMin: UV = UV(0, 0), uvFrontMax: UV = UV(1, 1),
-            uvTopMin: Optional[UV] = None, uvTopMax: Optional[UV] = None, uvTopCenter: Optional[UV] = None, uvTopCenterZ: Optional[float] = None,
+            uvTopMin: Optional[UV] = None, uvTopMax: Optional[UV] = None, uvTopCenter: Optional[UV] = None,
             uvSideMin: Optional[UV] = None, uvSideMax: Optional[UV] = None, _textureOriginSide: Optional[float] = None):
         self.name = name
         self.texture_origin = texture_origin
@@ -31,7 +30,6 @@ class LodCandidate:
         self.uvTopMin = uvTopMin
         self.uvTopMax = uvTopMax
         self.uvTopCenter = uvTopCenter
-        self.uvTopCenterZ = uvTopCenterZ
         self.uvSideMin = uvSideMin
         self.uvSideMax = uvSideMax
         self._textureOriginSide = _textureOriginSide

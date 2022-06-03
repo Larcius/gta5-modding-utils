@@ -32,6 +32,8 @@ class Util:
             return -1
         elif len(coords) == 1:
             return 0
+        elif len(coords[0]) == 1:
+            return max(coords) - min(coords)
         elif len(coords) < 11:
             # this is only mandatory for len(coords) < 5 because ConvexHull needs at least 5 points
             # however if there are only a few points then just compute the pairwise distances
