@@ -12,11 +12,12 @@ from natsort import natsorted
 from common.Box import Box
 from common.Util import Util
 from common.ymap.Flag import Flag
+from worker.static_col_creator.StaticCollisionModel import StaticCollisionModel
 
 
 class StaticCollisionCreator:
-    MAX_NUM_CHILDREN = 100
-    ENTITIES_EXTENTS_MAX_DIAGONAL = 200
+    MAX_NUM_CHILDREN = -1
+    ENTITIES_EXTENTS_MAX_DIAGONAL = 400
     IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION = True
     IGNORE_IF_SCALING_CLOSE_TO_IDENTITY = True
 
@@ -320,7 +321,7 @@ class StaticCollisionCreator:
         if not StaticCollisionCreator.IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION and flags & Flag.DISABLE_EMBEDDED_COLLISION:
             return False
 
-        if StaticCollisionCreator.IGNORE_IF_SCALING_CLOSE_TO_IDENTITY and min(scale) >= 0.9 and max(scale) <= 1.1:
+        if StaticCollisionCreator.IGNORE_IF_SCALING_CLOSE_TO_IDENTITY and min(scale) >= 0.9 and max(scale) <= 1 / 0.9:
             return False
 
         return True
@@ -573,40 +574,41 @@ class StaticCollisionCreator:
 
         return childBBox
 
-    def fixBBoxesAndBSpheres(self, children: list[str]) -> Box:
+    def fixBBoxesAndBSpheres(self, phBounds: list[list[str]]) -> Box:
         bbox = Box.createReversedInfinityBox()
 
-        translation = []
-        indexStartChild = indexStartPolygons = indexStartVertices = indexStartShrunk = -1
-        i = 0
-        for line in children:
-            i += 1
-            if line.startswith("		{"):
-                indexStartChild = i
-            if line.startswith("			GeometryCenter "):
-                xyzArr = line[18:-1].split(" ")
-                translation = [float(xyzArr[0]), float(xyzArr[1]), float(xyzArr[2])]
-            elif line.startswith("			Polygons "):
-                indexStartPolygons = i + 1
-            elif line.startswith("			Vertices "):
-                indexStartVertices = i + 1
-            elif line.startswith("			Shrunk "):
-                indexStartShrunk = i + 1
-            elif line.startswith("		}"):
-                if indexStartChild == -1 or indexStartPolygons == -1 or indexStartVertices == -1:
-                    open("dump.log", "w").writelines(children)
-                    raise ValueError("could not find all indices but reached end of block in line " + str(i))
+        for phBound in phBounds:
+            translation = []
+            indexStartChild = indexStartPolygons = indexStartVertices = indexStartShrunk = -1
+            i = 0
+            for line in phBound:
+                i += 1
+                if line.startswith("		{"):
+                    indexStartChild = i
+                if line.startswith("			GeometryCenter "):
+                    xyzArr = line[18:-1].split(" ")
+                    translation = [float(xyzArr[0]), float(xyzArr[1]), float(xyzArr[2])]
+                elif line.startswith("			Polygons "):
+                    indexStartPolygons = i + 1
+                elif line.startswith("			Vertices "):
+                    indexStartVertices = i + 1
+                elif line.startswith("			Shrunk "):
+                    indexStartShrunk = i + 1
+                elif line.startswith("		}"):
+                    if indexStartChild == -1 or indexStartPolygons == -1 or indexStartVertices == -1:
+                        open("dump.log", "w").writelines(phBound)
+                        raise ValueError("could not find all indices but reached end of block in line " + str(i))
 
-                childBBox = self.calculateBBox(children, translation, indexStartChild, indexStartPolygons, indexStartVertices, indexStartShrunk)
+                    childBBox = self.calculateBBox(phBound, translation, indexStartChild, indexStartPolygons, indexStartVertices, indexStartShrunk)
 
-                # set bbox of child
-                children[indexStartChild + 2] = "			AABBMax " + Util.floatToStr(childBBox.max[0]) + " " + Util.floatToStr(childBBox.max[1]) + \
-                                                " " + Util.floatToStr(childBBox.max[2]) + "\n"
-                children[indexStartChild + 3] = "			AABBMin " + Util.floatToStr(childBBox.min[0]) + " " + Util.floatToStr(childBBox.min[1]) + \
-                                                " " + Util.floatToStr(childBBox.min[2]) + "\n"
+                    # set bbox of child
+                    phBound[indexStartChild + 2] = "			AABBMax " + Util.floatToStr(childBBox.max[0]) + " " + Util.floatToStr(childBBox.max[1]) + \
+                                  " " + Util.floatToStr(childBBox.max[2]) + "\n"
+                    phBound[indexStartChild + 3] = "			AABBMin " + Util.floatToStr(childBBox.min[0]) + " " + Util.floatToStr(childBBox.min[1]) + \
+                                  " " + Util.floatToStr(childBBox.min[2]) + "\n"
 
-                bbox.extendByPoint(childBBox.min)
-                bbox.extendByPoint(childBBox.max)
+                    bbox.extendByPoint(childBBox.min)
+                    bbox.extendByPoint(childBBox.max)
 
         return bbox
 
@@ -675,11 +677,7 @@ class StaticCollisionCreator:
         mapName = mapFilename[:-9]
 
         for i in range(numClusters):
-            numChildren = self._colNumChildren[i]
-            children = self._colChildren[i]
-            childFlags = self._colChildFlags[i]
-
-            bbox = self.fixBBoxesAndBSpheres(children)
+            model = StaticCollisionModel(self._colChildren[i], self._colChildFlags[i])
 
             # obnEmptyContentNew = createInitObn(bbox, 0) \
             # .replace("${CHILDREN.BOUNDS}\n", "") \
@@ -689,22 +687,42 @@ class StaticCollisionCreator:
             # emptyObnFile.write(obnEmptyContentNew)
             # emptyObnFile.close()
 
-            colFilename = "hi@" + mapName
+            colDefaultFilename = mapName
             if numClusters > 1:
-                colFilename += "_" + str(i)
-            colFilename += ".obn"
-
-            obnFileNew = open(os.path.join(self.getOutputDirCollisionModels(), colFilename), 'w')
+                colDefaultFilename += "_" + str(i)
+            colDefaultFilename += ".obn"
 
             i += 1
 
-            obnContentNew = self.createInitObn(bbox, numChildren)
-            for line in obnContentNew.splitlines(keepends=True):
-                if line == "${CHILDREN.BOUNDS}\n":
-                    obnFileNew.writelines(children)
-                elif line == "${CHILD_TRANSFORMS.MATRICES}\n":
-                    for indexMatrix in range(numChildren):
-                        obnFileNew.write("""		Matrix """ + str(indexMatrix) + """
+            for mode in range(3):
+                if mode == 0:
+                    colFilename = "hi@" + colDefaultFilename
+                    bound = model.high
+                elif mode == 1:
+                    colFilename = "ma@" + colDefaultFilename
+                    bound = model.ma
+                else:
+                    colFilename = colDefaultFilename
+                    bound = model.default
+
+                numChildren = bound.getNumChildren()
+                if numChildren == 0:
+                    continue
+
+                bbox = self.fixBBoxesAndBSpheres(bound.phBounds)
+                children = bound.phBounds
+                childFlags = bound.childFlagItems
+
+                obnFileNew = open(os.path.join(self.getOutputDirCollisionModels(), colFilename), 'w')
+
+                obnContentNew = self.createInitObn(bbox, numChildren)
+                for line in obnContentNew.splitlines(keepends=True):
+                    if line == "${CHILDREN.BOUNDS}\n":
+                        for lines in children:
+                            obnFileNew.writelines(lines)
+                    elif line == "${CHILD_TRANSFORMS.MATRICES}\n":
+                        for indexMatrix in range(numChildren):
+                            obnFileNew.write("""		Matrix """ + str(indexMatrix) + """
 		{
 			1.00000000 0.00000000 0.00000000
 			0.00000000 1.00000000 0.00000000
@@ -712,11 +730,12 @@ class StaticCollisionCreator:
 			0.00000000 0.00000000 0.00000000
 		}
 """)
-                elif line == "${CHILD_FLAGS.ITEMS}\n":
-                    obnFileNew.writelines(childFlags)
-                else:
-                    obnFileNew.write(line)
-            obnFileNew.close()
+                    elif line == "${CHILD_FLAGS.ITEMS}\n":
+                        for lines in childFlags:
+                            obnFileNew.writelines(lines)
+                    else:
+                        obnFileNew.write(line)
+                obnFileNew.close()
 
         # colItems = ""
         # for i in range(numClusters):
