@@ -115,8 +115,11 @@ class Util:
 
     @staticmethod
     def performClustering(points: list[list[float]], maxPoints: int, maxFurthestDistance: float, unevenClusters: bool = False) -> (Any, list[float]):
-        X = np.array(points)
         numPoints = len(points)
+        if numPoints == 1:
+            return np.array([0]), [0]
+
+        X = np.array(points)
 
         largestNonValidNumClusters = 0
         smallestValidNumClusters = None
