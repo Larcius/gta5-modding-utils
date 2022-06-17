@@ -209,10 +209,10 @@ class LodMapCreator:
         self.slodCandidates = slodCandidates
 
     LOD_DISTANCE = 750
-    SLOD_DISTANCE = 1500  # somehow arbitrary and not that important because SLOD1 and SLOD2 are almost the same models.
+    SLOD_DISTANCE = 1100  # somehow arbitrary and not that important because SLOD1 and SLOD2 are almost the same models.
     # however, reducing this results in smaller streaming extents of LOD/SLOD1 maps
-    SLOD2_DISTANCE = 3000  # using 3000 because max height in game is 2600 and therefore until that height (plus a bit to allow slight xy offset)
-    # a model with xy plane is needed so that objects don't vanish when above (SLOD2 models do contain such a xy plane)
+    SLOD2_DISTANCE = 2800  # using 2800 because max height in game is 2600 and therefore until that height (plus a bit to allow slight xy offset)
+    # a model with xy plane is needed so that objects don't vanish when above (SLOD2 models do contain such a xy plane but not SLOD3)
     SLOD3_DISTANCE = 15000  # that seems to be the default value from Rockstars (in fact the whole map is not that large anyway)
 
     NUM_CHILDREN_MAX_VALUE = 255  # TODO confirm following claim: must be <= 255 since numChildren is of size 1 byte
