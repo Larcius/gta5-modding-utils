@@ -46,7 +46,9 @@ class VegetationCreator:
         "prop_s_pine_dead_01",
     }
 
-    TRIANGLE_MIN_ANGLE = math.pi / 8
+    TRIANGLE_DISTANCE_MIN = 10
+    TRIANGLE_DISTANCE_MAX = 60
+    TRIANGLE_MIN_ANGLE = math.pi / 14
 
     MAP_NAME_SUFFIX = "_vegetation_creator"
 
@@ -107,26 +109,29 @@ class VegetationCreator:
         origPoints2d = np.array(points)[:, :2]
 
         newPoints = []
-        for i in range(2):
+        pointsAdded = True
+        while pointsAdded:
+            pointsAdded = False
+
             points2d = np.array(points)[:, :2]
             tri = Delaunay(points2d)
 
             for simplex in tri.simplices:
                 simplexVertices = [points[simplex[0]], points[simplex[1]], points[simplex[2]]]
 
-                pairwiseDistances = pdist(simplexVertices)
-
-                if min(pairwiseDistances) < 16 or max(pairwiseDistances) > 60:
+                simplexVertices2d = [points2d[simplex[0]], points2d[simplex[1]], points2d[simplex[2]]]
+                pairwiseDistances2d = pdist(simplexVertices2d)
+                if min(pairwiseDistances2d) < VegetationCreator.TRIANGLE_DISTANCE_MIN or max(pairwiseDistances2d) > VegetationCreator.TRIANGLE_DISTANCE_MAX:
                     continue
 
                 minAngle = math.pi
                 for j in range(3):
-                    minAngle = min(minAngle, abs(Util.calculateAngle(simplexVertices[j], simplexVertices[(j + 1) % 3], simplexVertices[(j + 2) % 3])))
+                    minAngle = min(minAngle, abs(Util.calculateAngle(simplexVertices2d[j], simplexVertices2d[(j + 1) % 3], simplexVertices2d[(j + 2) % 3])))
 
                 if minAngle < VegetationCreator.TRIANGLE_MIN_ANGLE:
                     continue
 
-                factors = [random.uniform(0.5, 1), random.uniform(0.5, 1), random.uniform(0.5, 1)]
+                factors = [random.uniform(0.4, 1), random.uniform(0.4, 1), random.uniform(0.4, 1)]
                 factors = np.divide(factors, sum(factors))
 
                 center = np.zeros(3)
@@ -135,6 +140,7 @@ class VegetationCreator:
 
                 newPoints.append(center)
                 points.append(center)
+                pointsAdded = True
 
         newMapName = self.getNewMapName(mapNames)
         self.createYmap(newMapName, newPoints)
