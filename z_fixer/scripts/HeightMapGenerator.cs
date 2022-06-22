@@ -209,6 +209,10 @@ namespace HeightMap
 			}
 		}
 
+		private bool isPointOnRoad(float x, float y, float z) {
+			return Function.Call<bool>(Hash.IS_POINT_ON_ROAD, x, y, z);
+		}
+
 		private void OnTick(object sender, EventArgs e)
 		{
 			if (writer == null) {
@@ -260,6 +264,7 @@ namespace HeightMap
 				writer.Write(",");
 
 				float minZ = z;
+				bool isOnRoad = isPointOnRoad(coords.X, coords.Y, z + 1);
 				for (float curRadius = resolution; radius > 0 && curRadius < radius + resolution; curRadius += resolution) {
 					// if curRadius is approx. or even greater than the max radius then set it to max radius
 					if (curRadius >= radius - 0.001f) {
@@ -287,6 +292,11 @@ namespace HeightMap
 
 						float curZ = getHeightEpsHexagon(coords.X + point.X, coords.Y + point.Y);
 
+						// it is sufficient to check only the center and the circumcircle
+						if (!isOnRoad && curRadius == radius) {
+							isOnRoad = isPointOnRoad(coords.X + point.X, coords.Y + point.Y, curZ + 1);
+						}
+
 						if (!Single.IsNaN(curZ)) {
 							minZ = Math.Min(minZ, curZ - point.Z);
 						}
@@ -308,6 +318,9 @@ namespace HeightMap
 				float distanceToStreet = position.DistanceTo(nextPositionOnStreet);
 				writer.Write(",");
 				writer.Write(distanceToStreet.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+				writer.Write(",");
+				writer.Write(isOnRoad);
 
 				if (addWarning) {
 					writer.Write(",WARNING: could not get z coordinate so just used the one from the input file or 0 if NaN was given");

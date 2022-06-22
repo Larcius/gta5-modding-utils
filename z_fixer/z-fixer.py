@@ -1,4 +1,5 @@
 # TODO refactoring needed
+import distutils.util
 import math
 import os
 import getopt
@@ -184,7 +185,7 @@ def main(argv):
         heightmap.close()
 
 
-def getMinHeight(heightmap) -> [float, [float, float, float], float]:
+def getMinHeight(heightmap) -> [float, [float, float, float], float, bool]:
     heightmapEntry = heightmap.readline().rstrip("\n")
     if not heightmapEntry:
         print("ERROR: cannot get entry in heightmap")
@@ -192,12 +193,12 @@ def getMinHeight(heightmap) -> [float, [float, float, float], float]:
 
     parts = heightmapEntry.split(",")
 
-    if len(parts) < 8:
+    if len(parts) < 9:
         print("ERROR: invalid line in heightmap entry:")
         print(heightmapEntry)
         quit()
 
-    return float(parts[3]), [float(parts[4]), float(parts[5]), float(parts[6])], float(parts[7])
+    return float(parts[3]), [float(parts[4]), float(parts[5]), float(parts[6])], float(parts[7]), bool(distutils.util.strtobool(parts[8]))
 
 
 def floatToStr(val):
@@ -239,7 +240,7 @@ def repl(matchobj, outCoords, heightmap):
                         "," + str(tree.trunkRadius * scaleXY) + "\n")
         return matchobj.group(0)
 
-    minHeight, normal, distanceToStreet = getMinHeight(heightmap)
+    minHeight, normal, distanceToStreet, isOnStreet = getMinHeight(heightmap)
 
     calcZCoord = minHeight - transformed[2]
 
@@ -252,7 +253,7 @@ def repl(matchobj, outCoords, heightmap):
         print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - coords[2],
               "(new z coordinate is " + str(calcZCoord) + ")")
 
-    if DELETE_IF_ON_STREET and distanceToStreet < 3 + tree.trunkRadius * scaleXY:
+    if DELETE_IF_ON_STREET and (isOnStreet or distanceToStreet < 3 + tree.trunkRadius * scaleXY):
         print("INFO: removing", prop, "at position", position, "because it is placed on a street or path")
         return ""
 
