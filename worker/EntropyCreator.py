@@ -38,7 +38,6 @@ class EntropyCreator:
     CANDIDATES_ROTATION = tuple({
         "prop_cactus",
         "prop_joshua_tree",
-        "prop_joshua_tree",
         "prop_palm_fan",
         "prop_palm_huge",
         "prop_palm_med",

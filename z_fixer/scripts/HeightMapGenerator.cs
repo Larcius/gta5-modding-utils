@@ -194,23 +194,32 @@ namespace HeightMap
 		}
 
 		private Vector3 getNearestPositionOnStreet(Vector3 position) {
-			OutputArgument outPos = new OutputArgument();
+			OutputArgument outPos1 = new OutputArgument();
+			OutputArgument outPos2 = new OutputArgument();
 
-			Function.Call(Hash.GET_NTH_CLOSEST_VEHICLE_NODE, position.X, position.Y, position.Z, 1, outPos, 1, 0x40400000, 0);
-			Vector3 next1 = outPos.GetResult<Vector3>();
+			Function.Call(Hash.GET_CLOSEST_ROAD, position.X, position.Y, position.Z, 0.0f, 0, outPos1, outPos2);
+			Vector3 next1 = outPos1.GetResult<Vector3>();
+			Vector3 next2 = outPos2.GetResult<Vector3>();
 
-			Function.Call(Hash.GET_NTH_CLOSEST_VEHICLE_NODE, position.X, position.Y, position.Z, 2, outPos, 1, 0x40400000, 0);
-			Vector3 next2 = outPos.GetResult<Vector3>();
-
-			if (position.DistanceTo(next2) > 25) {
-				return next1;
-			} else {
-				return getClosestPointOnLineSegment(position, next1, next2);
-			}
+			return getClosestPointOnLineSegment(position, next1, next2);
 		}
 
 		private bool isPointOnRoad(float x, float y, float z) {
 			return Function.Call<bool>(Hash.IS_POINT_ON_ROAD, x, y, z);
+		}
+
+		private bool isPointInWater(float x, float y, float z) {
+			OutputArgument height = new OutputArgument();
+			return Function.Call<bool>(Hash.GET_WATER_HEIGHT, x, y, z, height);
+		}
+
+		private bool areNodesLoadedAroundPoint(float x, float y, float z) {
+			float offset = 25f;
+			return areNodesLoadedForArea(x - offset, y - offset, z - offset, x + offset, y + offset, z + offset);
+		}
+
+		private bool areNodesLoadedForArea(float x1, float y1, float z1, float x2, float y2, float z2) {
+			return Function.Call<bool>(Hash.IS_NAVMESH_LOADED_IN_AREA, x1, y1, z1, x2, y2, z2);
 		}
 
 		private void OnTick(object sender, EventArgs e)
@@ -256,6 +265,10 @@ namespace HeightMap
 					}
 				}
 
+				if (!areNodesLoadedAroundPoint(coords.X, coords.Y, z)) {
+					return;
+				}
+
 				writer.Write(coords.X.ToString(System.Globalization.CultureInfo.InvariantCulture));
 				writer.Write(",");
 				writer.Write(coords.Y.ToString(System.Globalization.CultureInfo.InvariantCulture));
@@ -264,10 +277,15 @@ namespace HeightMap
 				writer.Write(",");
 
 				float minZ = z;
-				bool isOnRoad = isPointOnRoad(coords.X, coords.Y, z + 1);
-				for (float curRadius = resolution; radius > 0 && curRadius < radius + resolution; curRadius += resolution) {
-					// if curRadius is approx. or even greater than the max radius then set it to max radius
-					if (curRadius >= radius - 0.001f) {
+				bool isOnRoad = isPointOnRoad(coords.X, coords.Y, z);
+				bool isInWater = isPointInWater(coords.X, coords.Y, z);
+				bool finalLoop = false;
+				for (float curRadius = resolution; radius > 0 && !finalLoop; curRadius += resolution) {
+					if (curRadius >= radius + resolution - 0.001f) {
+						finalLoop = true;
+						curRadius = radius + Math.Min(Math.Max(0.5f, radius), 2f);
+					} else if (curRadius >= radius - 0.001f) {
+						// if curRadius is approx. or even greater than the max radius then set it to max radius
 						curRadius = radius;
 					}
 
@@ -290,14 +308,23 @@ namespace HeightMap
 						Vector3 point = new Vector3((float) Math.Sin(angle) * curRadius, (float) Math.Cos(angle) * curRadius, 0f);
 						point = rotation * point;
 
-						float curZ = getHeightEpsHexagon(coords.X + point.X, coords.Y + point.Y);
+						float curX = coords.X + point.X;
+						float curY = coords.Y + point.Y;
+						float curZ = getHeightEpsHexagon(curX, curY);
 
-						// it is sufficient to check only the center and the circumcircle
-						if (!isOnRoad && curRadius == radius) {
-							isOnRoad = isPointOnRoad(coords.X + point.X, coords.Y + point.Y, curZ + 1);
+						if (Single.IsNaN(curZ)) {
+							continue;
 						}
 
-						if (!Single.IsNaN(curZ)) {
+						if (finalLoop) {
+							// it is sufficient to check only the center and the circumcircle
+							if (!isOnRoad) {
+								isOnRoad = isPointOnRoad(curX, curY, curZ);
+							}
+							if (!isInWater) {
+								isInWater = isPointInWater(curX, curY, curZ);
+							}
+						} else {
 							minZ = Math.Min(minZ, curZ - point.Z);
 						}
 					}
@@ -321,6 +348,8 @@ namespace HeightMap
 
 				writer.Write(",");
 				writer.Write(isOnRoad);
+				writer.Write(",");
+				writer.Write(isInWater);
 
 				if (addWarning) {
 					writer.Write(",WARNING: could not get z coordinate so just used the one from the input file or 0 if NaN was given");

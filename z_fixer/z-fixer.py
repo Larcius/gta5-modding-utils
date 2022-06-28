@@ -30,19 +30,22 @@ class Tree:
 # if True then z coordinate will not be changed if calculated value is greater than original value
 DISABLE_INCREASE_OF_Z = False
 
-IGNORE_BUSHES = True
+IGNORE_BUSHES = False
 
-DELETE_IF_ON_STREET = False
+DELETE_IF_ON_STREET = True
 
-DELETE_IF_TOO_STEEP = False
+DELETE_IF_IN_WATER = True
+
+DELETE_IF_TOO_STEEP = True
 DELETE_IF_TOO_STEEP_ANGLE_MIN = math.pi / 4   # 45°
 DELETE_IF_TOO_STEEP_ANGLE_MAX = math.pi / 3.6   # 50°
 
 
-# trees can be found at x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\
-# and update\x64\dlcpacks\patchday2ng\dlc.rpf\x64\levels\gta5\props\vegetation\v_trees.rpf
-
 trees = {
+    # others
+    "prop_tree_birch_05": Tree(0.22, -0.06),
+    "prop_veg_crop_orange": Tree(0.5, -0.066),
+    "prop_desert_iron_01": Tree(0.4, 0.184),
     # trees
     "prop_rio_del_01": Tree(1, 0.09),
     "prop_rus_olive": Tree(0.55, 0.08),
@@ -52,7 +55,6 @@ trees = {
     "prop_tree_birch_03": Tree(0.24, -0.03),
     "prop_tree_birch_03b": Tree(0.18, -0.04),
     "prop_tree_birch_04": Tree(0.57, -0.03),
-    "prop_tree_birch_05": Tree(0.22, -0.06),
     "prop_tree_cedar_02": Tree(1.4, 0.08),
     "prop_tree_cedar_03": Tree(1.4, 0.08),
     "prop_tree_cedar_04": Tree(1.4, 0.09),
@@ -84,6 +86,7 @@ trees = {
     "test_tree_cedar_trunk_001": Tree(1.3, 0.09),
     "test_tree_forest_trunk_01": Tree(4.82, -0.03),
     "test_tree_forest_trunk_base_01": Tree(4.25),
+    "test_tree_forest_trunk_04": Tree(4.7, -0.062),
     # bushes
     "prop_bush_lrg_02": Tree(3, 0.188, 0),
     "prop_bush_lrg_02b": Tree(1.1, -0.01),
@@ -114,6 +117,22 @@ trees = {
     "prop_palm_fan_04_d": Tree(1.5, -0.15, -1.1),
     "prop_palm_huge_01a": Tree(0.95, 0.37, -0.25),
     "prop_palm_huge_01b": Tree(0.95, -0.08, -1.2),
+    # cacti
+    "prop_cactus_01a": Tree(0.3, 0.018),
+    "prop_cactus_01b": Tree(0.36, 0.032),
+    "prop_cactus_01c": Tree(0.15, 0.051),
+    "prop_cactus_01d": Tree(0.16, 0.039),
+    "prop_cactus_01e": Tree(0.2, 0.05),
+    "prop_joshua_tree_01a": Tree(0.22),
+    "prop_joshua_tree_01b": Tree(0.45),
+    "prop_joshua_tree_01c": Tree(0.41, -0.005),
+    "prop_joshua_tree_01d": Tree(0.35, -0.005),
+    "prop_joshua_tree_01e": Tree(0.32, 0.014),
+    "prop_joshua_tree_02a": Tree(0.21, 0.031),
+    "prop_joshua_tree_02b": Tree(0.14, -0.002),
+    "prop_joshua_tree_02c": Tree(0.16, 0.051),
+    "prop_joshua_tree_02d": Tree(0.25, 0.05),
+    "prop_joshua_tree_02e": Tree(0.55, 0.061),
 }
 
 
@@ -156,7 +175,6 @@ def main(argv):
     else:
         heightmap = open(os.path.join(os.path.dirname(__file__), 'heights', 'hmap.txt'), 'r')
 
-    # create high quality files
     for filename in natsorted(os.listdir(os.path.join(os.path.dirname(__file__), "maps"))):
         if not filename.endswith(".ymap.xml") or filename.endswith("_lod.ymap.xml"):
             continue
@@ -165,7 +183,7 @@ def main(argv):
         content = f.read()
         f.close()
 
-        content_new = re.sub('(<Item type="CEntityDef">' +
+        content_new = re.sub('(\\s*<Item type="CEntityDef">' +
                              '\\s*<archetypeName>([^<]+)</archetypeName>' +
                              '(?:\\s*<[^/].*>)*?' +
                              '\\s*<position x="([^>]+)" y="([^>]+)" z=")([^"]+)("\\s*/>' +
@@ -174,7 +192,7 @@ def main(argv):
                              '\\s*<scaleXY\\s+value="([^"]+)"\\s*/>' +
                              '\\s*<scaleZ\\s+value="([^"]+)"\\s*/>' +
                              '(?:\\s*<[^/].*>)*?' +
-                             '\\s*</Item>\\s*)', lambda match: repl(match, outCoords, heightmap), content, flags=re.M)
+                             '\\s*</Item>)', lambda match: repl(match, outCoords, heightmap), content, flags=re.M)
 
         if not enableModeExtract:
             f = open(os.path.join(os.path.dirname(__file__), "generated", filename), 'w')
@@ -193,12 +211,13 @@ def getMinHeight(heightmap) -> [float, [float, float, float], float, bool]:
 
     parts = heightmapEntry.split(",")
 
-    if len(parts) < 9:
+    if len(parts) < 10:
         print("ERROR: invalid line in heightmap entry:")
         print(heightmapEntry)
         quit()
 
-    return float(parts[3]), [float(parts[4]), float(parts[5]), float(parts[6])], float(parts[7]), bool(distutils.util.strtobool(parts[8]))
+    return float(parts[3]), [float(parts[4]), float(parts[5]), float(parts[6])], float(parts[7]), \
+        bool(distutils.util.strtobool(parts[8])), bool(distutils.util.strtobool(parts[9]))
 
 
 def floatToStr(val):
@@ -240,7 +259,7 @@ def repl(matchobj, outCoords, heightmap):
                         "," + str(tree.trunkRadius * scaleXY) + "\n")
         return matchobj.group(0)
 
-    minHeight, normal, distanceToStreet, isOnStreet = getMinHeight(heightmap)
+    minHeight, normal, distanceToStreet, isOnStreet, isInWater = getMinHeight(heightmap)
 
     calcZCoord = minHeight - transformed[2]
 
@@ -253,8 +272,12 @@ def repl(matchobj, outCoords, heightmap):
         print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - coords[2],
               "(new z coordinate is " + str(calcZCoord) + ")")
 
-    if DELETE_IF_ON_STREET and (isOnStreet or distanceToStreet < 3 + tree.trunkRadius * scaleXY):
+    if DELETE_IF_ON_STREET and isOnStreet:
         print("INFO: removing", prop, "at position", position, "because it is placed on a street or path")
+        return ""
+
+    if DELETE_IF_IN_WATER and isInWater:
+        print("INFO: removing", prop, "at position", position, "because it is placed in the water")
         return ""
 
     if DELETE_IF_TOO_STEEP:
