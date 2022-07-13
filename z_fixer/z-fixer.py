@@ -21,6 +21,7 @@ class Tree:
     trunkRadius: float
     offsetZ: float = 0
     maxOffsetZ: Optional[float] = None
+    maxSteepAngle: Optional[float] = None
 
     def getRandomOffsetZ(self) -> float:
         maxOffsetZ = self.offsetZ if (DISABLE_INCREASE_OF_Z or self.maxOffsetZ is None or self.maxOffsetZ > self.offsetZ) else self.maxOffsetZ
@@ -45,54 +46,54 @@ trees = {
     # others
     "prop_tree_birch_05": Tree(0.22, -0.06),
     "prop_veg_crop_orange": Tree(0.5, -0.066),
-    "prop_desert_iron_01": Tree(0.4, 0.184),
+    "prop_desert_iron_01": Tree(0.4, 0.184, None, math.pi / 6),
     # trees
-    "prop_rio_del_01": Tree(1, 0.09),
-    "prop_rus_olive": Tree(0.55, 0.08),
+    "prop_rio_del_01": Tree(1, 0.09, None, math.pi / 8),
+    "prop_rus_olive": Tree(0.55, 0.08, None, math.pi / 8),
     "prop_s_pine_dead_01": Tree(0.55),
-    "prop_tree_birch_01": Tree(0.95, -0.01),
-    "prop_tree_birch_02": Tree(0.63),
+    "prop_tree_birch_01": Tree(0.95, -0.01, None, math.pi / 5),
+    "prop_tree_birch_02": Tree(0.63, 0, None, math.pi / 14),
     "prop_tree_birch_03": Tree(0.24, -0.03),
     "prop_tree_birch_03b": Tree(0.18, -0.04),
     "prop_tree_birch_04": Tree(0.57, -0.03),
     "prop_tree_cedar_02": Tree(1.4, 0.08),
     "prop_tree_cedar_03": Tree(1.4, 0.08),
     "prop_tree_cedar_04": Tree(1.4, 0.09),
-    "prop_tree_cedar_s_01": Tree(0.52, 0.03),
-    "prop_tree_cedar_s_02": Tree(0.13, 0.01),
+    "prop_tree_cedar_s_01": Tree(0.52, 0.03, None, math.pi / 6),
+    "prop_tree_cedar_s_02": Tree(0.13, 0.01, None, math.pi / 6),
     "prop_tree_cedar_s_04": Tree(1),
     "prop_tree_cedar_s_05": Tree(0.7),
     "prop_tree_cedar_s_06": Tree(0.6),
     "prop_tree_cypress_01": Tree(0.7),
-    "prop_tree_eng_oak_01": Tree(1.13, -0.02),
+    "prop_tree_eng_oak_01": Tree(1.13, -0.02, None, math.pi / 8),
     "prop_tree_eucalip_01": Tree(1.51, -0.17),
     "prop_tree_fallen_pine_01": Tree(1.25, 0.54, 0.2),
-    "prop_tree_jacada_01": Tree(0.56, -0.06),
-    "prop_tree_jacada_02": Tree(0.71, 0.1),
+    "prop_tree_jacada_01": Tree(0.56, -0.06, None, math.pi / 6),
+    "prop_tree_jacada_02": Tree(0.71, 0.1, None, math.pi / 6),
     "prop_tree_lficus_02": Tree(1, 0.39, 0),
     "prop_tree_lficus_03": Tree(0.85, -0.02, -0.21),
     "prop_tree_lficus_05": Tree(1.45, 0.08, -0.09),
     "prop_tree_lficus_06": Tree(1.9, 0.10, -0.15),
-    "prop_tree_maple_02": Tree(0.41, 0.05),
-    "prop_tree_maple_03": Tree(0.35, 0.05),
-    "prop_tree_mquite_01": Tree(0.45, -0.03),
-    "prop_tree_oak_01": Tree(2.68, -0.07),
+    "prop_tree_maple_02": Tree(0.41, 0.05, None, math.pi / 6),
+    "prop_tree_maple_03": Tree(0.35, 0.05, None, math.pi / 6),
+    "prop_tree_mquite_01": Tree(0.45, -0.03, None, math.pi / 6),
+    "prop_tree_oak_01": Tree(2.68, -0.07, None, math.pi / 12),
     "prop_tree_olive_01": Tree(1.6, 0.1),
     "prop_tree_pine_01": Tree(0.82, 0.44),
-    "prop_tree_pine_02": Tree(0.80, -0.04),
+    "prop_tree_pine_02": Tree(0.80, -0.04, None, math.pi / 6),
     "prop_tree_stump_01": Tree(0.70, 0.02),
-    "prop_w_r_cedar_01": Tree(1.34, 0.09),
+    "prop_w_r_cedar_01": Tree(1.34, 0.09, None, math.pi / 6),
     "prop_w_r_cedar_dead": Tree(1.34, 0.09),
     "test_tree_cedar_trunk_001": Tree(1.3, 0.09),
-    "test_tree_forest_trunk_01": Tree(4.82, -0.03),
-    "test_tree_forest_trunk_base_01": Tree(4.25),
-    "test_tree_forest_trunk_04": Tree(4.7, -0.062),
+    "test_tree_forest_trunk_01": Tree(4.82, -0.03, None, math.pi / 10),
+    "test_tree_forest_trunk_base_01": Tree(4.25, 0, math.pi / 14),
+    "test_tree_forest_trunk_04": Tree(4.7, -0.062, None, math.pi / 12),
     # bushes
     "prop_bush_lrg_02": Tree(3, 0.188, 0),
     "prop_bush_lrg_02b": Tree(1.1, -0.01),
-    "prop_bush_lrg_04b": Tree(2.6, 2.2, 0),
-    "prop_bush_lrg_04c": Tree(2.6, 2.2, 0),
-    "prop_bush_lrg_04d": Tree(2.6, 2.2, 0),
+    "prop_bush_lrg_04b": Tree(2.6, 2.2, 0, math.pi / 6),
+    "prop_bush_lrg_04c": Tree(2.6, 2.2, 0, math.pi / 6),
+    "prop_bush_lrg_04d": Tree(2.6, 2.2, 0, math.pi / 6),
     # palms
     "prop_palm_sm_01a": Tree(0.65, -0.05, -0.5),
     "prop_palm_sm_01d": Tree(0.7, -0.05, -0.57),
@@ -123,16 +124,16 @@ trees = {
     "prop_cactus_01c": Tree(0.15, 0.051),
     "prop_cactus_01d": Tree(0.16, 0.039),
     "prop_cactus_01e": Tree(0.2, 0.05),
-    "prop_joshua_tree_01a": Tree(0.22),
+    "prop_joshua_tree_01a": Tree(0.22, 0, None, math.pi / 6),
     "prop_joshua_tree_01b": Tree(0.45),
     "prop_joshua_tree_01c": Tree(0.41, -0.005),
-    "prop_joshua_tree_01d": Tree(0.35, -0.005),
-    "prop_joshua_tree_01e": Tree(0.32, 0.014),
-    "prop_joshua_tree_02a": Tree(0.21, 0.031),
+    "prop_joshua_tree_01d": Tree(0.35, -0.005, None, math.pi / 10),
+    "prop_joshua_tree_01e": Tree(0.32, 0.014, None, math.pi / 8),
+    "prop_joshua_tree_02a": Tree(0.21, 0.031, None, math.pi / 8),
     "prop_joshua_tree_02b": Tree(0.14, -0.002),
     "prop_joshua_tree_02c": Tree(0.16, 0.051),
     "prop_joshua_tree_02d": Tree(0.25, 0.05),
-    "prop_joshua_tree_02e": Tree(0.55, 0.061),
+    "prop_joshua_tree_02e": Tree(0.55, 0.061, None, math.pi / 6),
 }
 
 
@@ -281,7 +282,12 @@ def repl(matchobj, outCoords, heightmap):
         return ""
 
     if DELETE_IF_TOO_STEEP:
-        if calculateAngle([0, 0, 0], [0, 0, 1], normal) > random.uniform(DELETE_IF_TOO_STEEP_ANGLE_MIN, DELETE_IF_TOO_STEEP_ANGLE_MAX):
+        if tree.maxSteepAngle is None:
+            maxAngle = random.uniform(DELETE_IF_TOO_STEEP_ANGLE_MIN, DELETE_IF_TOO_STEEP_ANGLE_MAX)
+        else:
+            maxAngle = tree.maxSteepAngle
+
+        if calculateAngle([0, 0, 0], [0, 0, 1], normal) > maxAngle:
             print("INFO: removing", prop, "at position", position, "because it is placed on a steep spot")
             return ""
 
