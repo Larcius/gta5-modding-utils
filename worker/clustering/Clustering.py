@@ -23,7 +23,7 @@ class Clustering:
     prefix: str
     numCluster: int
 
-    GROUP_MAX_EXTEND = 2000
+    GROUP_MAX_EXTEND = 1800
     MAX_EXTEND = 600
 
     _PATTERN = re.compile(
