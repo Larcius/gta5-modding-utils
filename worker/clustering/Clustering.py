@@ -290,6 +290,9 @@ class Clustering:
 
                 i += 1
 
+        ax = pyplot.subplot()
+        ax.grid(visible=True)
+        pyplot.subplots_adjust(left=0.1, bottom=0.03, right=0.995, top=0.995)
         pyplot.gca().set_aspect('equal')
 
         pyplot.show(block=False)
