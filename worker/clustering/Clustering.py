@@ -1,6 +1,7 @@
 import math
 from typing import Optional
 import numpy as np
+from PIL import Image
 from natsort import natsorted
 from matplotlib import pyplot
 import matplotlib.patheffects as PathEffects
@@ -252,7 +253,6 @@ class Clustering:
             .replace("${TIMESTAMP}", Util.getNowInIsoFormat()) \
             .replace("${ENTITIES}\n", entities)
 
-
     def plotClusterResult(self, coords: list[list[float]], hierarchy: list[list[int]]):
         numTotalClusters = 0
         groups = {}
@@ -273,9 +273,9 @@ class Clustering:
         numGroups = len(groups)
 
         # create scatter plot for samples from each cluster
-        cmap = pyplot.cm.get_cmap("gist_ncar", numTotalClusters + 1)
+        cmap = pyplot.cm.get_cmap("gist_ncar", numTotalClusters + 4)  # +4 to exclude the very bright colors at the end of this color map
         X = np.array(coords)
-        i = 0
+        i = 1  # 1 to exclude the very dark colors at the beginning of this color map
         for group in groups:
             numClusters = len(groups[group])
             for cluster in groups[group]:
@@ -283,15 +283,27 @@ class Clustering:
                 row_ix = groups[group][cluster]
 
                 # create scatter of these samples
-                pyplot.scatter(X[row_ix, 0], X[row_ix, 1], color=cmap(i))
+                pyplot.scatter(X[row_ix, 0], X[row_ix, 1], marker='.', s=96, edgecolors='none', color='#ffffff')
+                pyplot.scatter(X[row_ix, 0], X[row_ix, 1], marker='.', s=64, edgecolors='none', color=cmap(i))
                 clusterName = self.getClusterName(group, cluster, numGroups, numClusters)
                 annotate = pyplot.annotate(clusterName, xy=(np.mean(X[row_ix, 0]), np.mean(X[row_ix, 1])), ha='center', va='center')
                 annotate.set_path_effects([PathEffects.withStroke(linewidth=4, foreground='w')])
 
                 i += 1
 
-        ax = pyplot.subplot()
-        ax.grid(visible=True)
+        pyplot.minorticks_on()
+        pyplot.grid(b=True, which='major', alpha=0.8)
+        pyplot.grid(b=True, which='minor', alpha=0.4)
+
+        img = Image.open(os.path.join(os.path.dirname(__file__), "img", "map.jpg"))
+        pyplot.imshow(img, extent=(-4000, 4500, -4000, 8000))
+
+        minCoords = np.min(X, axis=0)
+        maxCoords = np.max(X, axis=0)
+        size = maxCoords - minCoords
+        margin = max(size[0] * 0.03, size[1] * 0.03, 50)
+        pyplot.axis([minCoords[0] - margin, maxCoords[0] + margin, minCoords[1] - margin, maxCoords[1] + margin])
+
         pyplot.subplots_adjust(left=0.1, bottom=0.03, right=0.995, top=0.995)
         pyplot.gca().set_aspect('equal')
 
