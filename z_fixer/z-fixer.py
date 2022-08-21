@@ -39,7 +39,7 @@ DELETE_IF_IN_WATER = True
 
 DELETE_IF_TOO_STEEP = True
 DELETE_IF_TOO_STEEP_ANGLE_MIN = math.pi / 4   # 45°
-DELETE_IF_TOO_STEEP_ANGLE_MAX = math.pi / 3.6   # 50°
+DELETE_IF_TOO_STEEP_ANGLE_MAX = math.pi / 3   # 60°
 
 
 trees = {
@@ -77,12 +77,12 @@ trees = {
     "prop_tree_maple_02": Tree(0.41, 0.05, None, math.pi / 6),
     "prop_tree_maple_03": Tree(0.35, 0.05, None, math.pi / 6),
     "prop_tree_mquite_01": Tree(0.45, -0.03, None, math.pi / 6),
-    "prop_tree_oak_01": Tree(2.68, -0.07, None, math.pi / 12),
+    "prop_tree_oak_01": Tree(2.4, -0.06, None, math.pi / 12),
     "prop_tree_olive_01": Tree(1.6, 0.1),
-    "prop_tree_pine_01": Tree(0.82, 0.44),
+    "prop_tree_pine_01": Tree(0.6, 0),
     "prop_tree_pine_02": Tree(0.80, -0.04, None, math.pi / 6),
     "prop_tree_stump_01": Tree(0.70, 0.02),
-    "prop_w_r_cedar_01": Tree(1.34, 0.09, None, math.pi / 6),
+    "prop_w_r_cedar_01": Tree(1.34, 0, None, math.pi / 6),
     "prop_w_r_cedar_dead": Tree(1.34, 0.09),
     "test_tree_cedar_trunk_001": Tree(1.3, 0.09),
     "test_tree_forest_trunk_01": Tree(4.82, -0.03, None, math.pi / 10),
@@ -110,8 +110,8 @@ trees = {
     "prop_palm_fan_04_b": Tree(0.85, -0.12, -0.8),
     "prop_palm_fan_03_a": Tree(1.7, -0.03, -1.5),
     "prop_palm_fan_03_b": Tree(0.9, -0.03, -1.6),
-    "prop_palm_fan_03_c": Tree(1, 0, -1.9),
-    "prop_palm_fan_03_c_graff": Tree(1, 0, -1.9),
+    "prop_palm_fan_03_c": Tree(1, -0.02, -1.9),
+    "prop_palm_fan_03_c_graff": Tree(1, -0.02, -1.9),
     "prop_palm_fan_03_d": Tree(0.8, 0, -1.7),
     "prop_palm_fan_03_d_graff": Tree(0.8, 0, -1.7),
     "prop_palm_fan_04_c": Tree(1.25, -0.22, -1.1),

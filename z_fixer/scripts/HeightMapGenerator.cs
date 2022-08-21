@@ -283,7 +283,7 @@ namespace HeightMap
 				for (float curRadius = resolution; radius > 0 && !finalLoop; curRadius += resolution) {
 					if (curRadius >= radius + resolution - 0.001f) {
 						finalLoop = true;
-						curRadius = radius + Math.Min(Math.Max(0.5f, radius), 2f);
+						curRadius = radius + Math.Min(Math.Max(0.5f, radius), 1f);
 					} else if (curRadius >= radius - 0.001f) {
 						// if curRadius is approx. or even greater than the max radius then set it to max radius
 						curRadius = radius;
