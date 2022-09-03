@@ -124,7 +124,7 @@ class EntropyCreator:
         origScaleXY = float(match.group(8))
         origScaleZ = float(match.group(10))
 
-        maxScaleZ = random.uniform(0.9, 1.3)
+        maxScaleZ = random.uniform(0.9, 1.1)
 
         isRotationCandidate = self.isRotationCandidate(entity)
         isScaleCandidate = self.isScaleCandidate(entity)
