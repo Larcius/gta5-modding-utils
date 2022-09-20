@@ -5,6 +5,7 @@ from PIL import Image
 from natsort import natsorted
 from matplotlib import pyplot
 import matplotlib.patheffects as PathEffects
+from shapely.geometry.polygon import Polygon
 import os
 import re
 
@@ -23,6 +24,7 @@ class Clustering:
     ytypItems: dict[str, YtypItem]
     prefix: str
     numCluster: int
+    polygon: Optional[list[list[float]]]
 
     GROUP_MAX_EXTEND = 1800
     MAX_EXTEND = 600
@@ -36,11 +38,12 @@ class Clustering:
         '\\s*</Item>[\r\n]+'
     )
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: int, clusteringPrefix: Optional[str]):
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: int, polygon: Optional[list[list[float]]], clusteringPrefix: Optional[str]):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
         self.numCluster = numCluster
+        self.polygon = polygon
         self.clusteringPrefix = clusteringPrefix
 
     def run(self):
@@ -177,7 +180,10 @@ class Clustering:
 
         print("\tperforming clustering of " + str(len(mapNames)) + " ymap files and in total " + str(len(coords)) + " entities")
 
-        if self.numCluster > 0:
+        if self.polygon:
+            clusters = Util.performClusteringFixedPolygon(coords, self.polygon)
+            hierarchy = [[i, 0] for i in clusters]
+        elif self.numCluster > 0:
             clusters, unused, furthestDistances = Util.performClusteringFixedNumClusters(coords, self.numCluster)
             hierarchy = [[i, 0] for i in clusters]
         else:

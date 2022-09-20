@@ -11,6 +11,7 @@ https://docs.conda.io/en/latest/miniconda.html
 Once you installed Miniconda you need to create a new environment and install all required python packages:
 ```commandline
 conda create --name gta5-modding-utils -y
+conda install --name gta5-modding-utils -c conda-forge shapely -y
 conda install --name gta5-modding-utils -c conda-forge scikit-learn -y
 conda install --name gta5-modding-utils -c conda-forge transforms3d -y
 conda install --name gta5-modding-utils -c conda-forge natsort -y

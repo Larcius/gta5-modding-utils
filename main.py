@@ -4,6 +4,7 @@ import os.path
 import re
 import shutil
 import sys
+import json
 
 from matplotlib import pyplot
 
@@ -35,6 +36,7 @@ def main(argv):
     vegetationCreator = False
     clustering = False
     numClusters = -1
+    polygon = None
     clusteringPrefix = None
     staticCol = False
     lodMap = False
@@ -44,11 +46,11 @@ def main(argv):
     prefix = None
 
     usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> " \
-               "--clustering=<on|off> --numClusters=<integer> --clusteringPrefix=<CLUSTERING_PREFIX> " \
+               "--clustering=<on|off> --numClusters=<integer> --polygon=<list of x,y coordinates in CCW order> --clusteringPrefix=<CLUSTERING_PREFIX> " \
                "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off> "
 
     try:
-        opts, args = getopt.getopt(argv, "h?i:o:", ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "clusteringPrefix=",
+        opts, args = getopt.getopt(argv, "h?i:o:", ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "polygon=", "clusteringPrefix=",
             "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
     except getopt.GetoptError:
         print("ERROR: Unknown argument. Please see below for usage.")
@@ -73,6 +75,8 @@ def main(argv):
             clusteringPrefix = arg
         elif opt == "--numClusters":
             numClusters = int(arg)
+        elif opt == "--polygon":
+            polygon = json.loads(arg)
         elif opt == "--staticCol":
             staticCol = bool(distutils.util.strtobool(arg))
         elif opt == "--lodMap":
@@ -146,7 +150,7 @@ def main(argv):
         nextInputDir = entropyCreator.outputDir
 
     if clustering:
-        clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix, numClusters, clusteringPrefix)
+        clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix, numClusters, polygon, clusteringPrefix)
         clusteringWorker.run()
 
         nextInputDir = clusteringWorker.outputDir

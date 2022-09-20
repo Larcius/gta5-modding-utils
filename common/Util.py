@@ -13,6 +13,8 @@ from scipy.spatial.distance import pdist
 from scipy.spatial.qhull import QhullError
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import AgglomerativeClustering
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 from common import Box, Sphere
 
@@ -147,6 +149,27 @@ class Util:
             newClusters.append(mapping[origCluster])
 
         return newClusters
+
+    @staticmethod
+    def performClusteringFixedPolygon(points: list[list[float]], polygon: list[list[float]]) -> Any:
+        polygon = Polygon(polygon)
+        clusters = []
+        hasPointInside = False
+        hasPointOutside = False
+        for p in points:
+            point = Point(p[0], p[1])
+            if polygon.contains(point):
+                hasPointInside = True
+                c = 0
+            else:
+                hasPointOutside = True
+                c = 1
+            clusters.append(c)
+
+        if hasPointInside and hasPointOutside:
+            return clusters
+        else:
+            return np.zeros(len(points))
 
     @staticmethod
     def performClusteringFixedNumClusters(points: list[list[float]], numClusters: int, unevenClusters: bool = False) -> (Any, float, list[float]):
