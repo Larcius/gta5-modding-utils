@@ -71,7 +71,7 @@ class Util:
             model = MiniBatchKMeans(n_clusters=numClusters, random_state=0, reassignment_ratio=0, n_init=10)
         clusters = model.fit_predict(X)
 
-        clusters = Util._fixClusterLabels(clusters)
+        clusters = Util._fixClusterLabels(clusters, X)
 
         maxClusterSize = -1
         furthestDistances = [0] * numClusters
@@ -85,22 +85,62 @@ class Util:
         return clusters, maxClusterSize, furthestDistances
 
     @staticmethod
-    def _fixClusterLabels(clusters):
-        uniqueClusters = sorted(np.unique(clusters))
+    def _fixClusterLabels(clusters, X: np.ndarray):
+        uniqueClusters = np.unique(clusters)
 
-        needToFixLabels = False
+        dim = X.shape[1]
+
+        minVertex = X.min(axis=0)
+        maxVertex = X.max(axis=0)
+        extents = maxVertex - minVertex
+
+        sideLengths = np.zeros(dim)
+        centers = []
+        for cluster in uniqueClusters:
+            clusterEntries = np.where(clusters == cluster)
+            points = X[clusterEntries[0]]
+            centers.append(sum(points) / len(clusterEntries[0]))
+            clusterExtents = points.max(axis=0) - points.min(axis=0)
+            sideLengths += clusterExtents
+        centers = np.array(centers)
+
+        lexsortCriteria = []
+        if dim == 1:
+            lexsortCriteria.append(centers[:, 0])
+        else:
+            sideLengths = np.maximum(np.ones(dim), sideLengths)  # prevent dividing by zero if there is a degenerated dimension
+            numSteps = np.ceil(extents / sideLengths * len(uniqueClusters))
+            extents = np.maximum(np.ones(dim), extents)  # prevent dividing by zero if there is a degenerated dimension
+
+            discreteCenters = []
+            for center in centers:
+                discreteCenter = np.floor(numSteps * (center - minVertex) / extents)
+                discreteCenters.append(discreteCenter)
+            discreteCenters = np.array(discreteCenters)
+
+            for i in range(dim):
+                j = dim - i - 1
+                if j == 0:
+                    j = 1
+                elif j == 1:
+                    j = 0
+                lexsortCriteria.append(centers[:, j] * (-1 if j == 1 else 1))
+            for i in range(dim):
+                j = dim - i - 1
+                if j == 0:
+                    j = 1
+                elif j == 1:
+                    j = 0
+                lexsortCriteria.append(discreteCenters[:, j] * (-1 if j == 1 else 1))
+
+        order = np.lexsort(lexsortCriteria)
+        orderMapping = {}
+        for i in range(len(order)):
+            orderMapping[order[i]] = i
         mapping = {}
-        i = 0
-        for c in uniqueClusters:
-            if i != c:
-                needToFixLabels = True
-            mapping[c] = i
-            i += 1
+        for i in range(len(uniqueClusters)):
+            mapping[uniqueClusters[i]] = orderMapping[i]
 
-        if not needToFixLabels:
-            return clusters
-
-        # there are gaps in the labeling, so we have to fix them
         newClusters = []
         for i in range(len(clusters)):
             origCluster = clusters[i]
