@@ -10,7 +10,6 @@ from common.ytyp.YtypItem import YtypItem
 
 class Extents:
     CARGEN_LOD_DISTANCE = 200
-    CARGEN_BBOX = Box.createUnitBox().getScaled([10] * 3)
 
     @staticmethod
     def createReversedInfinityExtents() -> "Extents":
@@ -35,6 +34,7 @@ class Extents:
         return '<Item>' + \
                '\\s*<position x="([^"]+)" y="([^"]+)" z="([^"]+)"/>' + \
                '(?:\\s*<[^/].*>)*?' + \
+               '\\s*<perpendicularLength value="([^"]+)"/>' + \
                '\\s*<carModel>([^<]+)</carModel>' + \
                '(?:\\s*<[^/].*>)*?' + \
                '\\s*</Item>'
@@ -61,13 +61,15 @@ class Extents:
             extents.adaptExtents(position, rotationQuat, scale, lodDistance, bbox)
 
         for match in re.finditer(Extents.getExpressionForCalculateExtentsCarGen(), ymapContent):
-            carModel = match.group(4).lower()
+            perpendicularLength = float(match.group(4))
+            carModel = match.group(5).lower()
 
-            print("INFO: found carGenerator for car model " + carModel + ". Using 200 as lodDistance and a cubic boundingBox of side length 10")
+            print("INFO: found carGenerator for car model " + carModel + ". Using " + str(Extents.CARGEN_LOD_DISTANCE) + " as lodDistance.")
 
             position = [float(match.group(1)), float(match.group(2)), float(match.group(3))]
+            bbox = Box.createUnitBox().getScaled([perpendicularLength] * 3)
 
-            extents.adaptExtents(position, [0, 0, 0, 1], [1, 1, 1], Extents.CARGEN_LOD_DISTANCE, Extents.CARGEN_BBOX)
+            extents.adaptExtents(position, [0, 0, 0, 1], [1, 1, 1], Extents.CARGEN_LOD_DISTANCE, bbox)
 
         return extents
 

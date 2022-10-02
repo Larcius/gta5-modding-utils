@@ -5,7 +5,6 @@ from PIL import Image
 from natsort import natsorted
 from matplotlib import pyplot
 import matplotlib.patheffects as PathEffects
-from shapely.geometry.polygon import Polygon
 import os
 import re
 
