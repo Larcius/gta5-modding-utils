@@ -86,7 +86,7 @@ trees = {
     "prop_w_r_cedar_dead": Tree(1.34, 0.09),
     "test_tree_cedar_trunk_001": Tree(1.3, 0.09),
     "test_tree_forest_trunk_01": Tree(4.82, -0.03, None, math.pi / 10),
-    "test_tree_forest_trunk_base_01": Tree(4.25, 0, math.pi / 14),
+    "test_tree_forest_trunk_base_01": Tree(4.25, 0, None, math.pi / 14),
     "test_tree_forest_trunk_04": Tree(4.7, -0.062, None, math.pi / 12),
     # bushes
     "prop_bush_lrg_02": Tree(3, 0.188, 0),
