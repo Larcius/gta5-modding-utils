@@ -9,7 +9,7 @@ from common.ytyp.YtypItem import YtypItem
 
 
 class Extents:
-    CARGEN_LOD_DISTANCE = 200
+    CARGEN_LOD_DISTANCE = 250
 
     @staticmethod
     def createReversedInfinityExtents() -> "Extents":
