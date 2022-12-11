@@ -50,6 +50,7 @@ trees = {
     # trees
     "prop_rio_del_01": Tree(1, 0.09, None, math.pi / 8),
     "prop_rus_olive": Tree(0.55, 0.08, None, math.pi / 8),
+    "prop_rus_olive_wint": Tree(0.78, 0.12, 0, math.pi / 8),
     "prop_s_pine_dead_01": Tree(0.55),
     "prop_tree_birch_01": Tree(0.95, -0.01, None, math.pi / 5),
     "prop_tree_birch_02": Tree(0.63, 0, None, math.pi / 14),
