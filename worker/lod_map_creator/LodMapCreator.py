@@ -101,8 +101,8 @@ class LodMapCreator:
             "prop_tree_lficus_06": LodCandidate("prop_tree_lficus_06", 0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "prop_tree_mquite_01": LodCandidate("prop_tree_mquite_01", 0.46875),
             "prop_rio_del_01": LodCandidate("prop_rio_del_01", 0.53125),
-            "prop_rus_olive_wint": LodCandidate("prop_rio_del_01", 0.53125),
             "prop_rus_olive": LodCandidate("prop_rus_olive", 0.484375, 0.53125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_rus_olive_wint": LodCandidate("prop_rus_olive_wint", 0.556),
             # bushes
             "prop_bush_lrg_04b": LodCandidate("prop_bush_lrg_04b", 0.37333333, 0.40625, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None,
                 UV(0.5859375, 0), UV(1, 0.5), 0.45283018867),
@@ -151,8 +151,8 @@ class LodMapCreator:
             "prop_tree_lficus_06": UVMap("trees2", UV(1 / 2, 1 / 4), UV(2 / 2, 2 / 4), UV(1 / 2, 1 / 4), UV(2 / 2, 2 / 4)),
             "prop_tree_mquite_01": UVMap("trees2", UV(0 / 2, 2 / 4), UV(1 / 2, 3 / 4)),
             "prop_rio_del_01": UVMap("trees2", UV(1 / 2, 2 / 4), UV(2 / 2, 3 / 4)),
-            "prop_rus_olive_wint": UVMap("trees2", UV(1 / 2, 2 / 4), UV(2 / 2, 3 / 4)),
             "prop_rus_olive": UVMap("trees2", UV(0 / 2, 3 / 4), UV(1 / 2, 4 / 4), UV(0 / 2, 2 / 4), UV(1 / 2, 3 / 4)),
+            "prop_rus_olive_wint": UVMap("trees2", UV(1 / 2, 3 / 4), UV(2 / 2, 4 / 4)),
             # trees
             "prop_s_pine_dead_01": UVMap("trees", UV(10 / 16, 6 / 16), UV(12 / 16, 11 / 16), UV(0 / 16, 12 / 16), UV(3 / 16, 14 / 16)),
             "prop_tree_birch_01": UVMap("trees", UV(8 / 16, 6 / 16), UV(10 / 16, 10 / 16), UV(0 / 16, 3 / 16), UV(3 / 16, 6 / 16)),
