@@ -92,6 +92,7 @@ trees = {
     # bushes
     "prop_bush_lrg_02": Tree(3, 0.188, 0),
     "prop_bush_lrg_02b": Tree(1.1, -0.01),
+    "prop_bush_lrg_03": Tree(0.5, 0.7),
     "prop_bush_lrg_04b": Tree(2.6, 2.2, 0, math.pi / 6),
     "prop_bush_lrg_04c": Tree(2.6, 2.2, 0, math.pi / 6),
     "prop_bush_lrg_04d": Tree(2.6, 2.2, 0, math.pi / 6),
@@ -125,6 +126,8 @@ trees = {
     "prop_cactus_01c": Tree(0.15, 0.051),
     "prop_cactus_01d": Tree(0.16, 0.039),
     "prop_cactus_01e": Tree(0.2, 0.05),
+    "prop_cactus_02": Tree(0.7, 0.03, None, math.pi / 10),
+    "prop_cactus_03": Tree(0.4, 0.083, None, math.pi / 8),
     "prop_joshua_tree_01a": Tree(0.22, 0, None, math.pi / 6),
     "prop_joshua_tree_01b": Tree(0.45),
     "prop_joshua_tree_01c": Tree(0.41, -0.005),
