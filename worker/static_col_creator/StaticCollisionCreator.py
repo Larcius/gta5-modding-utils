@@ -350,11 +350,79 @@ class StaticCollisionCreator:
         boundContent = boundFile.read()
         boundFile.close()
 
-        if not boundContent.startswith("Version 43 31\n{\n\tType BoundComposite\n"):
-            start = boundContent.index("{") + 1
-            end = boundContent.rindex("}")
-            boundMiddle = boundContent[start:end].strip().replace("\n", "\n\t\t")
-            boundContent = """Version 43 31
+        boundContent = self.convertToBoundComposite(boundContent)
+
+        boundContent = self.convertToBoundBVH(boundContent)
+
+        numChildren = 0
+        childTransforms = ""
+        children = []
+        childFlags = []
+
+        mode = 0  # 0: no relevant block; 1: in Children block; 2: in ChildTransforms block; 3: in ChildFlags block
+        for line in boundContent.splitlines(keepends=True):
+            if mode != 0:
+                if line.startswith("	}"):
+                    mode = 0
+                    continue
+            elif line.startswith("	Children "):
+                numChildren = int(line[10:-1])
+                mode = 1
+                continue
+            elif line.startswith("	ChildTransforms "):
+                mode = 2
+                continue
+            elif line.startswith("	ChildFlags "):
+                mode = 3
+                continue
+
+            if mode != 0 and line.startswith("	{"):
+                continue
+
+            if mode == 1:
+                children.append(line)
+            elif mode == 2:
+                childTransforms += line
+            elif mode == 3:
+                childFlags.append(line)
+
+        matrices = []
+        for m in re.finditer('\\s*{' +
+                             '\\s*(\\S+) (\\S+) (\\S+)' +
+                             '\\s*(\\S+) (\\S+) (\\S+)' +
+                             '\\s*(\\S+) (\\S+) (\\S+)' +
+                             '\\s*(\\S+) (\\S+) (\\S+)' +
+                             '\\s*}', childTransforms, flags=re.M):
+            matrix = [[float(m.group(1)), float(m.group(2)), float(m.group(3))],
+                [float(m.group(4)), float(m.group(5)), float(m.group(6))],
+                [float(m.group(7)), float(m.group(8)), float(m.group(9))],
+                [float(m.group(10)), float(m.group(11)), float(m.group(12))]]
+
+            matrices.append(matrix)
+
+        matrixIndex = -1
+        for i in range(len(children)):
+            if children[i] == "		{\n":
+                matrixIndex += 1
+
+            children[i] = self.handleChildrenLine(children[i], matrices[matrixIndex], position, rotationQuaternion, scale)
+
+        cluster = self._clusters[self._entityIndex]
+        self._entityIndex += 1
+
+        assert len(childFlags) == numChildren * 5
+        self.mergeColChildren(cluster, children, childFlags)
+
+        return re.sub('(?<=<flags value=")[^"]+("\\s*/>)', str(flags) + "\\g<1>", match.group(0), flags=re.M)
+
+    def convertToBoundComposite(self, boundContent: str) -> str:
+        if boundContent.startswith("Version 43 31\n{\n\tType BoundComposite\n"):
+            return boundContent
+
+        start = boundContent.index("{") + 1
+        end = boundContent.rindex("}")
+        boundMiddle = boundContent[start:end].strip().replace("\n", "\n\t\t")
+        return """Version 43 31
 {
 	Type BoundComposite
 	Radius 0.00000000
@@ -390,6 +458,7 @@ class StaticCollisionCreator:
 }
 """
 
+    def convertToBoundBVH(self, boundContent):
         # special case: replace bounds of Type BoundCapsule by Type BoundBVH with Capsule as Polygons
         boundContent = re.sub('\\s*{' +
                               '\\s*Type BoundCapsule(' +
@@ -450,76 +519,19 @@ class StaticCollisionCreator:
                               '\\s*([^}]+?)' +
                               '\\s*}' +
                               '\\s*}', self.replaceBoundBox, boundContent, flags=re.M)
+        return boundContent
 
-        numChildren = 0
-        childTransforms = ""
-        children = []
-        childFlags = []
-
-        mode = 0  # 0: no relevant block; 1: in Children block; 2: in ChildTransforms block; 3: in ChildFlags block
-        for line in boundContent.splitlines(keepends=True):
-            if mode != 0:
-                if line.startswith("	}"):
-                    mode = 0
-                    continue
-            elif line.startswith("	Children "):
-                numChildren = int(line[10:-1])
-                mode = 1
-                continue
-            elif line.startswith("	ChildTransforms "):
-                mode = 2
-                continue
-            elif line.startswith("	ChildFlags "):
-                mode = 3
-                continue
-
-            if mode != 0 and line.startswith("	{"):
-                continue
-
-            if mode == 1:
-                children.append(line)
-            elif mode == 2:
-                childTransforms += line
-            elif mode == 3:
-                childFlags.append(line)
-
-        matrices = []
-        for m in re.finditer('\\s*{' +
-                             '\\s*(\\S+) (\\S+) (\\S+)' +
-                             '\\s*(\\S+) (\\S+) (\\S+)' +
-                             '\\s*(\\S+) (\\S+) (\\S+)' +
-                             '\\s*(\\S+) (\\S+) (\\S+)' +
-                             '\\s*}', childTransforms, flags=re.M):
-            matrix = [[float(m.group(1)), float(m.group(2)), float(m.group(3))],
-                [float(m.group(4)), float(m.group(5)), float(m.group(6))],
-                [float(m.group(7)), float(m.group(8)), float(m.group(9))],
-                [float(m.group(10)), float(m.group(11)), float(m.group(12))]]
-
-            matrices.append(matrix)
-
-        matrixIndex = -1
-        for i in range(len(children)):
-            if children[i] == "		{\n":
-                matrixIndex += 1
-
-            children[i] = self.handleChildrenLine(children[i], matrices[matrixIndex], position, rotationQuaternion, scale)
-
-        cluster = self._clusters[self._entityIndex]
-        self._entityIndex += 1
-
+    def mergeColChildren(self, cluster: int, children: list[str], childFlags: list[str]):
+        numChildren = len(childFlags) / 5
         self._colNumChildren[cluster] += numChildren
         self._colChildren[cluster].extend(children)
         self._colChildFlags[cluster].extend(childFlags)
-
-        return re.sub('(?<=<flags value=")[^"]+("\\s*/>)', str(flags) + "\\g<1>", match.group(0), flags=re.M)
 
     def getVertex(self, children: list[str], index: int) -> list[float]:
         splitted = children[index][4:-1].split(" ")
         return [float(splitted[0]), float(splitted[1]), float(splitted[2])]
 
-    def calculateBBox(self, children: list[str], translation: list[float], indexStartChild: int, indexStartPolygons: int, indexStartVertices: int,
-            indexStartShrunk: int) -> Box:
-
+    def calculateBBox(self, children: list[str], translation: list[float], indexStartPolygons: int, indexStartVertices: int, indexStartShrunk: int) -> Box:
         childBBox = Box.createReversedInfinityBox()
 
         i = indexStartPolygons
@@ -599,7 +611,7 @@ class StaticCollisionCreator:
                         open("dump.log", "w").writelines(phBound)
                         raise ValueError("could not find all indices but reached end of block in line " + str(i))
 
-                    childBBox = self.calculateBBox(phBound, translation, indexStartChild, indexStartPolygons, indexStartVertices, indexStartShrunk)
+                    childBBox = self.calculateBBox(phBound, translation, indexStartPolygons, indexStartVertices, indexStartShrunk)
 
                     # set bbox of child
                     phBound[indexStartChild + 2] = "			AABBMax " + Util.floatToStr(childBBox.max[0]) + " " + Util.floatToStr(childBBox.max[1]) + \
