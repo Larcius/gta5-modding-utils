@@ -225,7 +225,7 @@ class BoundBVH:
 
             raise Exception("Could not parse phBound. Error in line " + str(i + 1) + ":\n" + contentPhBound)
 
-        return polygons, materials, margin, vertices, shrunk
+        return polygons, materials, margin, vertices, None  # TODO bug with shrunk so always return None instead
 
     @staticmethod
     def transformVertex(vertex: list[float], geometryCenter: list[float], matrix: list[list[float]]) -> list[float]:
