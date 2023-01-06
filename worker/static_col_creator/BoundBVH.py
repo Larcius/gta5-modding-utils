@@ -1,5 +1,5 @@
 import re
-from typing import Any, IO, Union
+from typing import IO, Union
 
 import numpy as np
 
@@ -26,7 +26,7 @@ class BoundBVH:
         return BoundBVH(polygons, materials, margin, vertices, shrunk, flags1, flags2)
 
     @staticmethod
-    def parsePhBound(contentPhBound: str, matrix: list[list[float]]) -> (list[Any], list[str], float, list[list[float]], Union[list[list[float]], None]):
+    def parsePhBound(contentPhBound: str, matrix: list[list[float]]) -> (list[Union[Box, Capsule, Cylinder, Sphere, Tri]], list[str], float, list[list[float]], Union[list[list[float]], None]):
         # modes:
         #  0: start of phBound (before Polygons)
         #  1: start of Polygons
@@ -301,7 +301,7 @@ class BoundBVH:
         return flags1, flags2
 
 
-    polygons: list[Any]
+    polygons: list[Union[Box, Capsule, Cylinder, Sphere, Tri]]
     materials: list[Material]
     margin: float
     vertices: list[list[float]]
@@ -309,7 +309,7 @@ class BoundBVH:
     flags1: str
     flags2: str
 
-    def __init__(self, polygons: list[Any], materials: list[Material], margin: float, vertices: list[list[float]], shrunk: Union[list[list[float]], None], flags1: str, flags2: str):
+    def __init__(self, polygons: list[Union[Box, Capsule, Cylinder, Sphere, Tri]], materials: list[Material], margin: float, vertices: list[list[float]], shrunk: Union[list[list[float]], None], flags1: str, flags2: str):
         self.polygons = polygons
         self.materials = materials
         self.margin = margin
