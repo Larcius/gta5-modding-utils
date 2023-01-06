@@ -15,6 +15,9 @@ from worker.static_col_creator.Polygon.Tri import Tri
 
 class BoundBVH:
 
+    MAX_NUM_POLYGONS = 1 << 15
+    MAX_NUM_VERTICES = 1 << 15
+
     @staticmethod
     def parse(contentPhBound: str, contentMatrix: str, contentChildFlagsItem: str) -> "BoundBVH":
         matrix = BoundBVH.parseMatrix(contentMatrix)
@@ -336,18 +339,16 @@ class BoundBVH:
             return False
         elif self.flags2 != bound.flags2:
             return False
+        elif len(self.polygons) + len(bound.polygons) >= BoundBVH.MAX_NUM_POLYGONS:
+            return False
+        elif len(self.vertices) + len(bound.vertices) >= BoundBVH.MAX_NUM_VERTICES:
+            return False
         else:
             return True
 
     def merge(self, bound: "BoundBVH") -> None:
-        if self.getType() != bound.getType():
-            raise Exception("Cannot merge because types do not match")
-        if self.margin != bound.margin:
-            raise Exception("Cannot merge because margins do not match")
-        if self.flags1 != bound.flags1:
-            raise Exception("Cannot merge because flags1 do not match")
-        if self.flags2 != bound.flags2:
-            raise Exception("Cannot merge because flags2 do not match")
+        if not self.isMergable(bound):
+            raise Exception("Cannot merge BoundBVHs")
 
         materialsMapping = self.mergeMaterials(bound)
 
