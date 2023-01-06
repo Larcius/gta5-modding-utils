@@ -1,0 +1,93 @@
+import re
+import numpy as np
+
+from common.Box import Box
+from common.Util import Util
+
+
+class Cylinder:
+    centerTop: int
+    centerBottom: int
+    radius: float
+    materialIndex: int
+
+    @staticmethod
+    def parse(content: str) -> "Cylinder":
+        centerTop = -1
+        centerBottom = -1
+        radius = -1
+        materialIndex = -1
+        i = -1
+        for line in content.splitlines():
+            i += 1
+            if i == 0:
+                m = re.match(r'				Cylinder \d+', line)
+                if m is not None:
+                    continue
+            elif i == 1 and line == "				{":
+                continue
+            elif i == 2:
+                m = re.match(r'					CenterTop (\d+)', line)
+                if m is not None:
+                    centerTop = int(m.group(1))
+                    continue
+            elif i == 3:
+                m = re.match(r'					CenterBottom (\d+)', line)
+                if m is not None:
+                    centerBottom = int(m.group(1))
+                    continue
+            elif i == 4:
+                m = re.match(r'					Radius (\d+\.\d+)', line)
+                if m is not None:
+                    # TODO apply matrix to radius
+                    radius = float(m.group(1))
+                    continue
+            elif i == 5:
+                m = re.match(r'					MaterialIndex (\d+)', line)
+                if m is not None:
+                    materialIndex = int(m.group(1))
+                    continue
+            elif i == 6 and line == "				}":
+                continue
+            elif i == 7 and line == "":
+                continue
+
+            raise Exception("Could not parse Cylinder. Error in line " + str(i + 1) + ":\n" + content)
+
+        return Cylinder(centerTop, centerBottom, radius, materialIndex)
+
+    def __init__(self, centerTop: int, centerBottom: int, radius: float, materialIndex: int):
+        self.centerTop = centerTop
+        self.centerBottom = centerBottom
+        self.radius = radius
+        self.materialIndex = materialIndex
+
+    def offsetVertexIndex(self, offset: int) -> None:
+        self.centerTop = self.centerTop + offset
+        self.centerBottom = self.centerBottom + offset
+
+    def offsetMaterialIndex(self, offset: int) -> None:
+        self.materialIndex = self.materialIndex + offset
+
+    def scale(self, scale: float) -> None:
+        self.radius = self.radius * scale
+
+    def asPolygonString(self, polygonIndex: int) -> str:
+        return """				Cylinder """ + str(polygonIndex) + """
+				{
+					CenterTop """ + str(self.centerTop) + """
+					CenterBottom """ + str(self.centerBottom) + """
+					Radius """ + Util.floatToStr(self.radius) + """
+					MaterialIndex """ + str(self.materialIndex) + """
+				}
+"""
+
+    def extendBoundingBox(self, bbox: Box, vertices: list[list[float]]):
+        centerTop = vertices[self.centerTop]
+        centerBottom = vertices[self.centerBottom]
+
+        # TODO for Cylinder this is not correct. However it is ensured that the calculated bbox is not smaller than the actual bbox
+        bbox.extendByPoint(np.subtract(centerTop, [self.radius]).tolist())
+        bbox.extendByPoint(np.subtract(centerBottom, [self.radius]).tolist())
+        bbox.extendByPoint(np.add(centerTop, [self.radius]).tolist())
+        bbox.extendByPoint(np.add(centerBottom, [self.radius]).tolist())

@@ -27,6 +27,10 @@ class Util:
         return "{:.8f}".format(val)
 
     @staticmethod
+    def vertexToStr(vertex: list[float]) -> str:
+        return Util.floatToStr(vertex[0]) + " " + Util.floatToStr(vertex[1]) + " " + Util.floatToStr(vertex[2])
+
+    @staticmethod
     def calculateFurthestDistance(coords: list[list[float]]) -> float:
         coords = np.unique(coords, axis=0)
 
