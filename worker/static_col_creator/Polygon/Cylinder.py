@@ -21,29 +21,29 @@ class Cylinder:
         for line in content.splitlines():
             i += 1
             if i == 0:
-                m = re.match(r'				Cylinder \d+', line)
+                m = re.match(r'				Cylinder \d+$', line)
                 if m is not None:
                     continue
             elif i == 1 and line == "				{":
                 continue
             elif i == 2:
-                m = re.match(r'					CenterTop (\d+)', line)
+                m = re.match(r'					CenterTop (\d+)$', line)
                 if m is not None:
                     centerTop = int(m.group(1))
                     continue
             elif i == 3:
-                m = re.match(r'					CenterBottom (\d+)', line)
+                m = re.match(r'					CenterBottom (\d+)$', line)
                 if m is not None:
                     centerBottom = int(m.group(1))
                     continue
             elif i == 4:
-                m = re.match(r'					Radius (\d+\.\d+)', line)
+                m = re.match(r'					Radius (\d+\.\d+)$', line)
                 if m is not None:
                     # TODO apply matrix to radius
                     radius = float(m.group(1))
                     continue
             elif i == 5:
-                m = re.match(r'					MaterialIndex (\d+)', line)
+                m = re.match(r'					MaterialIndex (\d+)$', line)
                 if m is not None:
                     materialIndex = int(m.group(1))
                     continue

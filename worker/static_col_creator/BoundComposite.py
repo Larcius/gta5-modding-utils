@@ -46,21 +46,21 @@ class BoundComposite:
             elif i == 1 and line == "{":
                 continue
             elif i == 2:
-                m = re.match(r'	Type BoundComposite', line)
+                m = re.match(r'	Type BoundComposite$', line)
                 if m is not None:
                     continue
             elif i == 3:
-                m = re.match(r'	Radius ([+-]?\d+\.\d+)', line)
+                m = re.match(r'	Radius ([+-]?\d+\.\d+)$', line)
                 if m is not None:
                     continue
             elif 4 <= i <= 7:
-                m = re.match(r'	(?:AABBMax|AABBMin|Centroid|CG) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)', line)
+                m = re.match(r'	(?:AABBMax|AABBMin|Centroid|CG) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)$', line)
                 if m is not None:
                     continue
 
             # Children
             elif i == 8:
-                m = re.match(r'	Children \d+', line)
+                m = re.match(r'	Children \d+$', line)
                 if m is not None:
                     mode = 1
                     continue
@@ -93,7 +93,7 @@ class BoundComposite:
 
             # ChildTransforms
             elif mode == 5:
-                m = re.match(r'	ChildTransforms \d+', line)
+                m = re.match(r'	ChildTransforms \d+$', line)
                 if m is not None:
                     mode = 6
                     continue
@@ -102,7 +102,7 @@ class BoundComposite:
                     mode = 7
                     continue
             elif mode == 7:
-                m = re.match(r'		Matrix \d+', line)
+                m = re.match(r'		Matrix \d+$', line)
                 if m is not None:
                     matrix = line + "\n"
                     mode = 8
@@ -127,7 +127,7 @@ class BoundComposite:
 
             # ChildFlags
             elif mode == 10:
-                m = re.match(r'	ChildFlags \d+', line)
+                m = re.match(r'	ChildFlags \d+$', line)
                 if m is not None:
                     mode = 11
                     continue

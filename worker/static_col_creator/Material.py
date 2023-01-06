@@ -13,13 +13,13 @@ class Material:
         for line in content.splitlines():
             i += 1
             if i == 0:
-                m = re.match(r'				Material \d+', line)
+                m = re.match(r'				Material \d+$', line)
                 if m is not None:
                     continue
             elif i == 1 and line == "				{":
                 continue
             elif i == 2:
-                m = re.match(r'					MaterialIndex (\d+)', line)
+                m = re.match(r'					MaterialIndex (\d+)$', line)
                 if m is not None:
                     materialIndex = int(m.group(1))
                     continue
@@ -30,7 +30,7 @@ class Material:
             elif i == 5 and line == "					PedDensity 0":
                 continue
             elif i == 6:
-                m = re.match(r'					PolyFlags (.+)', line)
+                m = re.match(r'					PolyFlags (.+)$', line)
                 if m is not None:
                     polyFlags = m.group(1)
                     continue

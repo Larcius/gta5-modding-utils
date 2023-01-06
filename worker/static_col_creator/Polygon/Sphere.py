@@ -19,24 +19,24 @@ class Sphere:
         for line in content.splitlines():
             i += 1
             if i == 0:
-                m = re.match(r'				Sphere \d+', line)
+                m = re.match(r'				Sphere \d+$', line)
                 if m is not None:
                     continue
             elif i == 1 and line == "				{":
                 continue
             elif i == 2:
-                m = re.match(r'					Center (\d+)', line)
+                m = re.match(r'					Center (\d+)$', line)
                 if m is not None:
                     center = int(m.group(1))
                     continue
             elif i == 3:
-                m = re.match(r'					Radius (\d+\.\d+)', line)
+                m = re.match(r'					Radius (\d+\.\d+)$', line)
                 if m is not None:
                     # TODO apply matrix to radius
                     radius = float(m.group(1))
                     continue
             elif i == 4:
-                m = re.match(r'					MaterialIndex (\d+)', line)
+                m = re.match(r'					MaterialIndex (\d+)$', line)
                 if m is not None:
                     materialIndex = int(m.group(1))
                     continue

@@ -15,18 +15,18 @@ class Box:
         for line in content.splitlines():
             i += 1
             if i == 0:
-                m = re.match(r'				Box \d+', line)
+                m = re.match(r'				Box \d+$', line)
                 if m is not None:
                     continue
             elif i == 1 and line == "				{":
                 continue
             elif i == 2:
-                m = re.match(r'					Vertices (\d+) (\d+) (\d+) (\d+)', line)
+                m = re.match(r'					Vertices (\d+) (\d+) (\d+) (\d+)$', line)
                 if m is not None:
                     vertices = [int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))]
                     continue
             elif i == 3:
-                m = re.match(r'					MaterialIndex (\d+)', line)
+                m = re.match(r'					MaterialIndex (\d+)$', line)
                 if m is not None:
                     materialIndex = int(m.group(1))
                     continue

@@ -68,21 +68,21 @@ class BoundBVH:
             elif i == 1 and line == "		{":
                 continue
             elif i == 2:
-                m = re.match(r'			Type (?:BoundBVH|BoundGeometry)', line)
+                m = re.match(r'			Type (?:BoundBVH|BoundGeometry)$', line)
                 if m is not None:
                     continue
             elif i == 3:
-                m = re.match(r'			Radius ([+-]?\d+\.\d+)', line)
+                m = re.match(r'			Radius ([+-]?\d+\.\d+)$', line)
                 if m is not None:
                     continue
             elif 4 <= i <= 7:
-                m = re.match(r'			(?:AABBMax|AABBMin|Centroid|CG) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)', line)
+                m = re.match(r'			(?:AABBMax|AABBMin|Centroid|CG) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)$', line)
                 if m is not None:
                     continue
 
             # Polygons
             elif i == 8:
-                m = re.match(r'			Polygons \d+', line)
+                m = re.match(r'			Polygons \d+$', line)
                 if m is not None:
                     mode = 1
                     continue
@@ -91,7 +91,7 @@ class BoundBVH:
                     mode = 2
                     continue
             elif mode == 2:
-                m = re.match(r'				[a-zA-Z]+ \d+', line)
+                m = re.match(r'				[a-zA-Z]+ \d+$', line)
                 if m is not None:
                     polygon = line + "\n"
                     mode = 3
@@ -116,7 +116,7 @@ class BoundBVH:
 
             # GeometryCenter
             elif mode == 5:
-                m = re.match(r'			GeometryCenter ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)', line)
+                m = re.match(r'			GeometryCenter ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) 0.00250000$', line)
                 if m is not None:
                     geometryCenter = [float(m.group(1)), float(m.group(2)), float(m.group(3))]
                     mode = 6
@@ -124,7 +124,7 @@ class BoundBVH:
 
             # Vertices
             elif mode == 6:
-                m = re.match(r'			Vertices \d+', line)
+                m = re.match(r'			Vertices \d+$', line)
                 if m is not None:
                     mode = 7
                     continue
@@ -133,7 +133,7 @@ class BoundBVH:
                     mode = 8
                     continue
             elif mode == 8:
-                m = re.match(r'				([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)', line)
+                m = re.match(r'				([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)$', line)
                 if m is not None:
                     vertex = [float(m.group(1)), float(m.group(2)), float(m.group(3))]
                     vertices.append(BoundBVH.transformVertex(vertex, geometryCenter, matrix))
@@ -149,7 +149,7 @@ class BoundBVH:
 
             # Materials
             elif mode == 10:
-                m = re.match(r'			Materials \d+', line)
+                m = re.match(r'			Materials \d+$', line)
                 if m is not None:
                     mode = 11
                     continue
@@ -158,7 +158,7 @@ class BoundBVH:
                     mode = 12
                     continue
             elif mode == 12:
-                m = re.match(r'				Material \d+', line)
+                m = re.match(r'				Material \d+$', line)
                 if m is not None:
                     material = line + "\n"
                     mode = 13
@@ -188,7 +188,7 @@ class BoundBVH:
 
             # Margin
             elif mode == 16:
-                m = re.match(r'			Margin (\d+\.\d+)', line)
+                m = re.match(r'			Margin (\d+\.\d+)$', line)
                 if m is not None:
                     margin = float(m.group(1))
                     mode = 17
@@ -196,7 +196,7 @@ class BoundBVH:
 
             # Shrunk
             elif mode == 17:
-                m = re.match(r'			Shrunk \d+', line)
+                m = re.match(r'			Shrunk \d+$', line)
                 if m is not None:
                     shrunk = []
                     mode = 18
@@ -206,7 +206,7 @@ class BoundBVH:
                     mode = 19
                     continue
             elif mode == 19:
-                m = re.match(r'				([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)', line)
+                m = re.match(r'				([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)$', line)
                 if m is not None:
                     vertex = [float(m.group(1)), float(m.group(2)), float(m.group(3))]
                     shrunk.append(BoundBVH.transformVertex(vertex, geometryCenter, matrix))
@@ -253,13 +253,13 @@ class BoundBVH:
         for line in contentMatrix.splitlines():
             i += 1
             if i == 0:
-                m = re.match(r'		Matrix \d+', line)
+                m = re.match(r'		Matrix \d+$', line)
                 if m is not None:
                     continue
             if i == 1 and line == "		{":
                 continue
             if 2 <= i <= 5:
-                m = re.match(r'			([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)', line)
+                m = re.match(r'			([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+)$', line)
                 if m is not None:
                     row = [float(m.group(1)), float(m.group(2)), float(m.group(3))]
                     matrix.append(row)
@@ -283,12 +283,12 @@ class BoundBVH:
             elif i == 1 and line == "		{":
                 continue
             elif i == 2:
-                m = re.match(r'			Flags1 (.+)', line)
+                m = re.match(r'			Flags1 (.+)$', line)
                 if m is not None:
                     flags1 = m.group(1)
                     continue
             elif i == 3:
-                m = re.match(r'			Flags2 (.+)', line)
+                m = re.match(r'			Flags2 (.+)$', line)
                 if m is not None:
                     flags2 = m.group(1)
                     continue
@@ -408,7 +408,7 @@ class BoundBVH:
 
         self.writePolygons(file)
 
-        file.write("			GeometryCenter " + Util.vertexToStr(bsphere.center) + "\n")
+        file.write("			GeometryCenter " + Util.vertexToStr(bsphere.center) + " 0.00250000\n")
 
         self.writeVertices(file, bsphere.center)
         file.write("			VertexColors null\n")
