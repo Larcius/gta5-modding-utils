@@ -49,9 +49,6 @@ class Box:
         for i in range(len(self.vertices)):
             self.vertices[i] = self.vertices[i] + offset
 
-    def offsetMaterialIndex(self, offset: int) -> None:
-        self.materialIndex = self.materialIndex + offset
-
     def scale(self, scale: float) -> None:
         pass
 

@@ -57,9 +57,6 @@ class Sphere:
     def offsetVertexIndex(self, offset: int) -> None:
         self.center = self.center + offset
 
-    def offsetMaterialIndex(self, offset: int) -> None:
-        self.materialIndex = self.materialIndex + offset
-
     def scale(self, scale: float) -> None:
         self.radius = self.radius * scale
 

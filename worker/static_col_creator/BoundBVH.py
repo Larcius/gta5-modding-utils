@@ -349,21 +349,40 @@ class BoundBVH:
         if self.flags2 != bound.flags2:
             raise Exception("Cannot merge because flags2 do not match")
 
-        vertexIndexOffset = len(self.vertices)
-        materialIndexOffset = len(self.materials)
+        materialsMapping = self.mergeMaterials(bound)
 
+        vertexIndexOffset = len(self.vertices)
         for i in range(len(bound.polygons)):
             polygon = bound.polygons[i]
             polygon.offsetVertexIndex(vertexIndexOffset)
-            # TODO merge materials (so index offset no longer suffices)
-            polygon.offsetMaterialIndex(materialIndexOffset)
+            # fix MaterialIndex according to materialsMapping
+            polygon.materialIndex = materialsMapping[polygon.materialIndex]
 
         self.polygons.extend(bound.polygons)
-        # TODO merge materials (by just extending the list there are duplicate materials)
-        self.materials.extend(bound.materials)
         self.vertices.extend(bound.vertices)
         if self.shrunk is not None:
             self.shrunk.extend(bound.shrunk)
+
+    def mergeMaterials(self, bound: "BoundBVH") -> list[int]:
+        # compute materialsMapping to avoid redundant materials
+        materialsMapping = []
+        for i in range(len(bound.materials)):
+            index = self.findIndexOfSameMaterial(bound.materials[i])
+            materialsMapping.append(index)
+
+        # append non-existing materials and update materialsMapping accordingly
+        for i in range(len(materialsMapping)):
+            if materialsMapping[i] < 0:
+                self.materials.append(bound.materials[i])
+                materialsMapping[i] = len(self.materials) - 1
+
+        return materialsMapping
+
+    def findIndexOfSameMaterial(self, material: Material):
+        for i in range(len(self.materials)):
+            if self.materials[i].equals(material):
+                return i
+        return -1
 
     def getType(self) -> str:
         if self.shrunk is None:

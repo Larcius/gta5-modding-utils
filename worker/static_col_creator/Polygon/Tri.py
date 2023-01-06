@@ -62,9 +62,6 @@ class Tri:
         for i in range(len(self.siblings)):
             self.siblings[i] = self.siblings[i] + offset
 
-    def offsetMaterialIndex(self, offset: int) -> None:
-        self.materialIndex = self.materialIndex + offset
-
     def scale(self, scale: float) -> None:
         pass
 

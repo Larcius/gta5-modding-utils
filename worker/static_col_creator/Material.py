@@ -49,6 +49,9 @@ class Material:
         self.materialIndex = materialIndex
         self.polyFlags = polyFlags
 
+    def equals(self, other: "Material") -> bool:
+        return self.materialIndex == other.materialIndex and self.polyFlags == other.polyFlags
+
     def asMaterialString(self, materialIndex: int) -> str:
         return """				Material """ + str(materialIndex) + """
 				{

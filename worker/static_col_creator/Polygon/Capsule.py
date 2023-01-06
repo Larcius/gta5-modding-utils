@@ -66,9 +66,6 @@ class Capsule:
         self.centerTop = self.centerTop + offset
         self.centerBottom = self.centerBottom + offset
 
-    def offsetMaterialIndex(self, offset: int) -> None:
-        self.materialIndex = self.materialIndex + offset
-
     def scale(self, scale: float) -> None:
         self.radius = self.radius * scale
 
