@@ -101,15 +101,15 @@ class BoundBVH:
                     continue
             elif mode == 3:
                 if line == "				{":
-                    polygon = polygon + line + "\n"
+                    polygon += line + "\n"
                     mode = 4
                     continue
             elif mode == 4:
                 if line.startswith("					"):
-                    polygon = polygon + line + "\n"
+                    polygon += line + "\n"
                     continue
                 elif line == "				}":
-                    polygon = polygon + line + "\n"
+                    polygon += line + "\n"
                     polygons.append(BoundBVH.parsePolygon(polygon))
                     mode = 2
                     continue
@@ -168,15 +168,15 @@ class BoundBVH:
                     continue
             elif mode == 13:
                 if line == "				{":
-                    material = material + line + "\n"
+                    material += line + "\n"
                     mode = 14
                     continue
-            if mode == 14:
+            elif mode == 14:
                 if line.startswith("					"):
-                    material = material + line + "\n"
+                    material += line + "\n"
                     continue
                 elif line == "				}":
-                    material = material + line + "\n"
+                    material += line + "\n"
                     materials.append(Material.parse(material))
                     mode = 12
                     continue
@@ -268,7 +268,7 @@ class BoundBVH:
                     continue
             if i == 7 and line == "":
                 continue
-            raise "Could not parse matrix. Error in line " + str(i + 1) + ":\n" + contentMatrix
+            raise Exception("Could not parse matrix. Error in line " + str(i + 1) + ":\n" + contentMatrix)
 
         return matrix
 
@@ -280,23 +280,24 @@ class BoundBVH:
             i += 1
             if i == 0 and line == "		Item":
                 continue
-            if i == 1 and line == "		{":
+            elif i == 1 and line == "		{":
                 continue
-            if i == 2:
+            elif i == 2:
                 m = re.match(r'			Flags1 (.+)', line)
                 if m is not None:
                     flags1 = m.group(1)
                     continue
-            if i == 3:
+            elif i == 3:
                 m = re.match(r'			Flags2 (.+)', line)
                 if m is not None:
                     flags2 = m.group(1)
                     continue
-            if i == 4 and line == "		}":
+            elif i == 4 and line == "		}":
                 continue
-            if i == 5 and line == "":
+            elif i == 5 and line == "":
                 continue
-            raise "Could not parse ChildFlags item. Error in line " + str(i + 1) + ":\n" + contentChildFlagsItem
+
+            raise Exception("Could not parse ChildFlags item. Error in line " + str(i + 1) + ":\n" + contentChildFlagsItem)
 
         return flags1, flags2
 

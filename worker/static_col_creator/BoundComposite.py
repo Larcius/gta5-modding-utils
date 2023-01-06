@@ -78,15 +78,15 @@ class BoundComposite:
                     continue
             elif mode == 3:
                 if line == "		{":
-                    phBound = phBound + line + "\n"
+                    phBound += line + "\n"
                     mode = 4
                     continue
             elif mode == 4:
                 if line.startswith("			"):
-                    phBound = phBound + line + "\n"
+                    phBound += line + "\n"
                     continue
                 elif line == "		}":
-                    phBound = phBound + line + "\n"
+                    phBound += line + "\n"
                     children.append(phBound)
                     mode = 2
                     continue
@@ -112,15 +112,15 @@ class BoundComposite:
                     continue
             elif mode == 8:
                 if line == "		{":
-                    matrix = matrix + line + "\n"
+                    matrix += line + "\n"
                     mode = 9
                     continue
             elif mode == 9:
                 if line.startswith("			"):
-                    matrix = matrix + line + "\n"
+                    matrix += line + "\n"
                     continue
                 elif line == "		}":
-                    matrix = matrix + line + "\n"
+                    matrix += line + "\n"
                     childTransforms.append(matrix)
                     mode = 7
                     continue
@@ -145,15 +145,15 @@ class BoundComposite:
                     continue
             elif mode == 13:
                 if line == "		{":
-                    item = item + line + "\n"
+                    item += line + "\n"
                     mode = 14
                     continue
             elif mode == 14:
                 if line.startswith("			"):
-                    item = item + line + "\n"
+                    item += line + "\n"
                     continue
                 elif line == "		}":
-                    item = item + line + "\n"
+                    item += line + "\n"
                     childFlags.append(item)
                     mode = 12
                     continue
@@ -162,10 +162,10 @@ class BoundComposite:
             if mode == 15 and line == "}":
                 mode = 16
                 continue
-            if mode == 16 and line == "":
+            elif mode == 16 and line == "":
                 continue
 
-            raise "Could not parse BoundComposite. Error in line " + str(i + 1) + ":\n" + content
+            raise Exception("Could not parse BoundComposite. Error in line " + str(i + 1) + ":\n" + content)
 
         assert len(children) == len(childTransforms) == len(childFlags)
 
