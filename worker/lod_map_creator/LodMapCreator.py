@@ -363,7 +363,7 @@ class LodMapCreator:
 
     def replTranslateVertex(self, match: Match, translation: list[float]) -> str:
         vertex = [float(match.group(1)), float(match.group(2)), float(match.group(3))]
-        newVertex = np.subtract(vertex, translation).tolist()
+        newVertex = np.add(vertex, translation).tolist()
         return Util.vertexToStr(newVertex)
 
     def createTextureUvWithEps(self, uvMin: Optional[UV], uvMax: Optional[UV]) -> (Optional[UV], Optional[UV]):
@@ -425,11 +425,8 @@ class LodMapCreator:
         else:
             return ratioCandidate1, 0
 
-    def createLodModelVertexStr(self, entity: EntityItem, boundingBox: Box, vertex: list[float], normal: list[float], uv: list[float]):
-        vertex = entity.applyTransformationTo(vertex)
-        boundingBox.extendByPoint(vertex)
-
-        normal = Util.applyRotation(normal, entity.rotation)
+    @staticmethod
+    def createLodModelVertexNormalTextureUVStr(vertex: list[float], normal: list[float], uv: list[float]):
         return "				" + LodMapCreator.createVectorStr(vertex) + " / " + LodMapCreator.createVectorStr(normal, True) + " / 255 29 0 255 / " + Util.floatToStr(uv[0]) + " " + Util.floatToStr(uv[1]) + "\n"
 
     def createIndicesStr(self, indices: list[int]) -> str:
@@ -447,144 +444,181 @@ class LodMapCreator:
 
         return indicesStr
 
-    def createIndicesForLod(self, numEntities: int, withDiagonal: bool, withTop: bool) -> (list[int], int):
+    @staticmethod
+    def appendFrontPlaneIndicesForLod(indices: list[int], offset: int):
         indicesTemplate = [0, 1, 2, 0, 1, 2, 2, 3, 0, 2, 3, 0, 4, 5, 6, 4, 5, 6, 6, 7, 4, 6, 7, 4, 8, 11, 10, 8, 11, 10, 10, 9, 8, 10, 9, 8, 12, 15, 14, 12, 15, 14, 14, 13, 12, 14, 13, 12]
-        indicesTemplateTop = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1]
+        indices += [x + offset for x in indicesTemplate]
 
-        indices = []
-        offset = 0
-        for i in range(numEntities):
-            indices += [x + offset for x in indicesTemplate]
-            offset += 16
-            if withDiagonal:
-                indices += [x + offset for x in indicesTemplate]
-                offset += 16
-            if withTop:
-                indices += [x + offset for x in indicesTemplateTop]
-                offset += 5
-        return indices, offset
+    @staticmethod
+    def appendTopPlaneIndicesForLod(indices: list[int], offset: int):
+        indicesTemplateTop = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1]
+        indices += [x + offset for x in indicesTemplateTop]
+
+    def appendFrontPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
+        bbox = self.ytypItems[entity.archetypeName].boundingBox
+
+        lodCandidate = self.lodCandidates[entity.archetypeName]
+        uvFrontMin = lodCandidate.getUvFrontMin()
+        uvFrontMax = lodCandidate.getUvFrontMax()
+        uvSideMin = lodCandidate.getUvSideMin()
+        uvSideMax = lodCandidate.getUvSideMax()
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, -1, 0], [uvFrontMin.u, uvFrontMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, -1, 0], [uvFrontMax.u, uvFrontMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, -1, 1], [uvFrontMax.u, uvFrontMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, -1, 1], [uvFrontMin.u, uvFrontMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], bbox.min[2]], [1, -1, 0], [uvSideMin.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], bbox.min[2]], [1, 1, 0], [uvSideMax.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], bbox.max[2]], [1, 1, 1], [uvSideMax.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], bbox.max[2]], [1, -1, 1], [uvSideMin.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, 1, 0], [uvFrontMin.u, uvFrontMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, 1, 0], [uvFrontMax.u, uvFrontMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, 1, 1], [uvFrontMax.u, uvFrontMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, 1, 1], [uvFrontMin.u, uvFrontMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], bbox.min[2]], [-1, -1, 0], [uvSideMin.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], bbox.min[2]], [-1, 1, 0], [uvSideMax.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], bbox.max[2]], [-1, 1, 1], [uvSideMax.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], bbox.max[2]], [-1, -1, 1], [uvSideMin.u, uvSideMin.v])
+
+    def appendDiagonalPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
+        bbox = self.ytypItems[entity.archetypeName].boundingBox
+
+        lodCandidate = self.lodCandidates[entity.archetypeName]
+
+        uvFrontMin = lodCandidate.getUvFrontMin()
+        uvFrontMax = lodCandidate.getUvFrontMax()
+        uvSideMin = lodCandidate.getUvSideMin()
+        uvSideMax = lodCandidate.getUvSideMax()
+
+        distanceLeftToIntersection = planeIntersection[0] - bbox.min[0]
+        distanceRightToIntersection = bbox.max[0] - planeIntersection[0]
+        distanceBottomToIntersection = planeIntersection[1] - bbox.min[1]
+        distanceTopToIntersection = bbox.max[1] - planeIntersection[1]
+
+        vectorRightTop = self.calculateVectorOnEllipseAtDiagonal(distanceRightToIntersection, distanceTopToIntersection, 0)
+        vectorLeftBottom = self.calculateVectorOnEllipseAtDiagonal(distanceLeftToIntersection, distanceBottomToIntersection, 2)
+        lengthVectorRightTop = norm(vectorRightTop)
+        lengthVectorLeftBottom = norm(vectorLeftBottom)
+        ratio = lengthVectorLeftBottom / (lengthVectorLeftBottom + lengthVectorRightTop)
+        desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
+        uvDiagonal1Min = uvFrontMin if option == 0 else uvSideMin
+        uvDiagonal1Max = uvFrontMax if option == 0 else uvSideMax
+        if ratio > desiredRatio:
+            adapt = desiredRatio * (lengthVectorLeftBottom + lengthVectorRightTop) / lengthVectorLeftBottom
+            vectorLeftBottom = [vectorLeftBottom[0] * adapt, vectorLeftBottom[1] * adapt]
+        else:
+            adapt = (1 - desiredRatio) * (lengthVectorLeftBottom + lengthVectorRightTop) / lengthVectorRightTop
+            vectorRightTop = [vectorRightTop[0] * adapt, vectorRightTop[1] * adapt]
+
+        vectorLeftTop = self.calculateVectorOnEllipseAtDiagonal(distanceLeftToIntersection, distanceTopToIntersection, 1)
+        vectorRightBottom = self.calculateVectorOnEllipseAtDiagonal(distanceRightToIntersection, distanceBottomToIntersection, 3)
+        lengthVectorLeftTop = norm(vectorLeftTop)
+        lengthVectorRightBottom = norm(vectorRightBottom)
+        ratio = lengthVectorRightBottom / (lengthVectorLeftTop + lengthVectorRightBottom)
+        desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
+        uvDiagonal2Min = uvFrontMin if option == 0 else uvSideMin
+        uvDiagonal2Max = uvFrontMax if option == 0 else uvSideMax
+        if ratio > desiredRatio:
+            adapt = desiredRatio * (lengthVectorLeftTop + lengthVectorRightBottom) / lengthVectorRightBottom
+            vectorRightBottom = [vectorRightBottom[0] * adapt, vectorRightBottom[1] * adapt]
+        else:
+            adapt = (1 - desiredRatio) * (lengthVectorLeftTop + lengthVectorRightBottom) / lengthVectorLeftTop
+            vectorLeftTop = [vectorLeftTop[0] * adapt, vectorLeftTop[1] * adapt]
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [1, 0, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [1, 0, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [1, 0, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [1, 0, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
+
+    def appendTopPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
+        bbox = self.ytypItems[entity.archetypeName].boundingBox
+        sizes = bbox.getSizes()
+
+        lodCandidate = self.lodCandidates[entity.archetypeName]
+
+        uvTopMin = lodCandidate.getUvTopMin()
+        uvTopMax = lodCandidate.getUvTopMax()
+        uvTopCenter = lodCandidate.getUvTopCenter()
+
+        planeTopMinZ = bbox.min[2] + (bbox.max[2] - bbox.min[2]) * (1 - lodCandidate.planeZ)
+        planeTopMaxZ = min(bbox.max[2] - min(sizes) * 0.1, planeTopMinZ + min(sizes[0], sizes[1]) / 4)
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], planeIntersection[1], planeTopMaxZ], [0, 0, 1], [uvTopCenter.u, uvTopCenter.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], bbox.min[1], planeTopMinZ], [-1, -1, 0.1], [uvTopMin.u, uvTopMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], bbox.min[1], planeTopMinZ], [1, -1, 0.1], [uvTopMax.u, uvTopMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], bbox.max[1], planeTopMinZ], [1, 1, 0.1], [uvTopMax.u, uvTopMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], bbox.max[1], planeTopMinZ], [-1, 1, 0.1], [uvTopMin.u, uvTopMin.v])
+
+    def appendVertexForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, vertex: list[float], normal: list[float], uv: list[float]):
+        vertices.append(entity.applyTransformationTo(vertex))
+        normals.append(Util.applyRotation(normal, entity.rotation))
+        textureUVs.append(uv)
+
+    @staticmethod
+    def convertVerticesNormalsTextureUVsAsStr(vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], translation: list[float]) -> str:
+        result = ""
+        for i in range(len(vertices)):
+            translatedVertex = np.add(vertices[i], translation).tolist()
+            result += LodMapCreator.createLodModelVertexNormalTextureUVStr(translatedVertex, normals[i], textureUVs[i])
+        return result
 
     def createLodModel(self, lodName: str, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
-        archetypeToBbox = {}
-        archetypeToNumEntities = {}
         archetypeToVertices = {}
+        archetypeToNormals = {}
+        archetypeToTextureUVs = {}
+        archetypeToIndices = {}
 
         for entity in entities:
             lodCandidate = self.lodCandidates[entity.archetypeName]
             name = lodCandidate.name
             if name not in archetypeToVertices:
-                archetypeToBbox[name] = Box.createReversedInfinityBox()
-                archetypeToNumEntities[name] = 0
-                archetypeToVertices[name] = ""
+                archetypeToVertices[name] = []
+                archetypeToNormals[name] = []
+                archetypeToTextureUVs[name] = []
+                archetypeToIndices[name] = []
 
-            archetypeToNumEntities[name] += 1
             bbox = self.ytypItems[entity.archetypeName].boundingBox
             sizes = bbox.getSizes()
             distanceLeftToIntersection = sizes[0] * lodCandidate.texture_origin
             distanceBottomToIntersection = sizes[1] * lodCandidate.textureOriginSide()
             planeIntersection = [bbox.min[0] + distanceLeftToIntersection, bbox.min[1] + distanceBottomToIntersection]
 
-            geomBbox = archetypeToBbox[name]
+            LodMapCreator.appendFrontPlaneIndicesForLod(archetypeToIndices[name], len(archetypeToVertices[name]))
+            self.appendFrontPlaneVerticesForLod(archetypeToVertices[name], archetypeToNormals[name], archetypeToTextureUVs[name], entity, planeIntersection)
 
-            uvFrontMin = lodCandidate.getUvFrontMin()
-            uvFrontMax = lodCandidate.getUvFrontMax()
-            uvSideMin = lodCandidate.getUvSideMin()
-            uvSideMax = lodCandidate.getUvSideMax()
+            if lodCandidate.hasDiagonal(bbox, entity.scale):
+                LodMapCreator.appendFrontPlaneIndicesForLod(archetypeToIndices[name], len(archetypeToVertices[name]))
+                self.appendDiagonalPlaneVerticesForLod(archetypeToVertices[name], archetypeToNormals[name], archetypeToTextureUVs[name], entity, planeIntersection)
 
-            archetypeToVertices[name] += \
-                self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, -1, 0], [uvFrontMin.u, uvFrontMax.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, -1, 0], [uvFrontMax.u, uvFrontMax.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, -1, 1], [uvFrontMax.u, uvFrontMin.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, -1, 1], [uvFrontMin.u, uvFrontMin.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.min[2]], [1, -1, 0], [uvSideMin.u, uvSideMax.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.min[2]], [1, 1, 0], [uvSideMax.u, uvSideMax.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.max[2]], [1, 1, 1], [uvSideMax.u, uvSideMin.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.max[2]], [1, -1, 1], [uvSideMin.u, uvSideMin.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, 1, 0], [uvFrontMin.u, uvFrontMax.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, 1, 0], [uvFrontMax.u, uvFrontMax.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, 1, 1], [uvFrontMax.u, uvFrontMin.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, 1, 1], [uvFrontMin.u, uvFrontMin.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.min[2]], [-1, -1, 0], [uvSideMin.u, uvSideMax.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.min[2]], [-1, 1, 0], [uvSideMax.u, uvSideMax.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.max[2]], [-1, 1, 1], [uvSideMax.u, uvSideMin.v]) + \
-                self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.max[2]], [-1, -1, 1], [uvSideMin.u, uvSideMin.v])
-
-            if lodCandidate.hasDiagonal(self.ytypItems):
-                distanceRightToIntersection = sizes[0] - distanceLeftToIntersection
-                distanceTopToIntersection = sizes[1] - distanceBottomToIntersection
-
-                vectorRightTop = self.calculateVectorOnEllipseAtDiagonal(distanceRightToIntersection, distanceTopToIntersection, 0)
-                vectorLeftBottom = self.calculateVectorOnEllipseAtDiagonal(distanceLeftToIntersection, distanceBottomToIntersection, 2)
-                lengthVectorRightTop = norm(vectorRightTop)
-                lengthVectorLeftBottom = norm(vectorLeftBottom)
-                ratio = lengthVectorLeftBottom / (lengthVectorLeftBottom + lengthVectorRightTop)
-                desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
-                uvDiagonal1Min = uvFrontMin if option == 0 else uvSideMin
-                uvDiagonal1Max = uvFrontMax if option == 0 else uvSideMax
-                if ratio > desiredRatio:
-                    adapt = desiredRatio * (lengthVectorLeftBottom + lengthVectorRightTop) / lengthVectorLeftBottom
-                    vectorLeftBottom = [vectorLeftBottom[0] * adapt, vectorLeftBottom[1] * adapt]
-                else:
-                    adapt = (1 - desiredRatio) * (lengthVectorLeftBottom + lengthVectorRightTop) / lengthVectorRightTop
-                    vectorRightTop = [vectorRightTop[0] * adapt, vectorRightTop[1] * adapt]
-
-                vectorLeftTop = self.calculateVectorOnEllipseAtDiagonal(distanceLeftToIntersection, distanceTopToIntersection, 1)
-                vectorRightBottom = self.calculateVectorOnEllipseAtDiagonal(distanceRightToIntersection, distanceBottomToIntersection, 3)
-                lengthVectorLeftTop = norm(vectorLeftTop)
-                lengthVectorRightBottom = norm(vectorRightBottom)
-                ratio = lengthVectorRightBottom / (lengthVectorLeftTop + lengthVectorRightBottom)
-                desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
-                uvDiagonal2Min = uvFrontMin if option == 0 else uvSideMin
-                uvDiagonal2Max = uvFrontMax if option == 0 else uvSideMax
-                if ratio > desiredRatio:
-                    adapt = desiredRatio * (lengthVectorLeftTop + lengthVectorRightBottom) / lengthVectorRightBottom
-                    vectorRightBottom = [vectorRightBottom[0] * adapt, vectorRightBottom[1] * adapt]
-                else:
-                    adapt = (1 - desiredRatio) * (lengthVectorLeftTop + lengthVectorRightBottom) / lengthVectorLeftTop
-                    vectorLeftTop = [vectorLeftTop[0] * adapt, vectorLeftTop[1] * adapt]
-
-                archetypeToVertices[name] += \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [1, 0, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [1, 0, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [1, 0, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [1, 0, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
-
-            if lodCandidate.hasTop():
-                uvTopMin = lodCandidate.getUvTopMin()
-                uvTopMax = lodCandidate.getUvTopMax()
-                uvTopCenter = lodCandidate.getUvTopCenter()
-
-                planeTopMinZ = bbox.min[2] + (bbox.max[2] - bbox.min[2]) * (1 - lodCandidate.planeZ)
-                planeTopMaxZ = min(bbox.max[2] - min(sizes) * 0.1, planeTopMinZ + min(sizes[0], sizes[1]) / 4)
-
-                archetypeToVertices[name] += \
-                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], planeIntersection[1], planeTopMaxZ], [0, 0, 1], [uvTopCenter.u, uvTopCenter.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], bbox.min[1], planeTopMinZ], [-1, -1, 0.1], [uvTopMin.u, uvTopMax.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], bbox.min[1], planeTopMinZ], [1, -1, 0.1], [uvTopMax.u, uvTopMax.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [bbox.max[0], bbox.max[1], planeTopMinZ], [1, 1, 0.1], [uvTopMax.u, uvTopMin.v]) + \
-                    self.createLodModelVertexStr(entity, geomBbox, [bbox.min[0], bbox.max[1], planeTopMinZ], [-1, 1, 0.1], [uvTopMin.u, uvTopMin.v])
+            if lodCandidate.hasTop(bbox, entity.scale):
+                LodMapCreator.appendTopPlaneIndicesForLod(archetypeToIndices[name], len(archetypeToVertices[name]))
+                self.appendTopPlaneVerticesForLod(archetypeToVertices[name], archetypeToNormals[name], archetypeToTextureUVs[name], entity, planeIntersection)
 
         totalBbox = Box.createReversedInfinityBox()
 
-        for archetype in archetypeToBbox:
-            totalBbox.extendByPoint(archetypeToBbox[archetype].min)
-            totalBbox.extendByPoint(archetypeToBbox[archetype].max)
+        archetypeToBbox = {}
+        for name in archetypeToVertices:
+            archetypeToBbox[name] = Box.createBoxFromVertices(archetypeToVertices[name])
 
-        translation = totalBbox.getCenter()
+            totalBbox.extendByPoint(archetypeToBbox[name].min)
+            totalBbox.extendByPoint(archetypeToBbox[name].max)
 
-        totalBbox = totalBbox.getTranslated(np.multiply(translation, [-1]).tolist())
+        center = totalBbox.getCenter()
+        translation = np.multiply(center, [-1]).tolist()
+
+        totalBbox = totalBbox.getTranslated(translation)
 
         bounds = self.createAabb(totalBbox)
 
@@ -593,14 +627,11 @@ class LodMapCreator:
         shaderIndex = 0
         for archetype in archetypeToBbox:
             lodCandidate = self.lodCandidates[archetype]
-            numEntities = archetypeToNumEntities[archetype]
-            withTop = lodCandidate.hasTop()
-            withDiagonal = lodCandidate.hasDiagonal(self.ytypItems)
 
-            indices, numVertices = self.createIndicesForLod(numEntities, withDiagonal, withTop)
+            indices = archetypeToIndices[archetype]
 
-            archetypeToBbox[archetype] = archetypeToBbox[archetype].getTranslated(np.multiply(translation, [-1]).tolist())
-            archetypeToVertices[archetype] = re.sub('(?<=\t\t\t\t)(\\S+) (\\S+) (\\S+)', lambda match: self.replTranslateVertex(match, translation), archetypeToVertices[archetype])
+            archetypeToBbox[archetype] = archetypeToBbox[archetype].getTranslated(translation)
+            verticesNormalsTextureUVsStr = LodMapCreator.convertVerticesNormalsTextureUVsAsStr(archetypeToVertices[archetype], archetypeToNormals[archetype], archetypeToTextureUVs[archetype], translation)
 
             shaders += self.contentTemplateOdrShaderTreeLod.replace("${DIFFUSE_SAMPLER}", lodCandidate.texture())
 
@@ -611,8 +642,8 @@ class LodMapCreator:
                 .replace("${VERTEX_DECLARATION}", "N209731BE") \
                 .replace("${INDICES.NUM}", str(len(indices))) \
                 .replace("${INDICES}", self.createIndicesStr(indices)) \
-                .replace("${VERTICES.NUM}", str(numVertices)) \
-                .replace("${VERTICES}\n", archetypeToVertices[archetype])
+                .replace("${VERTICES.NUM}", str(len(archetypeToVertices[archetype]))) \
+                .replace("${VERTICES}\n", verticesNormalsTextureUVsStr)
             shaderIndex += 1
 
         contentModelMesh = self.contentTemplateMesh \
@@ -655,7 +686,7 @@ class LodMapCreator:
         """)
         self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", drawableDictionary, totalBbox, itemHdDistance, itemLodDistance))
 
-        return EntityItem(lodName, translation, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, LodLevel.LOD, Flag.FLAGS_LOD)
+        return EntityItem(lodName, center, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, LodLevel.LOD, Flag.FLAGS_LOD)
 
     def calculateVectorOnEllipseAtDiagonal(self, semiaxisX: float, semiaxisY: float, quadrant: int) -> list[float]:
         coordinate = semiaxisX * semiaxisY / math.sqrt(semiaxisX**2 + semiaxisY**2)
@@ -772,9 +803,10 @@ class LodMapCreator:
             totalBbox.extendByPoint(bbox[diffuseSampler].min)
             totalBbox.extendByPoint(bbox[diffuseSampler].max)
 
-        translation = totalBbox.getCenter()
+        center = totalBbox.getCenter()
+        translation = np.multiply(center, [-1]).tolist()
 
-        totalBbox = totalBbox.getTranslated(np.multiply(translation, [-1]).tolist())
+        totalBbox = totalBbox.getTranslated(translation)
 
         bounds = self.createAabb(totalBbox)
 
@@ -785,7 +817,7 @@ class LodMapCreator:
             indicesTopStr = self.createIndices(numTopPlanes[diffuseSampler])
             indicesFrontStr = self.createIndices(numFrontPlanes[diffuseSampler])
 
-            bbox[diffuseSampler] = bbox[diffuseSampler].getTranslated(np.multiply(translation, [-1]).tolist())
+            bbox[diffuseSampler] = bbox[diffuseSampler].getTranslated(translation)
             verticesFrontStr = re.sub('(?<=\t\t\t\t)(\\S+) (\\S+) (\\S+)', lambda match: self.replTranslateVertex(match, translation), verticesFront[diffuseSampler])
             verticesTopStr = re.sub('(?<=\t\t\t\t)(\\S+) (\\S+) (\\S+)', lambda match: self.replTranslateVertex(match, translation), verticesTop[diffuseSampler])
 
@@ -868,7 +900,7 @@ class LodMapCreator:
 """)
         self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, self.getYtypName(), drawableDictionary, totalBbox, itemHdDistance, itemLodDistance))
 
-        return EntityItem(name, translation, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, lodLevel, flags)
+        return EntityItem(name, center, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, lodLevel, flags)
 
     def fixHdOrOrphanHdLodLevelsAndRearrangeEntites(self, content: str) -> str:
         hdEntities = ""

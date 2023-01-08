@@ -13,6 +13,11 @@ class Box:
     def createUnitBox() -> "Box":
         return Box([-0.5] * 3, [0.5] * 3)
 
+    @staticmethod
+    def createBoxFromVertices(vertices: list[list[float]]) -> "Box":
+        npVertices = np.array(vertices)
+        return Box(np.min(npVertices, axis=0).tolist(), np.max(npVertices, axis=0).tolist())
+
     min: list[float]
     max: list[float]
 

@@ -1,7 +1,7 @@
 from typing import Optional
 
+from common.Box import Box
 from common.texture.UV import UV
-from common.ytyp.YtypItem import YtypItem
 
 
 class LodCandidate:
@@ -85,12 +85,16 @@ class LodCandidate:
     def texture(self) -> str:
         return "lod_" + self.name.lower()
 
-    def hasTop(self) -> bool:
-        return self.uvTopMin is not None and self.uvTopMax is not None
+    def hasTop(self, boundingBox: Box, scale: list[float]) -> bool:
+        if self.uvTopMin is None or self.uvTopMax is None:
+            return False
 
-    def hasDiagonal(self, archetypes: dict[str, YtypItem]) -> bool:
-        boundingBox = archetypes[self.name].boundingBox
-        return boundingBox.getDiagonalOfPlaneXY() >= 12 or boundingBox.getDiagonal() >= 40
+        scaledBoundingBox = boundingBox.getScaled(scale)
+        return scaledBoundingBox.getDiagonalOfPlaneXY() >= 7
+
+    def hasDiagonal(self, boundingBox: Box, scale: list[float]) -> bool:
+        scaledBoundingBox = boundingBox.getScaled(scale)
+        return scaledBoundingBox.getDiagonalOfPlaneXY() >= 12 or scaledBoundingBox.getDiagonal() >= 40
 
     def hasDedicatedSideTexture(self) -> bool:
         return self.uvSideMin is not None and self.uvSideMax is not None
