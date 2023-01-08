@@ -1,3 +1,4 @@
+import copy
 from re import Match
 from typing import Any
 
@@ -23,6 +24,8 @@ class StaticCollisionCreator:
     inputDir: str
     outputDir: str
 
+    _entityColModels: dict[str, BoundComposite]
+
     _colChildren: list[BoundComposite]
     _entityIndex: int
     _clusters: Any
@@ -45,6 +48,7 @@ class StaticCollisionCreator:
     def __init__(self, inputDir: str, outputDir: str):
         self.inputDir = inputDir
         self.outputDir = outputDir
+        self._entityColModels = {}
 
     def run(self):
         print("running static collision model creator...")
@@ -243,13 +247,7 @@ class StaticCollisionCreator:
         position = [float(match.group(3)), float(match.group(4)), float(match.group(5))]
         rotationQuaternion = [float(match.group(9)), -float(match.group(6)), -float(match.group(7)), -float(match.group(8))]  # order is w, -x, -y, -z
 
-        boundPath = self.getColModelPathCandidate(entity)
-        boundContent = Util.readFile(boundPath)
-
-        boundContent = self.convertToBoundComposite(boundContent)
-        boundContent = self.convertToBoundBVH(boundContent)
-
-        boundComposite = BoundComposite.parse(boundContent)
+        boundComposite = self.getEntityColModel(entity)
 
         boundComposite.transform(rotationQuaternion, scale, position)
 
@@ -259,6 +257,18 @@ class StaticCollisionCreator:
         self.mergeColChildren(cluster, boundComposite)
 
         return re.sub('(?<=<flags value=")[^"]+("\\s*/>)', str(flags) + "\\g<1>", match.group(0), flags=re.M)
+
+    def getEntityColModel(self, entity: str) -> BoundComposite:
+        if entity not in self._entityColModels:
+            boundPath = self.getColModelPathCandidate(entity)
+            boundContent = Util.readFile(boundPath)
+
+            boundContent = self.convertToBoundComposite(boundContent)
+            boundContent = self.convertToBoundBVH(boundContent)
+
+            self._entityColModels[entity] = BoundComposite.parse(boundContent)
+
+        return copy.deepcopy(self._entityColModels[entity])
 
     def convertToBoundComposite(self, boundContent: str) -> str:
         if boundContent.startswith("Version 43 31\n{\n\tType BoundComposite\n"):
