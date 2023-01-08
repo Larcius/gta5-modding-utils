@@ -1,5 +1,7 @@
 from typing import Optional
+
 from common.texture.UV import UV
+from common.ytyp.YtypItem import YtypItem
 
 
 class LodCandidate:
@@ -21,7 +23,7 @@ class LodCandidate:
     def __init__(self, name: str, texture_origin: float = 0.5, planeZ: Optional[float] = 0.5,
             uvFrontMin: UV = UV(0, 0), uvFrontMax: UV = UV(1, 1),
             uvTopMin: Optional[UV] = None, uvTopMax: Optional[UV] = None, uvTopCenter: Optional[UV] = None,
-            uvSideMin: Optional[UV] = None, uvSideMax: Optional[UV] = None, _textureOriginSide: Optional[float] = None):
+            uvSideMin: Optional[UV] = None, uvSideMax: Optional[UV] = None, textureOriginSide: Optional[float] = None):
         self.name = name
         self.texture_origin = texture_origin
         self.planeZ = planeZ
@@ -32,7 +34,7 @@ class LodCandidate:
         self.uvTopCenter = uvTopCenter
         self.uvSideMin = uvSideMin
         self.uvSideMax = uvSideMax
-        self._textureOriginSide = _textureOriginSide
+        self._textureOriginSide = textureOriginSide
 
     @staticmethod
     def createTextureUvWithEps(minUv: UV, maxUv: UV) -> (UV, UV):
@@ -85,6 +87,10 @@ class LodCandidate:
 
     def hasTop(self) -> bool:
         return self.uvTopMin is not None and self.uvTopMax is not None
+
+    def hasDiagonal(self, archetypes: dict[str, YtypItem]) -> bool:
+        boundingBox = archetypes[self.name].boundingBox
+        return boundingBox.getDiagonalOfPlaneXY() >= 12 or boundingBox.getDiagonal() >= 40
 
     def hasDedicatedSideTexture(self) -> bool:
         return self.uvSideMin is not None and self.uvSideMax is not None

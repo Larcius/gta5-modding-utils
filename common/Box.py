@@ -23,16 +23,12 @@ class Box:
     def getCenter(self) -> list[float]:
         return np.divide(np.add(self.min, self.max), [2]).tolist()
 
-    # returns the diagonal (distance between points min and max
+    # returns the diagonal (distance between points min and max)
     def getDiagonal(self) -> float:
         return math.dist(self.min, self.max)
 
-    # returns diagonals of YZ-, XZ-, XY-planes (in that order)
-    def getPlaneDiagonals(self) -> list[float]:
-        diagonals = []
-        for i in range(3):
-            diagonals.append(math.dist([self.min[(i + 1) % 3], self.min[(i + 1) % 3]], [self.max[(i + 2) % 3], self.max[(i + 1) % 3]]))
-        return diagonals
+    def getDiagonalOfPlaneXY(self) -> float:
+        return math.dist([self.min[0], self.min[1]], [self.max[0], self.max[1]])
 
     def getSizes(self) -> list[float]:
         return np.subtract(self.max, self.min).tolist()

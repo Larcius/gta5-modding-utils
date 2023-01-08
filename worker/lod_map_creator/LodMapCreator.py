@@ -1,7 +1,9 @@
+import math
 import shutil
 import os
 import re
 import numpy as np
+from numpy.linalg import norm
 from re import Match
 from typing import IO, Optional
 from natsort import natsorted
@@ -362,7 +364,7 @@ class LodMapCreator:
     def replTranslateVertex(self, match: Match, translation: list[float]) -> str:
         vertex = [float(match.group(1)), float(match.group(2)), float(match.group(3))]
         newVertex = np.subtract(vertex, translation).tolist()
-        return Util.floatToStr(newVertex[0]) + " " + Util.floatToStr(newVertex[1]) + " " + Util.floatToStr(newVertex[2])
+        return Util.vertexToStr(newVertex)
 
     def createTextureUvWithEps(self, uvMin: Optional[UV], uvMax: Optional[UV]) -> (Optional[UV], Optional[UV]):
         if uvMin is None or uvMax is None:
@@ -414,7 +416,14 @@ class LodMapCreator:
     def createVectorStr(vector: list[float], normalize: bool = False) -> str:
         if normalize:
             vector = Util.normalize(vector)
-        return Util.floatToStr(vector[0]) + " " + Util.floatToStr(vector[1]) + " " + Util.floatToStr(vector[2])
+        return Util.vertexToStr(vector)
+
+    @staticmethod
+    def findClosestRatio(ratioInput: float, ratioCandidate1: float, ratioCandidate2: float) -> (float, int):
+        if math.fabs(ratioInput - ratioCandidate2) < math.fabs(ratioInput - ratioCandidate1):
+            return ratioCandidate2, 1
+        else:
+            return ratioCandidate1, 0
 
     def createLodModelVertexStr(self, entity: EntityItem, boundingBox: Box, vertex: list[float], normal: list[float], uv: list[float]):
         vertex = entity.applyTransformationTo(vertex)
@@ -438,17 +447,22 @@ class LodMapCreator:
 
         return indicesStr
 
-    def createIndicesForLod(self, numEntities: int, withTop: bool) -> list[int]:
+    def createIndicesForLod(self, numEntities: int, withDiagonal: bool, withTop: bool) -> (list[int], int):
         indicesTemplate = [0, 1, 2, 0, 1, 2, 2, 3, 0, 2, 3, 0, 4, 5, 6, 4, 5, 6, 6, 7, 4, 6, 7, 4, 8, 11, 10, 8, 11, 10, 10, 9, 8, 10, 9, 8, 12, 15, 14, 12, 15, 14, 14, 13, 12, 14, 13, 12]
-        indicesTemplateTop = [16, 17, 18, 16, 18, 19, 16, 19, 20, 16, 20, 17]
+        indicesTemplateTop = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1]
+
         indices = []
-        verticesPerEntity = 21 if withTop else 16
+        offset = 0
         for i in range(numEntities):
-            offset = i * verticesPerEntity
             indices += [x + offset for x in indicesTemplate]
+            offset += 16
+            if withDiagonal:
+                indices += [x + offset for x in indicesTemplate]
+                offset += 16
             if withTop:
                 indices += [x + offset for x in indicesTemplateTop]
-        return indices
+                offset += 5
+        return indices, offset
 
     def createLodModel(self, lodName: str, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
         archetypeToBbox = {}
@@ -466,7 +480,9 @@ class LodMapCreator:
             archetypeToNumEntities[name] += 1
             bbox = self.ytypItems[entity.archetypeName].boundingBox
             sizes = bbox.getSizes()
-            planeIntersection = [bbox.min[0] + sizes[0] * lodCandidate.texture_origin, bbox.min[1] + sizes[1] * lodCandidate.textureOriginSide()]
+            distanceLeftToIntersection = sizes[0] * lodCandidate.texture_origin
+            distanceBottomToIntersection = sizes[1] * lodCandidate.textureOriginSide()
+            planeIntersection = [bbox.min[0] + distanceLeftToIntersection, bbox.min[1] + distanceBottomToIntersection]
 
             geomBbox = archetypeToBbox[name]
 
@@ -492,6 +508,58 @@ class LodMapCreator:
                 self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.min[2]], [-1, 1, 0], [uvSideMax.u, uvSideMax.v]) + \
                 self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.max[1], bbox.max[2]], [-1, 1, 1], [uvSideMax.u, uvSideMin.v]) + \
                 self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0], bbox.min[1], bbox.max[2]], [-1, -1, 1], [uvSideMin.u, uvSideMin.v])
+
+            if lodCandidate.hasDiagonal(self.ytypItems):
+                distanceRightToIntersection = sizes[0] - distanceLeftToIntersection
+                distanceTopToIntersection = sizes[1] - distanceBottomToIntersection
+
+                vectorRightTop = self.calculateVectorOnEllipseAtDiagonal(distanceRightToIntersection, distanceTopToIntersection, 0)
+                vectorLeftBottom = self.calculateVectorOnEllipseAtDiagonal(distanceLeftToIntersection, distanceBottomToIntersection, 2)
+                lengthVectorRightTop = norm(vectorRightTop)
+                lengthVectorLeftBottom = norm(vectorLeftBottom)
+                ratio = lengthVectorLeftBottom / (lengthVectorLeftBottom + lengthVectorRightTop)
+                desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
+                uvDiagonal1Min = uvFrontMin if option == 0 else uvSideMin
+                uvDiagonal1Max = uvFrontMax if option == 0 else uvSideMax
+                if ratio > desiredRatio:
+                    adapt = desiredRatio * (lengthVectorLeftBottom + lengthVectorRightTop) / lengthVectorLeftBottom
+                    vectorLeftBottom = [vectorLeftBottom[0] * adapt, vectorLeftBottom[1] * adapt]
+                else:
+                    adapt = (1 - desiredRatio) * (lengthVectorLeftBottom + lengthVectorRightTop) / lengthVectorRightTop
+                    vectorRightTop = [vectorRightTop[0] * adapt, vectorRightTop[1] * adapt]
+
+                vectorLeftTop = self.calculateVectorOnEllipseAtDiagonal(distanceLeftToIntersection, distanceTopToIntersection, 1)
+                vectorRightBottom = self.calculateVectorOnEllipseAtDiagonal(distanceRightToIntersection, distanceBottomToIntersection, 3)
+                lengthVectorLeftTop = norm(vectorLeftTop)
+                lengthVectorRightBottom = norm(vectorRightBottom)
+                ratio = lengthVectorRightBottom / (lengthVectorLeftTop + lengthVectorRightBottom)
+                desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
+                uvDiagonal2Min = uvFrontMin if option == 0 else uvSideMin
+                uvDiagonal2Max = uvFrontMax if option == 0 else uvSideMax
+                if ratio > desiredRatio:
+                    adapt = desiredRatio * (lengthVectorLeftTop + lengthVectorRightBottom) / lengthVectorRightBottom
+                    vectorRightBottom = [vectorRightBottom[0] * adapt, vectorRightBottom[1] * adapt]
+                else:
+                    adapt = (1 - desiredRatio) * (lengthVectorLeftTop + lengthVectorRightBottom) / lengthVectorLeftTop
+                    vectorLeftTop = [vectorLeftTop[0] * adapt, vectorLeftTop[1] * adapt]
+
+                archetypeToVertices[name] += \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [1, 0, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [1, 0, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [1, 0, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [1, 0, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v]) + \
+                    self.createLodModelVertexStr(entity, geomBbox, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
 
             if lodCandidate.hasTop():
                 uvTopMin = lodCandidate.getUvTopMin()
@@ -527,9 +595,9 @@ class LodMapCreator:
             lodCandidate = self.lodCandidates[archetype]
             numEntities = archetypeToNumEntities[archetype]
             withTop = lodCandidate.hasTop()
-            verticesPerEntity = 21 if withTop else 16
+            withDiagonal = lodCandidate.hasDiagonal(self.ytypItems)
 
-            indices = self.createIndicesForLod(numEntities, withTop)
+            indices, numVertices = self.createIndicesForLod(numEntities, withDiagonal, withTop)
 
             archetypeToBbox[archetype] = archetypeToBbox[archetype].getTranslated(np.multiply(translation, [-1]).tolist())
             archetypeToVertices[archetype] = re.sub('(?<=\t\t\t\t)(\\S+) (\\S+) (\\S+)', lambda match: self.replTranslateVertex(match, translation), archetypeToVertices[archetype])
@@ -543,7 +611,7 @@ class LodMapCreator:
                 .replace("${VERTEX_DECLARATION}", "N209731BE") \
                 .replace("${INDICES.NUM}", str(len(indices))) \
                 .replace("${INDICES}", self.createIndicesStr(indices)) \
-                .replace("${VERTICES.NUM}", str(verticesPerEntity * numEntities)) \
+                .replace("${VERTICES.NUM}", str(numVertices)) \
                 .replace("${VERTICES}\n", archetypeToVertices[archetype])
             shaderIndex += 1
 
@@ -588,6 +656,10 @@ class LodMapCreator:
         self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", drawableDictionary, totalBbox, itemHdDistance, itemLodDistance))
 
         return EntityItem(lodName, translation, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, LodLevel.LOD, Flag.FLAGS_LOD)
+
+    def calculateVectorOnEllipseAtDiagonal(self, semiaxisX: float, semiaxisY: float, quadrant: int) -> list[float]:
+        coordinate = semiaxisX * semiaxisY / math.sqrt(semiaxisX**2 + semiaxisY**2)
+        return [coordinate * (1 if quadrant == 0 or quadrant == 3 else -1), coordinate * (1 if quadrant == 0 or quadrant == 1 else -1)]
 
     def createDrawableDictionary(self, name: str, entities: list[EntityItem]):
         if len(entities) == 0:
