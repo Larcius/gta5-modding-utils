@@ -39,7 +39,7 @@ class LodCandidate:
     @staticmethod
     def createTextureUvWithEps(minUv: UV, maxUv: UV) -> (UV, UV):
         if minUv is None or maxUv is None:
-            Exception("minUv and maxUv must not be None")
+            raise Exception("minUv and maxUv must not be None")
 
         minUvEps = UV(minUv.u, minUv.v)
         maxUvEps = UV(maxUv.u, maxUv.v)

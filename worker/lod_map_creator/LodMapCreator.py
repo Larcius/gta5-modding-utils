@@ -64,8 +64,8 @@ class LodMapCreator:
                 UV(0.7734375, 0.453125)),
             "prop_tree_maple_02": LodCandidate("prop_tree_maple_02", 0.421875),
             "prop_tree_maple_03": LodCandidate("prop_tree_maple_03", 0.5),
-            "prop_tree_cedar_02": LodCandidate("prop_tree_cedar_02", 0.515625, 0.46315789473, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "prop_tree_cedar_03": LodCandidate("prop_tree_cedar_03", 0.5390625, 0.51052631578, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_tree_cedar_02": LodCandidate("prop_tree_cedar_02", 0.5078125, 0.46315789473, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_tree_cedar_03": LodCandidate("prop_tree_cedar_03", 0.5234375, 0.51052631578, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_tree_cedar_04": LodCandidate("prop_tree_cedar_04", 0.484375, 0.3947368421, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1),
                 UV(0.484375, 0.87890625)),
             "prop_tree_cedar_s_01": LodCandidate("prop_tree_cedar_s_01", 0.484375, 0.71875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1),
@@ -73,7 +73,7 @@ class LodMapCreator:
             "prop_tree_cedar_s_04": LodCandidate("prop_tree_cedar_s_04", 0.5, 0.68269230769, UV(0, 0), UV(1, 0.8125), UV(0, 1), UV(1, 0.8125)),
             "prop_tree_cedar_s_05": LodCandidate("prop_tree_cedar_s_05", 0.46875),
             "prop_tree_cedar_s_06": LodCandidate("prop_tree_cedar_s_06", 0.5),
-            "prop_tree_cypress_01": LodCandidate("prop_tree_cypress_01", 0.5),
+            "prop_tree_cypress_01": LodCandidate("prop_tree_cypress_01", 0.5, 0.78125, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_tree_eng_oak_01": LodCandidate("prop_tree_eng_oak_01", 0.5, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.75, 0.53125)),
             "prop_tree_eucalip_01": LodCandidate("prop_tree_eucalip_01", 0.5, 0.359375, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1)),
             "prop_tree_jacada_01": LodCandidate("prop_tree_jacada_01", 0.484375, 0.46875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
@@ -84,14 +84,13 @@ class LodMapCreator:
                 UV(0.515625, 0.79296875)),
             "prop_tree_pine_02": LodCandidate("prop_tree_pine_02", 0.546875, 0.6875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.5, 0.80078125)),
-            "prop_tree_fallen_pine_01": LodCandidate("prop_tree_fallen_pine_01", 0.609375, 1, UV(0, 0), UV(1, 0.625)),
-            # , UV(0, 1), UV(1, 0.625), UV(0.390625, 0.7734375)),
+            "prop_tree_fallen_pine_01": LodCandidate("prop_tree_fallen_pine_01", 0.609375, None, UV(0, 0), UV(1, 1)),
             "prop_s_pine_dead_01": LodCandidate("prop_s_pine_dead_01", 0.40625, 0.4875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.53125, 0.8515625)),
-            "prop_w_r_cedar_01": LodCandidate("prop_w_r_cedar_01", 0.5, 0.8, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_w_r_cedar_01": LodCandidate("prop_w_r_cedar_01", 0.515625, 0.8, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_w_r_cedar_dead": LodCandidate("prop_w_r_cedar_dead", 0.59375, 0.425, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.53125, 0.78125)),
-            "test_tree_cedar_trunk_001": LodCandidate("test_tree_cedar_trunk_001", 0.515625, 0.5769231, UV(0, 0), UV(1, 0.8125), UV(0, 1),
+            "test_tree_cedar_trunk_001": LodCandidate("test_tree_cedar_trunk_001", 0.53125, 0.5769231, UV(0, 0), UV(1, 0.8125), UV(0, 1),
                 UV(1, 0.8125)),
             "test_tree_forest_trunk_01": LodCandidate("test_tree_forest_trunk_01", 0.515625, 0.3894231, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125),
                 UV(1, 1)),
@@ -106,12 +105,12 @@ class LodMapCreator:
             "prop_rus_olive": LodCandidate("prop_rus_olive", 0.484375, 0.53125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "prop_rus_olive_wint": LodCandidate("prop_rus_olive_wint", 0.556),
             # bushes
-            "prop_bush_lrg_04b": LodCandidate("prop_bush_lrg_04b", 0.37333333, 0.40625, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None,
-                UV(0.5859375, 0), UV(1, 0.5), 0.45283018867),
-            "prop_bush_lrg_04c": LodCandidate("prop_bush_lrg_04c", 0.37333333, 0.4375, UV(0, 0), UV(0.5859375, 0.5), UV(0, 0.5), UV(1, 1), None,
-                UV(0.5859375, 0), UV(1, 0.5), 0.5660377358),
-            "prop_bush_lrg_04d": LodCandidate("prop_bush_lrg_04d", 0.4, 0.421875, UV(0, 0), UV(0.5078125, 0.5), UV(0, 0.5), UV(0.75, 1), None,
-                UV(0.5078125, 0), UV(1, 0.484375), 0.47619047619),
+            "prop_bush_lrg_04b": LodCandidate("prop_bush_lrg_04b", 0.375, 0.5, UV(0, 0), UV(0.59375, 0.5), UV(0, 0.5), UV(1, 1), None,
+                UV(0.59375, 0), UV(1, 0.5), 0.4423076923),
+            "prop_bush_lrg_04c": LodCandidate("prop_bush_lrg_04c", 0.38157894736, 0.46875, UV(0, 0), UV(0.59375, 0.5), UV(0, 0.5), UV(1, 1), None,
+                UV(0.59375, 0), UV(1, 0.5), 0.4423076923),
+            "prop_bush_lrg_04d": LodCandidate("prop_bush_lrg_04d", 0.38970588235, 0.5, UV(0, 0), UV(0.53125, 0.5), UV(0, 0.5), UV(0.75, 1), None,
+                UV(0.53125, 0), UV(1, 0.5), 0.5),
             # palms
             "prop_palm_fan_02_b": LodCandidate("prop_palm_fan_02_b", 0.515625, 0.25625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
                 UV(0.484375, 0.8125)),
@@ -120,27 +119,30 @@ class LodMapCreator:
                 UV(0.484375, 0.90625)),
             "prop_palm_fan_04_b": LodCandidate("prop_palm_fan_04_b", 0.484375, 0.321875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1),
                 UV(0.46875, 0.80859375)),
+            "prop_palm_fan_04_c": LodCandidate("prop_palm_fan_04_c", 0.5, 0.1875, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_palm_fan_04_d": LodCandidate("prop_palm_fan_04_d", 0.421875, 0.15384615384, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
             "prop_palm_huge_01a": LodCandidate("prop_palm_huge_01a", 0.46875, 0.11574074074, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375),
+                UV(0.484375, 0.921875)),
+            "prop_palm_huge_01b": LodCandidate("prop_palm_huge_01b", 0.53125, 0.08796296296, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375),
                 UV(0.484375, 0.921875)),
             "prop_palm_med_01b": LodCandidate("prop_palm_med_01b", 0.515625, 0.24431818181, UV(0, 0), UV(1, 0.6875), UV(0, 1), UV(1, 0.6875),
                 UV(0.546875, 0.84375)),
+            "prop_palm_med_01c": LodCandidate("prop_palm_med_01c", 0.515625, 0.23958333333, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_palm_med_01d": LodCandidate("prop_palm_med_01d", 0.5, 0.14423076923, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
+            "prop_palm_sm_01a": LodCandidate("prop_palm_sm_01a", 0.46875, None, UV(0, 0), UV(1, 1)),
+            "prop_palm_sm_01d": LodCandidate("prop_palm_sm_01d", 0.515625, None, UV(0, 0), UV(1, 1)),
             "prop_palm_sm_01e": LodCandidate("prop_palm_sm_01e", 0.515625, None, UV(0, 0), UV(1, 1)),
+            "prop_palm_sm_01f": LodCandidate("prop_palm_sm_01f", 0.515625, None, UV(0, 0), UV(1, 1)),
+            "prop_veg_crop_tr_01": LodCandidate("prop_veg_crop_tr_01", 0.484375, None, UV(0, 0), UV(1, 1)),
+            "prop_veg_crop_tr_02": LodCandidate("prop_veg_crop_tr_02", 0.5, None, UV(0, 0), UV(1, 1))
         }
         # add other Props that should use the same UV mapping
-        lodCandidates["prop_palm_sm_01d"] = lodCandidates["prop_palm_sm_01f"] = \
-            lodCandidates["prop_palm_sm_01e"]
-        lodCandidates["prop_palm_med_01a"] = lodCandidates["prop_palm_med_01c"] = \
-            lodCandidates["prop_palm_med_01b"]
-        lodCandidates["prop_fan_palm_01a"] = lodCandidates["prop_palm_fan_02_a"] = \
-            lodCandidates["prop_palm_fan_02_b"]
-        lodCandidates["prop_palm_sm_01a"] = lodCandidates["prop_palm_fan_04_a"] = lodCandidates["prop_palm_fan_04_b"] = \
-            lodCandidates["prop_palm_fan_04_b"]
-        lodCandidates["prop_palm_fan_03_a"] = lodCandidates["prop_palm_fan_03_b"] = lodCandidates["prop_palm_fan_03_c_graff"] = lodCandidates["prop_palm_fan_04_c"] = \
+        lodCandidates["prop_palm_med_01a"] = lodCandidates["prop_palm_med_01b"]
+        lodCandidates["prop_fan_palm_01a"] = lodCandidates["prop_palm_fan_02_a"] = lodCandidates["prop_palm_fan_02_b"]
+        lodCandidates["prop_palm_fan_04_a"] = lodCandidates["prop_palm_fan_04_b"]
+        lodCandidates["prop_palm_fan_03_a"] = lodCandidates["prop_palm_fan_03_b"] = lodCandidates["prop_palm_fan_03_c_graff"] = \
             lodCandidates["prop_palm_fan_03_c"]
-        lodCandidates["prop_palm_med_01d"] = lodCandidates["prop_palm_fan_03_d_graff"] = lodCandidates["prop_palm_fan_04_d"] = \
-            lodCandidates["prop_palm_fan_03_d"]
-        lodCandidates["prop_palm_huge_01b"] = \
-            lodCandidates["prop_palm_huge_01a"]
+        lodCandidates["prop_palm_fan_03_d_graff"] = lodCandidates["prop_palm_fan_03_d"]
 
         self.lodCandidates = lodCandidates
 
@@ -172,7 +174,7 @@ class LodMapCreator:
             "prop_tree_cypress_01": UVMap("trees", UV(4 / 16, 6 / 16), UV(6 / 16, 11 / 16)),
             "prop_tree_eng_oak_01": UVMap("trees", UV(10 / 16, 0 / 16), UV(13 / 16, 3 / 16), UV(9 / 16, 0 / 16), UV(12 / 16, 3 / 16)),
             "prop_tree_eucalip_01": UVMap("trees", UV(0 / 16, 8 / 16), UV(3 / 16, 12 / 16), UV(9 / 16, 3 / 16), UV(12 / 16, 6 / 16)),
-            "prop_tree_fallen_pine_01": UVMap("trees", UV(12 / 16, 3 / 16), UV(14 / 16, 8 / 16), UV(0 / 16, 14 / 16), UV(3 / 16, 16 / 16)),
+            "prop_tree_fallen_pine_01": UVMap("trees", UV(12 / 16, 3 / 16), UV(14 / 16, 8 / 16)),
             "prop_tree_jacada_01": UVMap("trees", UV(0 / 16, 0 / 16), UV(3 / 16, 3 / 16), UV(0 / 16, 0 / 16), UV(3 / 16, 3 / 16)),
             "prop_tree_jacada_02": UVMap("trees", UV(3 / 16, 0 / 16), UV(6 / 16, 3 / 16), UV(3 / 16, 0 / 16), UV(6 / 16, 3 / 16)),
             "prop_tree_maple_02": UVMap("trees", UV(0 / 16, 3 / 16), UV(2 / 16, 5 / 16)),
@@ -195,16 +197,15 @@ class LodMapCreator:
             "prop_palm_fan_02_b": UVMap("palms", UV(0 / 4, 2 / 4), UV(1 / 4, 4 / 4), UV(0, 0), UV(0.5, 0.5), 0.23692810457),
             "prop_palm_fan_03_c": UVMap("palms", UV(1 / 4, 0 / 4), UV(2 / 4, 4 / 4), UV(0.5, 0), UV(1, 0.5), 0.14356435643),
             "prop_palm_fan_03_d": UVMap("palms", UV(2 / 4, 0 / 4), UV(3 / 4, 4 / 4), UV(0, 0.5), UV(0.5, 1), 0.13046937151),
-            "prop_palm_huge_01a": UVMap("palms", UV(3 / 4, 0 / 4), UV(4 / 4, 4 / 4), UV(0.5, 0.5), UV(1, 1), 0.09644268774),
+            "prop_palm_huge_01a": UVMap("palms", UV(3 / 4, 0 / 4), UV(4 / 4, 4 / 4), UV(0.5, 0.5), UV(1, 1), 0.09644268774)
         }
         # add other Props that should use the same UV mapping
         slodCandidates["prop_palm_sm_01d"] = slodCandidates["prop_palm_sm_01f"] = slodCandidates["prop_palm_med_01a"] = slodCandidates["prop_palm_med_01b"] = \
             slodCandidates["prop_palm_med_01c"] = slodCandidates["prop_palm_sm_01e"]
-        slodCandidates["prop_fan_palm_01a"] = slodCandidates["prop_palm_fan_02_a"] = slodCandidates["prop_palm_sm_01a"] = slodCandidates["prop_palm_fan_04_a"] = \
-            slodCandidates["prop_palm_fan_04_b"] = slodCandidates["prop_palm_fan_02_b"]
-        slodCandidates["prop_palm_fan_03_a"] = slodCandidates["prop_palm_fan_03_b"] = slodCandidates["prop_palm_fan_03_c_graff"] = slodCandidates[
-            "prop_palm_fan_04_c"] = \
-            slodCandidates["prop_palm_fan_03_c"]
+        slodCandidates["prop_fan_palm_01a"] = slodCandidates["prop_palm_fan_02_a"] = slodCandidates["prop_palm_sm_01a"] = \
+            slodCandidates["prop_palm_fan_04_a"] = slodCandidates["prop_palm_fan_04_b"] = slodCandidates["prop_palm_fan_02_b"]
+        slodCandidates["prop_palm_fan_03_a"] = slodCandidates["prop_palm_fan_03_b"] = slodCandidates["prop_palm_fan_03_c_graff"] = \
+            slodCandidates["prop_palm_fan_04_c"] = slodCandidates["prop_palm_fan_03_c"]
         slodCandidates["prop_palm_med_01d"] = slodCandidates["prop_palm_fan_03_d_graff"] = slodCandidates["prop_palm_fan_04_d"] = \
             slodCandidates["prop_palm_fan_03_d"]
         slodCandidates["prop_palm_huge_01b"] = \
