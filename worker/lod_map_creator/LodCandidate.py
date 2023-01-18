@@ -6,9 +6,9 @@ from common.texture.UV import UV
 
 class LodCandidate:
     # needed to avoid getting wrong pixels from texture (e.g. using 0 would result in getting right-most resp. down-most pixel)
-    TEXTURE_UV_EPS = 1 / 256
+    TEXTURE_UV_EPS = 0.00343323
 
-    name: str
+    diffuseSampler: str
     texture_origin: float
     planeZ: float
     uvFrontMin: UV
@@ -20,11 +20,10 @@ class LodCandidate:
     uvSideMax: Optional[UV]
     _textureOriginSide: Optional[float]
 
-    def __init__(self, name: str, texture_origin: float = 0.5, planeZ: Optional[float] = 0.5,
+    def __init__(self, texture_origin: float = 0.5, planeZ: Optional[float] = 0.5,
             uvFrontMin: UV = UV(0, 0), uvFrontMax: UV = UV(1, 1),
             uvTopMin: Optional[UV] = None, uvTopMax: Optional[UV] = None, uvTopCenter: Optional[UV] = None,
             uvSideMin: Optional[UV] = None, uvSideMax: Optional[UV] = None, textureOriginSide: Optional[float] = None):
-        self.name = name
         self.texture_origin = texture_origin
         self.planeZ = planeZ
         self.uvFrontMin = uvFrontMin
@@ -36,6 +35,9 @@ class LodCandidate:
         self.uvSideMax = uvSideMax
         self._textureOriginSide = textureOriginSide
 
+    def setDiffuseSampler(self, archetypeName: str):
+        self.diffuseSampler = "lod_" + archetypeName.lower()
+
     @staticmethod
     def createTextureUvWithEps(minUv: UV, maxUv: UV) -> (UV, UV):
         if minUv is None or maxUv is None:
@@ -45,12 +47,16 @@ class LodCandidate:
         maxUvEps = UV(maxUv.u, maxUv.v)
         if minUvEps.u < maxUvEps.u:
             minUvEps.u += LodCandidate.TEXTURE_UV_EPS
+            maxUvEps.u -= LodCandidate.TEXTURE_UV_EPS
         else:
+            minUvEps.u -= LodCandidate.TEXTURE_UV_EPS
             maxUvEps.u += LodCandidate.TEXTURE_UV_EPS
 
         if minUvEps.v < maxUvEps.v:
             minUvEps.v += LodCandidate.TEXTURE_UV_EPS
+            maxUvEps.v -= LodCandidate.TEXTURE_UV_EPS
         else:
+            minUvEps.v -= LodCandidate.TEXTURE_UV_EPS
             maxUvEps.v += LodCandidate.TEXTURE_UV_EPS
 
         return minUvEps, maxUvEps
@@ -82,9 +88,6 @@ class LodCandidate:
     def textureOriginSide(self) -> Optional[float]:
         return self.texture_origin if self._textureOriginSide is None else self._textureOriginSide
 
-    def texture(self) -> str:
-        return "lod_" + self.name.lower()
-
     def hasTop(self, boundingBox: Box, scale: list[float]) -> bool:
         if self.uvTopMin is None or self.uvTopMax is None:
             return False
@@ -93,6 +96,9 @@ class LodCandidate:
         return scaledBoundingBox.getDiagonalOfPlaneXY() >= 7
 
     def hasDiagonal(self, boundingBox: Box, scale: list[float]) -> bool:
+        if not self.hasDedicatedSideTexture():
+            return False
+
         scaledBoundingBox = boundingBox.getScaled(scale)
         return scaledBoundingBox.getDiagonalOfPlaneXY() >= 12 or scaledBoundingBox.getDiagonal() >= 40
 
@@ -109,12 +115,3 @@ class LodCandidate:
                 return UV(minUv.u + (maxUv.u - minUv.u) * self.texture_origin, minUv.v + (maxUv.v - minUv.v) * (1 - self.textureOriginSide()))
         else:
             return self.uvTopCenter
-
-    def getTextureDictionary(self, prefix: str) -> str:
-        if self.name.startswith("prop_bush_"):
-            dictMain = "bushes"
-        elif self.name.startswith("prop_palm_") or self.name.startswith("prop_fan_palm_"):
-            dictMain = "palms"
-        else:
-            dictMain = "trees"
-        return prefix + "_" + dictMain + "_lod"

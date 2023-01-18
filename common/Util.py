@@ -2,6 +2,7 @@ import math
 import os
 import random
 import shutil
+import struct
 from typing import Any, Callable, Optional
 
 import numpy as np
@@ -29,6 +30,10 @@ class Util:
     @staticmethod
     def vertexToStr(vertex: list[float]) -> str:
         return Util.floatToStr(vertex[0]) + " " + Util.floatToStr(vertex[1]) + " " + Util.floatToStr(vertex[2])
+
+    @staticmethod
+    def vector2DToStr(vector: list[float]) -> str:
+        return Util.floatToStr(vector[0]) + " " + Util.floatToStr(vector[1])
 
     @staticmethod
     def calculateFurthestDistance(coords: list[list[float]]) -> float:
@@ -394,3 +399,7 @@ class Util:
     @staticmethod
     def applyTransformation(vertex: list[float], rotation: list[float], scaling: list[float], translation: list[float]) -> list[float]:
         return np.add(np.multiply(Util.applyRotation(vertex, rotation), scaling), translation).tolist()
+
+    @staticmethod
+    def hashFloat(val: float) -> int:
+        return hash(struct.pack("f", val))

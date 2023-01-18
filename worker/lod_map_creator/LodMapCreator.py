@@ -1,8 +1,10 @@
 import math
+import random
 import shutil
 import os
 import re
 import numpy as np
+import transforms3d
 from numpy.linalg import norm
 from re import Match
 from typing import IO, Optional
@@ -54,88 +56,72 @@ class LodMapCreator:
     def prepareLodCandidates(self):
         lodCandidates = {
             # trees
-            "prop_tree_birch_01": LodCandidate("prop_tree_birch_01", 0.546875, 0.6640625, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1),
-                UV(0.7734375, 0.5078125)),
-            "prop_tree_birch_02": LodCandidate("prop_tree_birch_02", 0.421875, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1),
-                UV(0.765625, 0.3671875)),
-            "prop_tree_birch_03": LodCandidate("prop_tree_birch_03", 0.546875),
-            "prop_tree_birch_03b": LodCandidate("prop_tree_birch_03b", 0.5625),
-            "prop_tree_birch_04": LodCandidate("prop_tree_birch_04", 0.5625, 0.421875, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0),
-                UV(0.7734375, 0.453125)),
-            "prop_tree_maple_02": LodCandidate("prop_tree_maple_02", 0.421875),
-            "prop_tree_maple_03": LodCandidate("prop_tree_maple_03", 0.5),
-            "prop_tree_cedar_02": LodCandidate("prop_tree_cedar_02", 0.5078125, 0.46315789473, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "prop_tree_cedar_03": LodCandidate("prop_tree_cedar_03", 0.5234375, 0.51052631578, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "prop_tree_cedar_04": LodCandidate("prop_tree_cedar_04", 0.484375, 0.3947368421, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1),
-                UV(0.484375, 0.87890625)),
-            "prop_tree_cedar_s_01": LodCandidate("prop_tree_cedar_s_01", 0.484375, 0.71875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1),
-                UV(0.46875, 0.8203125)),
-            "prop_tree_cedar_s_04": LodCandidate("prop_tree_cedar_s_04", 0.5, 0.68269230769, UV(0, 0), UV(1, 0.8125), UV(0, 1), UV(1, 0.8125)),
-            "prop_tree_cedar_s_05": LodCandidate("prop_tree_cedar_s_05", 0.46875),
-            "prop_tree_cedar_s_06": LodCandidate("prop_tree_cedar_s_06", 0.5),
-            "prop_tree_cypress_01": LodCandidate("prop_tree_cypress_01", 0.5, 0.78125, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "prop_tree_eng_oak_01": LodCandidate("prop_tree_eng_oak_01", 0.5, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.75, 0.53125)),
-            "prop_tree_eucalip_01": LodCandidate("prop_tree_eucalip_01", 0.5, 0.359375, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1)),
-            "prop_tree_jacada_01": LodCandidate("prop_tree_jacada_01", 0.484375, 0.46875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "prop_tree_jacada_02": LodCandidate("prop_tree_jacada_02", 0.515625, 0.546875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "prop_tree_oak_01": LodCandidate("prop_tree_oak_01", 0.4765625, 0.4765625, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), UV(0.46875, 0.75)),
-            "prop_tree_olive_01": LodCandidate("prop_tree_olive_01", 0.5, 0.40625, UV(0, 0), UV(1, 0.5), UV(0, 1), UV(1, 0.5)),
-            "prop_tree_pine_01": LodCandidate("prop_tree_pine_01", 0.515625, 0.515625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
-                UV(0.515625, 0.79296875)),
-            "prop_tree_pine_02": LodCandidate("prop_tree_pine_02", 0.546875, 0.6875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
-                UV(0.5, 0.80078125)),
-            "prop_tree_fallen_pine_01": LodCandidate("prop_tree_fallen_pine_01", 0.609375, None, UV(0, 0), UV(1, 1)),
-            "prop_s_pine_dead_01": LodCandidate("prop_s_pine_dead_01", 0.40625, 0.4875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
-                UV(0.53125, 0.8515625)),
-            "prop_w_r_cedar_01": LodCandidate("prop_w_r_cedar_01", 0.515625, 0.8, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "prop_w_r_cedar_dead": LodCandidate("prop_w_r_cedar_dead", 0.59375, 0.425, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
-                UV(0.53125, 0.78125)),
-            "test_tree_cedar_trunk_001": LodCandidate("test_tree_cedar_trunk_001", 0.53125, 0.5769231, UV(0, 0), UV(1, 0.8125), UV(0, 1),
-                UV(1, 0.8125)),
-            "test_tree_forest_trunk_01": LodCandidate("test_tree_forest_trunk_01", 0.515625, 0.3894231, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125),
-                UV(1, 1)),
-            "test_tree_forest_trunk_04": LodCandidate("test_tree_forest_trunk_04", 0.453125),
+            "prop_tree_birch_01": LodCandidate(0.546875, 0.6640625, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.7734375, 0.5078125)),
+            "prop_tree_birch_02": LodCandidate(0.421875, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.765625, 0.3671875)),
+            "prop_tree_birch_03": LodCandidate(0.546875),
+            "prop_tree_birch_03b": LodCandidate(0.5625),
+            "prop_tree_birch_04": LodCandidate(0.5625, 0.421875, UV(0, 0), UV(0.5, 1), UV(0.5, 1), UV(1, 0), UV(0.7734375, 0.453125)),
+            "prop_tree_maple_02": LodCandidate(0.421875),
+            "prop_tree_maple_03": LodCandidate(0.5),
+            "prop_tree_cedar_02": LodCandidate(0.5078125, 0.46315789473, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_tree_cedar_03": LodCandidate(0.5234375, 0.51052631578, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_tree_cedar_04": LodCandidate(0.484375, 0.3947368421, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1), UV(0.484375, 0.87890625)),
+            "prop_tree_cedar_s_01": LodCandidate(0.484375, 0.71875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1), UV(0.46875, 0.8203125)),
+            "prop_tree_cedar_s_04": LodCandidate(0.5, 0.68269230769, UV(0, 0), UV(1, 0.8125), UV(0, 1), UV(1, 0.8125)),
+            "prop_tree_cedar_s_05": LodCandidate(0.46875),
+            "prop_tree_cedar_s_06": LodCandidate(0.5),
+            "prop_tree_cypress_01": LodCandidate(0.5, 0.78125, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_tree_eng_oak_01": LodCandidate(0.5, 0.5703125, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.75, 0.53125)),
+            "prop_tree_eucalip_01": LodCandidate(0.5, 0.359375, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1)),
+            "prop_tree_jacada_01": LodCandidate(0.484375, 0.46875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_jacada_02": LodCandidate(0.515625, 0.546875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_oak_01": LodCandidate(0.4765625, 0.4765625, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1), UV(0.46875, 0.75)),
+            "prop_tree_olive_01": LodCandidate(0.5, 0.40625, UV(0, 0), UV(1, 0.5), UV(0, 1), UV(1, 0.5)),
+            "prop_tree_pine_01": LodCandidate(0.515625, 0.515625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625), UV(0.515625, 0.79296875)),
+            "prop_tree_pine_02": LodCandidate(0.546875, 0.6875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625), UV(0.5, 0.80078125)),
+            "prop_tree_fallen_pine_01": LodCandidate(0.609375, None, UV(0, 0), UV(1, 1)),
+            "prop_s_pine_dead_01": LodCandidate(0.40625, 0.4875, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625), UV(0.53125, 0.8515625)),
+            "prop_w_r_cedar_01": LodCandidate(0.515625, 0.8, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_w_r_cedar_dead": LodCandidate(0.59375, 0.425, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625), UV(0.53125, 0.78125)),
+            "test_tree_cedar_trunk_001": LodCandidate(0.5234375, 0.5769231, UV(0, 0), UV(1, 0.8125), UV(0, 1), UV(1, 0.8125)),
+            "test_tree_forest_trunk_01": LodCandidate(0.515625, 0.3894231, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
+            "test_tree_forest_trunk_04": LodCandidate(0.453125),
             # trees2
-            "prop_tree_lficus_02": LodCandidate("prop_tree_lficus_02", 0.4453125, 0.55, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "prop_tree_lficus_03": LodCandidate("prop_tree_lficus_03", 0.46875, 0.359375, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "prop_tree_lficus_05": LodCandidate("prop_tree_lficus_05", 0.46875, 0.3125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "prop_tree_lficus_06": LodCandidate("prop_tree_lficus_06", 0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "prop_tree_mquite_01": LodCandidate("prop_tree_mquite_01", 0.46875),
-            "prop_rio_del_01": LodCandidate("prop_rio_del_01", 0.53125),
-            "prop_rus_olive": LodCandidate("prop_rus_olive", 0.484375, 0.53125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
-            "prop_rus_olive_wint": LodCandidate("prop_rus_olive_wint", 0.556),
+            "prop_tree_lficus_02": LodCandidate(0.4453125, 0.55, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_lficus_03": LodCandidate(0.46875, 0.359375, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_lficus_05": LodCandidate(0.46875, 0.3125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_lficus_06": LodCandidate(0.453125, 0.43, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_tree_mquite_01": LodCandidate(0.46875),
+            "prop_rio_del_01": LodCandidate(0.53125),
+            "prop_rus_olive": LodCandidate(0.484375, 0.53125, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
+            "prop_rus_olive_wint": LodCandidate(0.556),
             # bushes
-            "prop_bush_lrg_04b": LodCandidate("prop_bush_lrg_04b", 0.375, 0.5, UV(0, 0), UV(0.59375, 0.5), UV(0, 0.5), UV(1, 1), None,
-                UV(0.59375, 0), UV(1, 0.5), 0.4423076923),
-            "prop_bush_lrg_04c": LodCandidate("prop_bush_lrg_04c", 0.38157894736, 0.46875, UV(0, 0), UV(0.59375, 0.5), UV(0, 0.5), UV(1, 1), None,
-                UV(0.59375, 0), UV(1, 0.5), 0.4423076923),
-            "prop_bush_lrg_04d": LodCandidate("prop_bush_lrg_04d", 0.38970588235, 0.5, UV(0, 0), UV(0.53125, 0.5), UV(0, 0.5), UV(0.75, 1), None,
-                UV(0.53125, 0), UV(1, 0.5), 0.5),
+            "prop_bush_lrg_04b": LodCandidate(0.375, 0.5, UV(0, 0), UV(0.59375, 0.5), UV(0, 0.5), UV(1, 1), None, UV(0.59375, 0), UV(1, 0.5), 0.4423076923),
+            "prop_bush_lrg_04c": LodCandidate(0.38157894736, 0.46875, UV(0, 0), UV(0.59375, 0.5), UV(0, 0.5), UV(1, 1), None, UV(0.59375, 0), UV(1, 0.5), 0.4423076923),
+            "prop_bush_lrg_04d": LodCandidate(0.38970588235, 0.5, UV(0, 0), UV(0.53125, 0.5), UV(0, 0.5), UV(0.75, 1), None, UV(0.53125, 0), UV(1, 0.5), 0.5),
             # palms
-            "prop_palm_fan_02_b": LodCandidate("prop_palm_fan_02_b", 0.515625, 0.25625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625),
-                UV(0.484375, 0.8125)),
-            "prop_palm_fan_03_c": LodCandidate("prop_palm_fan_03_c", 0.5, 0.166666667, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "prop_palm_fan_03_d": LodCandidate("prop_palm_fan_03_d", 0.484375, 0.15865384615, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1),
-                UV(0.484375, 0.90625)),
-            "prop_palm_fan_04_b": LodCandidate("prop_palm_fan_04_b", 0.484375, 0.321875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1),
-                UV(0.46875, 0.80859375)),
-            "prop_palm_fan_04_c": LodCandidate("prop_palm_fan_04_c", 0.5, 0.1875, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "prop_palm_fan_04_d": LodCandidate("prop_palm_fan_04_d", 0.421875, 0.15384615384, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
-            "prop_palm_huge_01a": LodCandidate("prop_palm_huge_01a", 0.46875, 0.11574074074, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375),
-                UV(0.484375, 0.921875)),
-            "prop_palm_huge_01b": LodCandidate("prop_palm_huge_01b", 0.53125, 0.08796296296, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375),
-                UV(0.484375, 0.921875)),
-            "prop_palm_med_01b": LodCandidate("prop_palm_med_01b", 0.515625, 0.24431818181, UV(0, 0), UV(1, 0.6875), UV(0, 1), UV(1, 0.6875),
-                UV(0.546875, 0.84375)),
-            "prop_palm_med_01c": LodCandidate("prop_palm_med_01c", 0.515625, 0.23958333333, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
-            "prop_palm_med_01d": LodCandidate("prop_palm_med_01d", 0.5, 0.14423076923, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
-            "prop_palm_sm_01a": LodCandidate("prop_palm_sm_01a", 0.46875, None, UV(0, 0), UV(1, 1)),
-            "prop_palm_sm_01d": LodCandidate("prop_palm_sm_01d", 0.515625, None, UV(0, 0), UV(1, 1)),
-            "prop_palm_sm_01e": LodCandidate("prop_palm_sm_01e", 0.515625, None, UV(0, 0), UV(1, 1)),
-            "prop_palm_sm_01f": LodCandidate("prop_palm_sm_01f", 0.515625, None, UV(0, 0), UV(1, 1)),
-            "prop_veg_crop_tr_01": LodCandidate("prop_veg_crop_tr_01", 0.484375, None, UV(0, 0), UV(1, 1)),
-            "prop_veg_crop_tr_02": LodCandidate("prop_veg_crop_tr_02", 0.5, None, UV(0, 0), UV(1, 1))
+            "prop_palm_fan_02_b": LodCandidate(0.515625, 0.25625, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625), UV(0.484375, 0.8125)),
+            "prop_palm_fan_03_c": LodCandidate(0.5, 0.166666667, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_palm_fan_03_d": LodCandidate(0.484375, 0.15865384615, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1), UV(0.484375, 0.90625)),
+            "prop_palm_fan_04_b": LodCandidate(0.484375, 0.321875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1), UV(0.46875, 0.80859375)),
+            "prop_palm_fan_04_c": LodCandidate(0.5, 0.1875, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_palm_fan_04_d": LodCandidate(0.421875, 0.15384615384, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
+            "prop_palm_huge_01a": LodCandidate(0.46875, 0.11574074074, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875)),
+            "prop_palm_huge_01b": LodCandidate(0.53125, 0.08796296296, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875)),
+            "prop_palm_med_01b": LodCandidate(0.515625, 0.24431818181, UV(0, 0), UV(1, 0.6875), UV(0, 1), UV(1, 0.6875), UV(0.546875, 0.84375)),
+            "prop_palm_med_01c": LodCandidate(0.515625, 0.23958333333, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
+            "prop_palm_med_01d": LodCandidate(0.5, 0.14423076923, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
+            "prop_palm_sm_01a": LodCandidate(0.46875, None, UV(0, 0), UV(1, 1)),
+            "prop_palm_sm_01d": LodCandidate(0.515625, None, UV(0, 0), UV(1, 1)),
+            "prop_palm_sm_01e": LodCandidate(0.515625, None, UV(0, 0), UV(1, 1)),
+            "prop_palm_sm_01f": LodCandidate(0.515625, None, UV(0, 0), UV(1, 1)),
+            "prop_veg_crop_tr_01": LodCandidate(0.484375, None, UV(0, 0), UV(1, 1)),
+            "prop_veg_crop_tr_02": LodCandidate(0.5, None, UV(0, 0), UV(1, 1))
         }
+        # for each lodCandidate set its diffuseSampler as lod_<archetype name>
+        for name in lodCandidates:
+            lodCandidates[name].setDiffuseSampler(name)
+
         # add other Props that should use the same UV mapping
         lodCandidates["prop_palm_med_01a"] = lodCandidates["prop_palm_med_01b"]
         lodCandidates["prop_fan_palm_01a"] = lodCandidates["prop_palm_fan_02_a"] = lodCandidates["prop_palm_fan_02_b"]
@@ -147,6 +133,10 @@ class LodMapCreator:
         self.lodCandidates = lodCandidates
 
     def prepareSlodCandidates(self):
+        # ensure that lodCandidates are prepared
+        if self.lodCandidates is None:
+            self.prepareLodCandidates()
+
         slodCandidates = {
             # trees2
             "prop_tree_lficus_02": UVMap("trees2", UV(0 / 2, 0 / 4), UV(1 / 2, 1 / 4), UV(0 / 2, 0 / 4), UV(1 / 2, 1 / 4)),
@@ -199,6 +189,11 @@ class LodMapCreator:
             "prop_palm_fan_03_d": UVMap("palms", UV(2 / 4, 0 / 4), UV(3 / 4, 4 / 4), UV(0, 0.5), UV(0.5, 1), 0.13046937151),
             "prop_palm_huge_01a": UVMap("palms", UV(3 / 4, 0 / 4), UV(4 / 4, 4 / 4), UV(0.5, 0.5), UV(1, 1), 0.09644268774)
         }
+        # for each missing topZ in slodCandidates get planeZ from lodCandidates and set that value
+        for name in slodCandidates:
+            if slodCandidates[name].topZ is None:
+                slodCandidates[name].topZ = self.lodCandidates[name].planeZ
+
         # add other Props that should use the same UV mapping
         slodCandidates["prop_palm_sm_01d"] = slodCandidates["prop_palm_sm_01f"] = slodCandidates["prop_palm_med_01a"] = slodCandidates["prop_palm_med_01b"] = \
             slodCandidates["prop_palm_med_01c"] = slodCandidates["prop_palm_sm_01e"]
@@ -236,8 +231,6 @@ class LodMapCreator:
     MIN_HD_LOD_DISTANCE_FOR_SLOD1 = Util.calculateLodDistance(unitBox, unitSphere, [4] * 3, True)  # 180
     MIN_HD_LOD_DISTANCE_FOR_SLOD2 = Util.calculateLodDistance(unitBox, unitSphere, [8] * 3, True)  # 240
     MIN_HD_LOD_DISTANCE_FOR_SLOD3 = Util.calculateLodDistance(unitBox, unitSphere, [13] * 3, True)  # 290
-
-    TEXTURE_UV_EPS = 1 / 512
 
     def __init__(self, inputDir: str, outputDir: str, prefix: str):
         self.inputDir = inputDir
@@ -333,7 +326,7 @@ class LodMapCreator:
 
     def replParentIndex(self, matchobj: Match, mutableIndex: list[int], hdToLod: dict[int, int], offsetParentIndex: int) -> str:
         archetypeName = matchobj.group(2).lower()
-        if archetypeName in self.lodCandidates:
+        if (not self.USE_SLOD_AS_LOD_MODEL and archetypeName in self.lodCandidates) or (self.USE_SLOD_AS_LOD_MODEL and archetypeName in self.slodCandidates):
             index = mutableIndex[0]
             parentIndex = hdToLod[index] + offsetParentIndex
             mutableIndex[0] += 1
@@ -362,46 +355,16 @@ class LodMapCreator:
             .replace("${BBOX.MAX.Y}", Util.floatToStr(bbox.max[1])) \
             .replace("${BBOX.MAX.Z}", Util.floatToStr(bbox.max[2]))
 
-    def replTranslateVertex(self, match: Match, translation: list[float]) -> str:
-        vertex = [float(match.group(1)), float(match.group(2)), float(match.group(3))]
-        newVertex = np.add(vertex, translation).tolist()
-        return Util.vertexToStr(newVertex)
-
-    def createTextureUvWithEps(self, uvMin: Optional[UV], uvMax: Optional[UV]) -> (Optional[UV], Optional[UV]):
-        if uvMin is None or uvMax is None:
-            return uvMin, uvMax
-
-        minUvEps = UV(uvMin.u, uvMin.v)
-        maxUvEps = UV(uvMax.u, uvMax.v)
-        if minUvEps.u < maxUvEps.u:
-            minUvEps.u += LodMapCreator.TEXTURE_UV_EPS
-        else:
-            maxUvEps.u += LodMapCreator.TEXTURE_UV_EPS
-
-        if minUvEps.v < maxUvEps.v:
-            minUvEps.v += LodMapCreator.TEXTURE_UV_EPS
-        else:
-            maxUvEps.v += LodMapCreator.TEXTURE_UV_EPS
-
-        return minUvEps, maxUvEps
-
-    def createIndices(self, numRectangles: int) -> str:
-        indices = ""
+    def createIndicesForRectangles(self, numRectangles: int) -> list[int]:
+        indices = []
         for i in range(numRectangles):
-            if (i * 6) % 15 == 0:
-                if i > 0:
-                    indices += "\n"
-                indices += "				"
-            else:
-                indices += " "
-            indices += str(i * 4) + " " + str(i * 4 + 1) + " " + str(i * 4 + 2)
-
-            if (i * 6 + 3) % 15 == 0:
-                indices += "\n				"
-            else:
-                indices += " "
-            indices += str(i * 4 + 2) + " " + str(i * 4 + 3) + " " + str(i * 4)
-
+            offset = 4 * i
+            indices.append(offset)
+            indices.append(offset + 1)
+            indices.append(offset + 2)
+            indices.append(offset + 2)
+            indices.append(offset + 3)
+            indices.append(offset)
         return indices
 
     def createAabb(self, bbox: Box) -> str:
@@ -421,14 +384,13 @@ class LodMapCreator:
 
     @staticmethod
     def findClosestRatio(ratioInput: float, ratioCandidate1: float, ratioCandidate2: float) -> (float, int):
-        if math.fabs(ratioInput - ratioCandidate2) < math.fabs(ratioInput - ratioCandidate1):
-            return ratioCandidate2, 1
-        else:
-            return ratioCandidate1, 0
+        options = [ratioCandidate1, ratioCandidate2]
+        argmin = np.abs(np.asarray(options) - ratioInput).argmin()
+        return options[argmin], argmin
 
     @staticmethod
     def createLodModelVertexNormalTextureUVStr(vertex: list[float], normal: list[float], uv: list[float]):
-        return "				" + LodMapCreator.createVectorStr(vertex) + " / " + LodMapCreator.createVectorStr(normal, True) + " / 255 29 0 255 / " + Util.floatToStr(uv[0]) + " " + Util.floatToStr(uv[1]) + "\n"
+        return "				" + LodMapCreator.createVectorStr(vertex) + " / " + LodMapCreator.createVectorStr(normal, True) + " / 255 29 0 255 / " + Util.vector2DToStr(uv) + "\n"
 
     def createIndicesStr(self, indices: list[int]) -> str:
         indicesStr = ""
@@ -500,16 +462,16 @@ class LodMapCreator:
         vectorLeftBottom = self.calculateVectorOnEllipseAtDiagonal(distanceLeftToIntersection, distanceBottomToIntersection, 2)
         lengthVectorRightTop = norm(vectorRightTop)
         lengthVectorLeftBottom = norm(vectorLeftBottom)
-        ratio = lengthVectorLeftBottom / (lengthVectorLeftBottom + lengthVectorRightTop)
+        ratio = lengthVectorRightTop / (lengthVectorLeftBottom + lengthVectorRightTop)
         desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
         uvDiagonal1Min = uvFrontMin if option == 0 else uvSideMin
         uvDiagonal1Max = uvFrontMax if option == 0 else uvSideMax
         if ratio > desiredRatio:
-            adapt = desiredRatio * (lengthVectorLeftBottom + lengthVectorRightTop) / lengthVectorLeftBottom
-            vectorLeftBottom = [vectorLeftBottom[0] * adapt, vectorLeftBottom[1] * adapt]
-        else:
-            adapt = (1 - desiredRatio) * (lengthVectorLeftBottom + lengthVectorRightTop) / lengthVectorRightTop
+            adapt = desiredRatio / (1 - desiredRatio) * lengthVectorLeftBottom / lengthVectorRightTop
             vectorRightTop = [vectorRightTop[0] * adapt, vectorRightTop[1] * adapt]
+        else:
+            adapt = (1 - desiredRatio) / desiredRatio * lengthVectorRightTop / lengthVectorLeftBottom
+            vectorLeftBottom = [vectorLeftBottom[0] * adapt, vectorLeftBottom[1] * adapt]
 
         vectorLeftTop = self.calculateVectorOnEllipseAtDiagonal(distanceLeftToIntersection, distanceTopToIntersection, 1)
         vectorRightBottom = self.calculateVectorOnEllipseAtDiagonal(distanceRightToIntersection, distanceBottomToIntersection, 3)
@@ -520,24 +482,24 @@ class LodMapCreator:
         uvDiagonal2Min = uvFrontMin if option == 0 else uvSideMin
         uvDiagonal2Max = uvFrontMax if option == 0 else uvSideMax
         if ratio > desiredRatio:
-            adapt = desiredRatio * (lengthVectorLeftTop + lengthVectorRightBottom) / lengthVectorRightBottom
+            adapt = desiredRatio / (1 - desiredRatio) * lengthVectorLeftTop / lengthVectorRightBottom
             vectorRightBottom = [vectorRightBottom[0] * adapt, vectorRightBottom[1] * adapt]
         else:
-            adapt = (1 - desiredRatio) * (lengthVectorLeftTop + lengthVectorRightBottom) / lengthVectorLeftTop
+            adapt = (1 - desiredRatio) / desiredRatio * lengthVectorRightBottom / lengthVectorLeftTop
             vectorLeftTop = [vectorLeftTop[0] * adapt, vectorLeftTop[1] * adapt]
 
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [1, 0, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [1, 0, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [1, 0, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [1, 0, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [1, 0, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [1, 0, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v])
@@ -553,8 +515,9 @@ class LodMapCreator:
         uvTopMax = lodCandidate.getUvTopMax()
         uvTopCenter = lodCandidate.getUvTopCenter()
 
-        planeTopMinZ = bbox.min[2] + (bbox.max[2] - bbox.min[2]) * (1 - lodCandidate.planeZ)
-        planeTopMaxZ = min(bbox.max[2] - min(sizes) * 0.1, planeTopMinZ + min(sizes[0], sizes[1]) / 4)
+        planeTopMinZ = bbox.min[2] + sizes[2] * (1 - lodCandidate.planeZ)
+        # planeTopMaxZ = min(bbox.max[2] - min(sizes) * 0.1, planeTopMinZ + min(sizes[0], sizes[1]) / 4)
+        planeTopMaxZ = max(bbox.min[2] + min(sizes) * 0.2, planeTopMinZ - 0.15 * min(sizes[0], sizes[1]))
 
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], planeIntersection[1], planeTopMaxZ], [0, 0, 1], [uvTopCenter.u, uvTopCenter.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], bbox.min[1], planeTopMinZ], [-1, -1, 0.1], [uvTopMin.u, uvTopMax.v])
@@ -575,20 +538,49 @@ class LodMapCreator:
             result += LodMapCreator.createLodModelVertexNormalTextureUVStr(translatedVertex, normals[i], textureUVs[i])
         return result
 
+    @staticmethod
+    def convertVerticesTextureUVsAsStrForSlod(vertices: list[list[float]], sizes: list[list[float]], textureUVs: list[list[UV]], translation: list[float]) -> str:
+        result = ""
+        for i in range(len(vertices)):
+            translatedVertex = np.add(vertices[i], translation).tolist()
+
+            uvMin, uvMax = LodCandidate.createTextureUvWithEps(textureUVs[i][0], textureUVs[i][1])
+
+            # for a bit more variety randomly flip/mirror the texture
+            # set a seed here to get the same result for multiple runs and different SLOD levels (therefore do not use translatedVertex)
+            seed = Util.hashFloat(vertices[i][0]) ^ Util.hashFloat(vertices[i][1])
+            random.seed(a=seed)
+            if bool(random.getrandbits(1)):
+                temp = uvMin.u
+                uvMin.u = uvMax.u
+                uvMax.u = temp
+
+            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [-1, -1, 0], sizes[i], [0, 1], [uvMin.u, uvMax.v])
+            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [1, -1, 0], sizes[i], [1, 1], [uvMax.u, uvMax.v])
+            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [1, -1, 1], sizes[i], [1, 0], [uvMax.u, uvMin.v])
+            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [-1, -1, 1], sizes[i], [0, 0], [uvMin.u, uvMin.v])
+
+        return result
+
+    @staticmethod
+    def createSlodModelVertexNormalTextureUVStr(center: list[float], normal: list[float], size: list[float], unnamed: list[float], uv: list[float]):
+        colorsFront = "255 29 0 255 / 0 255 0 0"
+        return "				" + LodMapCreator.createVectorStr(center) + " / " + LodMapCreator.createVectorStr(normal, True) + " / " + colorsFront + " / " + Util.vector2DToStr(unnamed) + " / " + Util.vector2DToStr(uv) + " / " + Util.vector2DToStr(size) + " / " + Util.vector2DToStr([1, 1]) + "\n"
+
     def createLodModel(self, lodName: str, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
-        archetypeToVertices = {}
-        archetypeToNormals = {}
-        archetypeToTextureUVs = {}
-        archetypeToIndices = {}
+        diffuseSamplerToVertices = {}
+        diffuseSamplerToNormals = {}
+        diffuseSamplerToTextureUVs = {}
+        diffuseSamplerToIndices = {}
 
         for entity in entities:
             lodCandidate = self.lodCandidates[entity.archetypeName]
-            name = lodCandidate.name
-            if name not in archetypeToVertices:
-                archetypeToVertices[name] = []
-                archetypeToNormals[name] = []
-                archetypeToTextureUVs[name] = []
-                archetypeToIndices[name] = []
+            diffuseSampler = lodCandidate.diffuseSampler
+            if diffuseSampler not in diffuseSamplerToVertices:
+                diffuseSamplerToVertices[diffuseSampler] = []
+                diffuseSamplerToNormals[diffuseSampler] = []
+                diffuseSamplerToTextureUVs[diffuseSampler] = []
+                diffuseSamplerToIndices[diffuseSampler] = []
 
             bbox = self.ytypItems[entity.archetypeName].boundingBox
             sizes = bbox.getSizes()
@@ -596,25 +588,25 @@ class LodMapCreator:
             distanceBottomToIntersection = sizes[1] * lodCandidate.textureOriginSide()
             planeIntersection = [bbox.min[0] + distanceLeftToIntersection, bbox.min[1] + distanceBottomToIntersection]
 
-            LodMapCreator.appendFrontPlaneIndicesForLod(archetypeToIndices[name], len(archetypeToVertices[name]))
-            self.appendFrontPlaneVerticesForLod(archetypeToVertices[name], archetypeToNormals[name], archetypeToTextureUVs[name], entity, planeIntersection)
+            LodMapCreator.appendFrontPlaneIndicesForLod(diffuseSamplerToIndices[diffuseSampler], len(diffuseSamplerToVertices[diffuseSampler]))
+            self.appendFrontPlaneVerticesForLod(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], entity, planeIntersection)
 
             if lodCandidate.hasDiagonal(bbox, entity.scale):
-                LodMapCreator.appendFrontPlaneIndicesForLod(archetypeToIndices[name], len(archetypeToVertices[name]))
-                self.appendDiagonalPlaneVerticesForLod(archetypeToVertices[name], archetypeToNormals[name], archetypeToTextureUVs[name], entity, planeIntersection)
+                LodMapCreator.appendFrontPlaneIndicesForLod(diffuseSamplerToIndices[diffuseSampler], len(diffuseSamplerToVertices[diffuseSampler]))
+                self.appendDiagonalPlaneVerticesForLod(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], entity, planeIntersection)
 
             if lodCandidate.hasTop(bbox, entity.scale):
-                LodMapCreator.appendTopPlaneIndicesForLod(archetypeToIndices[name], len(archetypeToVertices[name]))
-                self.appendTopPlaneVerticesForLod(archetypeToVertices[name], archetypeToNormals[name], archetypeToTextureUVs[name], entity, planeIntersection)
+                LodMapCreator.appendTopPlaneIndicesForLod(diffuseSamplerToIndices[diffuseSampler], len(diffuseSamplerToVertices[diffuseSampler]))
+                self.appendTopPlaneVerticesForLod(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], entity, planeIntersection)
 
         totalBbox = Box.createReversedInfinityBox()
 
-        archetypeToBbox = {}
-        for name in archetypeToVertices:
-            archetypeToBbox[name] = Box.createBoxFromVertices(archetypeToVertices[name])
+        diffuseSamplerToBbox = {}
+        for diffuseSampler in diffuseSamplerToVertices:
+            diffuseSamplerToBbox[diffuseSampler] = Box.createBoxFromVertices(diffuseSamplerToVertices[diffuseSampler])
 
-            totalBbox.extendByPoint(archetypeToBbox[name].min)
-            totalBbox.extendByPoint(archetypeToBbox[name].max)
+            totalBbox.extendByPoint(diffuseSamplerToBbox[diffuseSampler].min)
+            totalBbox.extendByPoint(diffuseSamplerToBbox[diffuseSampler].max)
 
         center = totalBbox.getCenter()
         translation = np.multiply(center, [-1]).tolist()
@@ -626,24 +618,22 @@ class LodMapCreator:
         shaders = ""
         geometries = ""
         shaderIndex = 0
-        for archetype in archetypeToBbox:
-            lodCandidate = self.lodCandidates[archetype]
+        for diffuseSampler in diffuseSamplerToVertices:
+            indices = diffuseSamplerToIndices[diffuseSampler]
 
-            indices = archetypeToIndices[archetype]
+            diffuseSamplerToBbox[diffuseSampler] = diffuseSamplerToBbox[diffuseSampler].getTranslated(translation)
+            verticesNormalsTextureUVsStr = LodMapCreator.convertVerticesNormalsTextureUVsAsStr(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], translation)
 
-            archetypeToBbox[archetype] = archetypeToBbox[archetype].getTranslated(translation)
-            verticesNormalsTextureUVsStr = LodMapCreator.convertVerticesNormalsTextureUVsAsStr(archetypeToVertices[archetype], archetypeToNormals[archetype], archetypeToTextureUVs[archetype], translation)
+            shaders += self.contentTemplateOdrShaderTreeLod.replace("${DIFFUSE_SAMPLER}", diffuseSampler)
 
-            shaders += self.contentTemplateOdrShaderTreeLod.replace("${DIFFUSE_SAMPLER}", lodCandidate.texture())
-
-            bounds += self.createAabb(archetypeToBbox[archetype])
+            bounds += self.createAabb(diffuseSamplerToBbox[diffuseSampler])
 
             geometries += self.contentTemplateMeshGeometry \
                 .replace("${SHADER_INDEX}", str(shaderIndex)) \
                 .replace("${VERTEX_DECLARATION}", "N209731BE") \
                 .replace("${INDICES.NUM}", str(len(indices))) \
                 .replace("${INDICES}", self.createIndicesStr(indices)) \
-                .replace("${VERTICES.NUM}", str(len(archetypeToVertices[archetype]))) \
+                .replace("${VERTICES.NUM}", str(len(diffuseSamplerToVertices[diffuseSampler]))) \
                 .replace("${VERTICES}\n", verticesNormalsTextureUVsStr)
             shaderIndex += 1
 
@@ -708,15 +698,54 @@ class LodMapCreator:
         file.write("}\n")
         file.close()
 
-    def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
-        name = nameWithoutSlodLevel + str(slodLevel)
+    def appendSlodTop(self, verticesTop: list[list[float]], normalsTop: list[list[float]], textureUVsTop: list[list[float]], size: list[float], center: list[float], rotation: list[float], uvMap: UVMap):
+        # in terms of absolute z-coordinate this is sizeZ * (1 - topZ) + transformedBboxEntityMin[2]
+        # which yields relative (to centerTransformed) z-coordinate sizeZ * (1 - topZ) - sizeZ / 2 <=>  sizeZ * ((1 - topZ) - 1 / 2)
+        planeZ = size[1] * (0.5 - uvMap.topZ)
 
-        colors = " / 255 29 0 255 / "
-        normalAndColorsFront = " / 0.00000000 -0.98058068 0.19611614" + colors + "0 255 0 0 / "
+        vertices = [
+            [-size[0] / 2, -size[0] / 2, planeZ],
+            [size[0] / 2, -size[0] / 2, planeZ],
+            [size[0] / 2, size[0] / 2, planeZ],
+            [-size[0] / 2, size[0] / 2, planeZ]
+        ]
+
+        normals = [
+            [-1, -1, 0.1],
+            [1, -1, 0.1],
+            [1, 1, 0.1],
+            [-1, 1, 0.1]
+        ]
+
+        rotZ, unused, unused = transforms3d.euler.quat2euler(rotation, axes='rzyx')
+        onlyZRotationQuaternion = transforms3d.euler.euler2quat(rotZ, 0, 0, axes='rzyx')
+        for i in range(4):
+            rotatedVertex = Util.applyRotation(vertices[i], onlyZRotationQuaternion)
+            translatedVertex = np.add(rotatedVertex, center).tolist()
+            rotatedNormal = Util.applyRotation(normals[i], onlyZRotationQuaternion)
+
+            verticesTop.append(translatedVertex)
+            normalsTop.append(rotatedNormal)
+
+        uvTopMin, uvTopMax = LodCandidate.createTextureUvWithEps(uvMap.topMin, uvMap.topMax)
+        textureUVsTop += [
+            [uvTopMin.u, uvTopMax.v],
+            [uvTopMax.u, uvTopMax.v],
+            [uvTopMax.u, uvTopMin.v],
+            [uvTopMin.u, uvTopMin.v]
+        ]
+
+    def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
+        name = nameWithoutSlodLevel
+        if slodLevel > 0:
+            name += str(slodLevel)
+
         verticesFront = {}
+        sizesFront = {}
+        textureUVsFront = {}
         verticesTop = {}
-        numFrontPlanes = {}
-        numTopPlanes = {}
+        normalsTop = {}
+        textureUVsTop = {}
         bbox = {}
         for entity in entities:
             uvMap = self.slodCandidates[entity.archetypeName]
@@ -724,81 +753,42 @@ class LodMapCreator:
             diffuseSampler = uvMap.getDiffuseSampler()
 
             if diffuseSampler not in verticesFront:
-                verticesFront[diffuseSampler] = ""
-                verticesTop[diffuseSampler] = ""
-                numFrontPlanes[diffuseSampler] = 0
-                numTopPlanes[diffuseSampler] = 0
+                verticesFront[diffuseSampler] = []
+                sizesFront[diffuseSampler] = []
+                textureUVsFront[diffuseSampler] = []
+                verticesTop[diffuseSampler] = []
+                normalsTop[diffuseSampler] = []
+                textureUVsTop[diffuseSampler] = []
                 bbox[diffuseSampler] = Box.createReversedInfinityBox()
 
             bboxEntity = self.ytypItems[entity.archetypeName].boundingBox
 
-            uvFrontMin, uvFrontMax = self.createTextureUvWithEps(uvMap.frontMin, uvMap.frontMax)
-            uvTopMin, uvTopMax = self.createTextureUvWithEps(uvMap.topMin, uvMap.topMax)
-            textureMinStr = [Util.floatToStr(uvFrontMin.u), Util.floatToStr(uvFrontMin.v)]
-            textureMaxStr = [Util.floatToStr(uvFrontMax.u), Util.floatToStr(uvFrontMax.v)]
-
             size = bboxEntity.getScaled(entity.scale).getSizes()
             sizeXY = (size[0] + size[1]) / 2
             sizeZ = size[2]
-            sizeXYStr = Util.floatToStr(sizeXY)
-            sizeZStr = Util.floatToStr(sizeZ)
 
-            center = bboxEntity.getCenter()
-            centerTransformed = entity.applyTransformationTo(center)
+            centerTransformed = entity.applyTransformationTo(bboxEntity.getCenter())
 
             transformedBboxEntityMin = np.subtract(centerTransformed, [sizeXY / 2, sizeXY / 2, sizeZ / 2]).tolist()
             transformedBboxEntityMax = np.add(centerTransformed, [sizeXY / 2, sizeXY / 2, sizeZ / 2]).tolist()
 
-            centerStr = [Util.floatToStr(centerTransformed[0]), Util.floatToStr(centerTransformed[1]), Util.floatToStr(centerTransformed[2])]
-
             bbox[diffuseSampler].extendByPoint(transformedBboxEntityMin)
             bbox[diffuseSampler].extendByPoint(transformedBboxEntityMax)
 
-            numFrontPlanes[diffuseSampler] += 1
+            size2D = [sizeXY, sizeZ]
+            sizesFront[diffuseSampler].append(size2D)
+            verticesFront[diffuseSampler].append(centerTransformed)
+            textureUVsFront[diffuseSampler].append([uvMap.frontMin, uvMap.frontMax])
 
-            if verticesFront[diffuseSampler] != "":
-                verticesFront[diffuseSampler] += "\n"
-            verticesFront[diffuseSampler] += "				" + centerStr[0] + " " + centerStr[1] + " " + centerStr[
-                2] + normalAndColorsFront + "0.00000000 1.00000000 / " + \
-                                             textureMinStr[0] + " " + textureMaxStr[1] + " / " + sizeXYStr + " " + sizeZStr + " / 1.00000000 1.00000000"
-            verticesFront[diffuseSampler] += "\n				" + centerStr[0] + " " + centerStr[1] + " " + centerStr[
-                2] + normalAndColorsFront + "1.00000000 1.00000000 / " + \
-                                             textureMaxStr[0] + " " + textureMaxStr[1] + " / " + sizeXYStr + " " + sizeZStr + " / 1.00000000 1.00000000"
-            verticesFront[diffuseSampler] += "\n				" + centerStr[0] + " " + centerStr[1] + " " + centerStr[
-                2] + normalAndColorsFront + "1.00000000 0.00000000 / " + \
-                                             textureMaxStr[0] + " " + textureMinStr[1] + " / " + sizeXYStr + " " + sizeZStr + " / 1.00000000 1.00000000"
-            verticesFront[diffuseSampler] += "\n				" + centerStr[0] + " " + centerStr[1] + " " + centerStr[
-                2] + normalAndColorsFront + "0.00000000 0.00000000 / " + \
-                                             textureMinStr[0] + " " + textureMinStr[1] + " / " + sizeXYStr + " " + sizeZStr + " / 1.00000000 1.00000000"
-
-            if slodLevel < 3 and uvTopMin is not None and uvTopMax is not None:
-                numTopPlanes[diffuseSampler] += 1
-                if uvMap.topZ is None:
-                    topZ = self.lodCandidates[entity.archetypeName].planeZ
-                else:
-                    topZ = uvMap.topZ
-                planeZ = (transformedBboxEntityMax[2] - transformedBboxEntityMin[2]) * (1 - topZ) + transformedBboxEntityMin[2]
-                topZStr = Util.floatToStr(planeZ)
-                if verticesTop[diffuseSampler] != "":
-                    verticesTop[diffuseSampler] += "\n"
-                verticesTop[diffuseSampler] += "				" + \
-                                               Util.floatToStr(transformedBboxEntityMin[0]) + " " + Util.floatToStr(transformedBboxEntityMin[1]) + " " + \
-                                               topZStr + " / " + LodMapCreator.createVectorStr([-1, -1, 0.1], True) + colors + \
-                                               Util.floatToStr(uvTopMin.u) + " " + Util.floatToStr(uvTopMin.v)
-                verticesTop[diffuseSampler] += "\n				" + \
-                                               Util.floatToStr(transformedBboxEntityMax[0]) + " " + Util.floatToStr(transformedBboxEntityMin[1]) + " " + \
-                                               topZStr + " / " + LodMapCreator.createVectorStr([1, -1, 0.1], True) + colors + \
-                                               Util.floatToStr(uvTopMax.u) + " " + Util.floatToStr(uvTopMin.v)
-                verticesTop[diffuseSampler] += "\n				" + \
-                                               Util.floatToStr(transformedBboxEntityMax[0]) + " " + Util.floatToStr(transformedBboxEntityMax[1]) + " " + \
-                                               topZStr + " / " + LodMapCreator.createVectorStr([1, 1, 0.1], True) + colors + \
-                                               Util.floatToStr(uvTopMax.u) + " " + Util.floatToStr(uvTopMax.v)
-                verticesTop[diffuseSampler] += "\n				" +\
-                                               Util.floatToStr(transformedBboxEntityMin[0]) + " " + Util.floatToStr(transformedBboxEntityMax[1]) + " " + \
-                                               topZStr + " / " + LodMapCreator.createVectorStr([-1, 1, 0.1], True) + colors + \
-                                               Util.floatToStr(uvTopMin.u) + " " + Util.floatToStr(uvTopMax.v)
+            if slodLevel < 3 and uvMap.topMin is not None and uvMap.topMax is not None:
+                assert uvMap.topZ is not None
+                self.appendSlodTop(verticesTop[diffuseSampler], normalsTop[diffuseSampler], textureUVsTop[diffuseSampler], size2D, centerTransformed, entity.rotation, uvMap)
 
         totalBbox = Box.createReversedInfinityBox()
+
+        for diffuseSampler in verticesTop:
+            for vertex in verticesTop[diffuseSampler]:
+                bbox[diffuseSampler].extendByPoint(vertex)
 
         for diffuseSampler in verticesFront:
             totalBbox.extendByPoint(bbox[diffuseSampler].min)
@@ -815,12 +805,11 @@ class LodMapCreator:
         geometries = ""
         shaderIndex = 0
         for diffuseSampler in verticesFront:
-            indicesTopStr = self.createIndices(numTopPlanes[diffuseSampler])
-            indicesFrontStr = self.createIndices(numFrontPlanes[diffuseSampler])
+            numFrontPlanes = len(verticesFront[diffuseSampler])
+            indicesFront = self.createIndicesForRectangles(numFrontPlanes)
 
             bbox[diffuseSampler] = bbox[diffuseSampler].getTranslated(translation)
-            verticesFrontStr = re.sub('(?<=\t\t\t\t)(\\S+) (\\S+) (\\S+)', lambda match: self.replTranslateVertex(match, translation), verticesFront[diffuseSampler])
-            verticesTopStr = re.sub('(?<=\t\t\t\t)(\\S+) (\\S+) (\\S+)', lambda match: self.replTranslateVertex(match, translation), verticesTop[diffuseSampler])
+            verticesFrontStr = LodMapCreator.convertVerticesTextureUVsAsStrForSlod(verticesFront[diffuseSampler], sizesFront[diffuseSampler], textureUVsFront[diffuseSampler], translation)
 
             shaders += self.contentTemplateOdrShaderTreeLod2.replace("${DIFFUSE_SAMPLER}", diffuseSampler)
 
@@ -829,13 +818,18 @@ class LodMapCreator:
             geometries += self.contentTemplateMeshGeometry \
                 .replace("${SHADER_INDEX}", str(shaderIndex)) \
                 .replace("${VERTEX_DECLARATION}", "N5A9A1E1A") \
-                .replace("${INDICES.NUM}", str(numFrontPlanes[diffuseSampler] * 6)) \
-                .replace("${INDICES}", indicesFrontStr) \
-                .replace("${VERTICES.NUM}", str(numFrontPlanes[diffuseSampler] * 4)) \
-                .replace("${VERTICES}", verticesFrontStr)
+                .replace("${INDICES.NUM}", str(numFrontPlanes * 6)) \
+                .replace("${INDICES}", self.createIndicesStr(indicesFront)) \
+                .replace("${VERTICES.NUM}", str(numFrontPlanes * 4)) \
+                .replace("${VERTICES}\n", verticesFrontStr)
             shaderIndex += 1
 
-            if numTopPlanes[diffuseSampler] > 0:
+            if len(verticesTop[diffuseSampler]) > 0:
+                assert len(verticesTop[diffuseSampler]) % 4 == 0
+                numTopPlanes = int(len(verticesTop[diffuseSampler]) / 4)
+                indicesTop = self.createIndicesForRectangles(numTopPlanes)
+                verticesTopStr = LodMapCreator.convertVerticesNormalsTextureUVsAsStr(verticesTop[diffuseSampler], normalsTop[diffuseSampler], textureUVsTop[diffuseSampler], translation)
+
                 shaders += self.contentTemplateOdrShaderTreeLod.replace("${DIFFUSE_SAMPLER}", diffuseSampler + "_top")
 
                 bounds += self.createAabb(bbox[diffuseSampler])
@@ -843,10 +837,10 @@ class LodMapCreator:
                 geometries += self.contentTemplateMeshGeometry \
                     .replace("${SHADER_INDEX}", str(shaderIndex)) \
                     .replace("${VERTEX_DECLARATION}", "N209731BE") \
-                    .replace("${INDICES.NUM}", str(numTopPlanes[diffuseSampler] * 6)) \
-                    .replace("${INDICES}", indicesTopStr) \
-                    .replace("${VERTICES.NUM}", str(numTopPlanes[diffuseSampler] * 4)) \
-                    .replace("${VERTICES}", verticesTopStr)
+                    .replace("${INDICES.NUM}", str(numTopPlanes * 6)) \
+                    .replace("${INDICES}", self.createIndicesStr(indicesTop)) \
+                    .replace("${VERTICES.NUM}", str(len(verticesTop[diffuseSampler]))) \
+                    .replace("${VERTICES}\n", verticesTopStr)
                 shaderIndex += 1
 
         contentModelMesh = self.contentTemplateMesh \
@@ -877,7 +871,10 @@ class LodMapCreator:
         fileModelOdr.write(contentModelOdr)
         fileModelOdr.close()
 
-        if slodLevel == 1:
+        if slodLevel == 0:
+            itemHdDistance = 350
+            itemLodDistance = LodMapCreator.LOD_DISTANCE
+        elif slodLevel == 1:
             itemHdDistance = LodMapCreator.LOD_DISTANCE
             itemLodDistance = LodMapCreator.SLOD_DISTANCE
         elif slodLevel == 2:
@@ -886,9 +883,6 @@ class LodMapCreator:
         elif slodLevel == 3:
             itemHdDistance = LodMapCreator.SLOD2_DISTANCE
             itemLodDistance = LodMapCreator.SLOD3_DISTANCE
-        elif slodLevel == 0:    # Wieder Ausbauen, nur vorübergehend bis eigene Methode zum erzeugen der LOD-Modelle vorhanden ist
-            itemHdDistance = 350
-            itemLodDistance = LodMapCreator.LOD_DISTANCE
         else:
             Exception("unknown slod level " + str(slodLevel))
 
@@ -1016,7 +1010,8 @@ class LodMapCreator:
 
             for matchobj in re.finditer(pattern, contentNoLod):
                 archetypeName = matchobj.group(1).lower()
-                if archetypeName not in self.lodCandidates:
+                if (not self.USE_SLOD_AS_LOD_MODEL and archetypeName not in self.lodCandidates) or \
+                        (self.USE_SLOD_AS_LOD_MODEL and archetypeName not in self.slodCandidates):
                     continue
 
                 position = [float(matchobj.group(2)), float(matchobj.group(3)), float(matchobj.group(4))]
