@@ -28,12 +28,11 @@ class Util:
         return "{:.8f}".format(val)
 
     @staticmethod
-    def vertexToStr(vertex: list[float]) -> str:
-        return Util.floatToStr(vertex[0]) + " " + Util.floatToStr(vertex[1]) + " " + Util.floatToStr(vertex[2])
-
-    @staticmethod
-    def vector2DToStr(vector: list[float]) -> str:
-        return Util.floatToStr(vector[0]) + " " + Util.floatToStr(vector[1])
+    def vectorToStr(vertex: list[float]) -> str:
+        converted = []
+        for i in range(len(vertex)):
+            converted.append(Util.floatToStr(vertex[i]))
+        return " ".join(converted)
 
     @staticmethod
     def calculateFurthestDistance(coords: list[list[float]]) -> float:

@@ -400,15 +400,15 @@ class BoundBVH:
 		{
 			Type """ + self.getType() + """
 			Radius """ + Util.floatToStr(bsphere.radius) + """
-			AABBMax """ + Util.vertexToStr(bbox.max) + """
-			AABBMin """ + Util.vertexToStr(bbox.min) + """
-			Centroid """ + Util.vertexToStr(bsphere.center) + """
-			CG """ + Util.vertexToStr(bsphere.center) + """ 
+			AABBMax """ + Util.vectorToStr(bbox.max) + """
+			AABBMin """ + Util.vectorToStr(bbox.min) + """
+			Centroid """ + Util.vectorToStr(bsphere.center) + """
+			CG """ + Util.vectorToStr(bsphere.center) + """ 
 """)
 
         self.writePolygons(file)
 
-        file.write("			GeometryCenter " + Util.vertexToStr(bsphere.center) + " 0.00250000\n")
+        file.write("			GeometryCenter " + Util.vectorToStr(bsphere.center) + " 0.00250000\n")
 
         self.writeVertices(file, bsphere.center)
         file.write("			VertexColors null\n")
@@ -471,7 +471,7 @@ class BoundBVH:
     def writeVertexList(self, file: IO, vertices: list[list[float]], geometryCenter: list[float]):
         for i in range(len(vertices)):
             vertex = np.subtract(self.vertices[i], geometryCenter)
-            file.write("				" + Util.vertexToStr(vertex) + "\n")
+            file.write("				" + Util.vectorToStr(vertex) + "\n")
 
     def writeMaterials(self, file: IO):
         numMaterials = len(self.materials)

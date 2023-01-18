@@ -230,10 +230,10 @@ class BoundComposite:
 {
 	Type BoundComposite
 	Radius """ + Util.floatToStr(bsphere.radius) + """
-	AABBMax """ + Util.vertexToStr(bbox.max) + """
-	AABBMin """ + Util.vertexToStr(bbox.min) + """
-	Centroid """ + Util.vertexToStr(bsphere.center) + """
-	CG """ + Util.vertexToStr(bsphere.center) + """ 
+	AABBMax """ + Util.vectorToStr(bbox.max) + """
+	AABBMin """ + Util.vectorToStr(bbox.min) + """
+	Centroid """ + Util.vectorToStr(bsphere.center) + """
+	CG """ + Util.vectorToStr(bsphere.center) + """ 
 """)
 
     def writeChildren(self, file: IO):

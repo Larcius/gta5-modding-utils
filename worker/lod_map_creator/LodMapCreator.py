@@ -377,12 +377,6 @@ class LodMapCreator:
             .replace("${BBOX.MAX.Z}", Util.floatToStr(bbox.max[2]))
 
     @staticmethod
-    def createVectorStr(vector: list[float], normalize: bool = False) -> str:
-        if normalize:
-            vector = Util.normalize(vector)
-        return Util.vertexToStr(vector)
-
-    @staticmethod
     def findClosestRatio(ratioInput: float, ratioCandidate1: float, ratioCandidate2: float) -> (float, int):
         options = [ratioCandidate1, ratioCandidate2]
         argmin = np.abs(np.asarray(options) - ratioInput).argmin()
@@ -390,7 +384,7 @@ class LodMapCreator:
 
     @staticmethod
     def createLodModelVertexNormalTextureUVStr(vertex: list[float], normal: list[float], uv: list[float]):
-        return "				" + LodMapCreator.createVectorStr(vertex) + " / " + LodMapCreator.createVectorStr(normal, True) + " / 255 29 0 255 / " + Util.vector2DToStr(uv) + "\n"
+        return "				" + Util.vectorToStr(vertex) + " / " + Util.vectorToStr(Util.normalize(normal)) + " / 255 29 0 255 / " + Util.vectorToStr(uv) + "\n"
 
     def createIndicesStr(self, indices: list[int]) -> str:
         indicesStr = ""
@@ -563,9 +557,9 @@ class LodMapCreator:
         return result
 
     @staticmethod
-    def createSlodModelVertexNormalTextureUVStr(center: list[float], normal: list[float], size: list[float], unnamed: list[float], uv: list[float]):
+    def createSlodModelVertexNormalTextureUVStr(center: list[float], normal: list[float], size: list[float], uvPosition: list[float], uv: list[float]):
         colorsFront = "255 29 0 255 / 0 255 0 0"
-        return "				" + LodMapCreator.createVectorStr(center) + " / " + LodMapCreator.createVectorStr(normal, True) + " / " + colorsFront + " / " + Util.vector2DToStr(unnamed) + " / " + Util.vector2DToStr(uv) + " / " + Util.vector2DToStr(size) + " / " + Util.vector2DToStr([1, 1]) + "\n"
+        return "				" + Util.vectorToStr(center) + " / " + Util.vectorToStr(Util.normalize(normal)) + " / " + colorsFront + " / " + Util.vectorToStr(uvPosition) + " / " + Util.vectorToStr(uv) + " / " + Util.vectorToStr(size) + " / " + Util.vectorToStr([1, 1]) + "\n"
 
     def createLodModel(self, lodName: str, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
         diffuseSamplerToVertices = {}
