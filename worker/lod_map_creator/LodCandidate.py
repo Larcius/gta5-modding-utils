@@ -5,9 +5,6 @@ from common.texture.UV import UV
 
 
 class LodCandidate:
-    # needed to avoid getting wrong pixels from texture (e.g. using 0 would result in getting right-most resp. down-most pixel)
-    TEXTURE_UV_EPS = 0.00343323
-
     diffuseSampler: str
     texture_origin: float
     planeZ: float
@@ -38,52 +35,17 @@ class LodCandidate:
     def setDiffuseSampler(self, archetypeName: str):
         self.diffuseSampler = "lod_" + archetypeName.lower()
 
-    @staticmethod
-    def createTextureUvWithEps(minUv: UV, maxUv: UV) -> (UV, UV):
-        if minUv is None or maxUv is None:
-            raise Exception("minUv and maxUv must not be None")
-
-        minUvEps = UV(minUv.u, minUv.v)
-        maxUvEps = UV(maxUv.u, maxUv.v)
-        if minUvEps.u < maxUvEps.u:
-            minUvEps.u += LodCandidate.TEXTURE_UV_EPS
-            maxUvEps.u -= LodCandidate.TEXTURE_UV_EPS
-        else:
-            minUvEps.u -= LodCandidate.TEXTURE_UV_EPS
-            maxUvEps.u += LodCandidate.TEXTURE_UV_EPS
-
-        if minUvEps.v < maxUvEps.v:
-            minUvEps.v += LodCandidate.TEXTURE_UV_EPS
-            maxUvEps.v -= LodCandidate.TEXTURE_UV_EPS
-        else:
-            minUvEps.v -= LodCandidate.TEXTURE_UV_EPS
-            maxUvEps.v += LodCandidate.TEXTURE_UV_EPS
-
-        return minUvEps, maxUvEps
-
-    def getUvFrontMin(self) -> UV:
-        return LodCandidate.createTextureUvWithEps(self.uvFrontMin, self.uvFrontMax)[0]
-
-    def getUvFrontMax(self) -> UV:
-        return LodCandidate.createTextureUvWithEps(self.uvFrontMin, self.uvFrontMax)[1]
-
     def getUvSideMin(self) -> UV:
         if self.hasDedicatedSideTexture():
-            return LodCandidate.createTextureUvWithEps(self.uvSideMin, self.uvSideMax)[0]
+            return self.uvSideMin
         else:
-            return self.getUvFrontMin()
+            return self.uvFrontMin
 
     def getUvSideMax(self) -> UV:
         if self.hasDedicatedSideTexture():
-            return LodCandidate.createTextureUvWithEps(self.uvSideMin, self.uvSideMax)[1]
+            return self.uvSideMax
         else:
-            return self.getUvFrontMax()
-
-    def getUvTopMin(self) -> UV:
-        return LodCandidate.createTextureUvWithEps(self.uvTopMin, self.uvTopMax)[0]
-
-    def getUvTopMax(self) -> UV:
-        return LodCandidate.createTextureUvWithEps(self.uvTopMin, self.uvTopMax)[1]
+            return self.uvFrontMax
 
     def textureOriginSide(self) -> Optional[float]:
         return self.texture_origin if self._textureOriginSide is None else self._textureOriginSide

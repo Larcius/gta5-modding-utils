@@ -106,7 +106,7 @@ class LodMapCreator:
             "prop_palm_fan_04_b": LodCandidate(0.484375, 0.20625, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1), UV(0.46875, 0.80859375)),
             "prop_palm_fan_04_c": LodCandidate(0.5, 0.140625, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_palm_fan_04_d": LodCandidate(0.421875, 0.12019230769, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
-            "prop_palm_huge_01a": LodCandidate(0.46875, 0.05555555555, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875)),
+            "prop_palm_huge_01a": LodCandidate(0.46875, 0.05092592592, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875)),
             "prop_palm_huge_01b": LodCandidate(0.53125, 0.04166666666, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875)),
             "prop_palm_med_01b": LodCandidate(0.515625, 0.17613636363, UV(0, 0), UV(1, 0.6875), UV(0, 1), UV(1, 0.6875), UV(0.546875, 0.84375)),
             "prop_palm_med_01c": LodCandidate(0.515625, 0.16666666666, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
@@ -415,8 +415,8 @@ class LodMapCreator:
         bbox = self.ytypItems[entity.archetypeName].boundingBox
 
         lodCandidate = self.lodCandidates[entity.archetypeName]
-        uvFrontMin = lodCandidate.getUvFrontMin()
-        uvFrontMax = lodCandidate.getUvFrontMax()
+        uvFrontMin = lodCandidate.uvFrontMin
+        uvFrontMax = lodCandidate.uvFrontMax
         uvSideMin = lodCandidate.getUvSideMin()
         uvSideMax = lodCandidate.getUvSideMax()
 
@@ -442,8 +442,8 @@ class LodMapCreator:
 
         lodCandidate = self.lodCandidates[entity.archetypeName]
 
-        uvFrontMin = lodCandidate.getUvFrontMin()
-        uvFrontMax = lodCandidate.getUvFrontMax()
+        uvFrontMin = lodCandidate.uvFrontMin
+        uvFrontMax = lodCandidate.uvFrontMax
         uvSideMin = lodCandidate.getUvSideMin()
         uvSideMax = lodCandidate.getUvSideMax()
 
@@ -505,8 +505,8 @@ class LodMapCreator:
 
         lodCandidate = self.lodCandidates[entity.archetypeName]
 
-        uvTopMin = lodCandidate.getUvTopMin()
-        uvTopMax = lodCandidate.getUvTopMax()
+        uvTopMin = lodCandidate.uvTopMin
+        uvTopMax = lodCandidate.uvTopMax
         uvTopCenter = lodCandidate.getUvTopCenter()
 
         planeTopMinZ = bbox.min[2] + sizes[2] * (1 - lodCandidate.planeZ)
@@ -538,7 +538,8 @@ class LodMapCreator:
         for i in range(len(vertices)):
             translatedVertex = np.add(vertices[i], translation).tolist()
 
-            uvMin, uvMax = LodCandidate.createTextureUvWithEps(textureUVs[i][0], textureUVs[i][1])
+            uvMin = textureUVs[i][0]
+            uvMax = textureUVs[i][1]
 
             # for a bit more variety randomly flip/mirror the texture
             # set a seed here to get the same result for multiple runs and different SLOD levels (therefore do not use translatedVertex)
@@ -721,12 +722,11 @@ class LodMapCreator:
             verticesTop.append(translatedVertex)
             normalsTop.append(rotatedNormal)
 
-        uvTopMin, uvTopMax = LodCandidate.createTextureUvWithEps(uvMap.topMin, uvMap.topMax)
         textureUVsTop += [
-            [uvTopMin.u, uvTopMax.v],
-            [uvTopMax.u, uvTopMax.v],
-            [uvTopMax.u, uvTopMin.v],
-            [uvTopMin.u, uvTopMin.v]
+            [uvMap.topMin.u, uvMap.topMax.v],
+            [uvMap.topMax.u, uvMap.topMax.v],
+            [uvMap.topMax.u, uvMap.topMin.v],
+            [uvMap.topMin.u, uvMap.topMin.v]
         ]
 
     def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
