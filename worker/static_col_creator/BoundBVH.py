@@ -1,9 +1,9 @@
 import re
-from typing import IO, Union
+from typing import IO, Optional, Union
 
 import numpy as np
 
-from common.Box import Box as BBox
+from common.BoundingGeometry import BoundingGeometry
 from common.Util import Util
 from worker.static_col_creator.Material import Material
 from worker.static_col_creator.Polygon.Box import Box
@@ -309,6 +309,7 @@ class BoundBVH:
     shrunk: Union[list[list[float]], None]
     flags1: str
     flags2: str
+    boundingGeometry: Optional[BoundingGeometry]
 
     def __init__(self, polygons: list[Union[Box, Capsule, Cylinder, Sphere, Tri]], materials: list[Material], margin: float, vertices: list[list[float]], shrunk: Union[list[list[float]], None], flags1: str, flags2: str):
         self.polygons = polygons
@@ -330,6 +331,8 @@ class BoundBVH:
         if self.shrunk is not None:
             for i in range(len(self.shrunk)):
                 self.shrunk[i] = Util.applyTransformation(self.shrunk[i], rotationQuaternion, scale, translation)
+
+        self.boundingGeometry = None
 
     def isMergable(self, bound: "BoundBVH") -> bool:
         if self.getType() != bound.getType():
@@ -365,6 +368,8 @@ class BoundBVH:
         if self.shrunk is not None:
             self.shrunk.extend(bound.shrunk)
 
+        self.boundingGeometry = None
+
     def mergeMaterials(self, bound: "BoundBVH") -> list[int]:
         # compute materialsMapping to avoid redundant materials
         materialsMapping = []
@@ -393,8 +398,9 @@ class BoundBVH:
             return "BoundGeometry"
 
     def writePhBound(self, file: IO):
-        bbox = self.computeBoundingBox()
-        bsphere = bbox.getEnclosingSphere()
+        boundingGeometry = self.getBoundingGeometry()
+        bbox = boundingGeometry.getBox()
+        bsphere = boundingGeometry.getSphere()
 
         file.write("""		phBound
 		{
@@ -482,10 +488,12 @@ class BoundBVH:
             file.write(self.materials[i].asMaterialString(i))
         file.write("			}\n")
 
-    def computeBoundingBox(self) -> BBox:
-        # TODO store BBox to avoid duplicate computation when called mutiple times
-        bbox = BBox.createReversedInfinityBox()
-        for i in range(len(self.polygons)):
-            self.polygons[i].extendBoundingBox(bbox, self.vertices)
+    def getBoundingGeometry(self) -> BoundingGeometry:
+        if self.boundingGeometry is None:
+            self._computeBoundingGeometry()
+        return self.boundingGeometry
 
-        return bbox
+    def _computeBoundingGeometry(self) -> None:
+        self.boundingGeometry = BoundingGeometry()
+        for i in range(len(self.polygons)):
+            self.polygons[i].extendBoundingGeometry(self.boundingGeometry, self.vertices)

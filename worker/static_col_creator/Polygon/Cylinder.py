@@ -1,7 +1,6 @@
 import re
-import numpy as np
 
-from common.Box import Box
+from common.BoundingGeometry import BoundingGeometry
 from common.Util import Util
 
 
@@ -79,12 +78,10 @@ class Cylinder:
 				}
 """
 
-    def extendBoundingBox(self, bbox: Box, vertices: list[list[float]]):
+    def extendBoundingGeometry(self, boundingGeometry: BoundingGeometry, vertices: list[list[float]]):
         centerTop = vertices[self.centerTop]
         centerBottom = vertices[self.centerBottom]
 
-        # TODO for Cylinder this is not correct. However it is ensured that the calculated bbox is not smaller than the actual bbox
-        bbox.extendByPoint(np.subtract(centerTop, [self.radius]).tolist())
-        bbox.extendByPoint(np.subtract(centerBottom, [self.radius]).tolist())
-        bbox.extendByPoint(np.add(centerTop, [self.radius]).tolist())
-        bbox.extendByPoint(np.add(centerBottom, [self.radius]).tolist())
+        # TODO for sphere this is not correct. However it is ensured that the calculated bounding geometry is not smaller than the actual bounding geometry
+        boundingGeometry.extendBySphere(centerTop, self.radius)
+        boundingGeometry.extendBySphere(centerBottom, self.radius)

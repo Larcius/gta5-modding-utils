@@ -1,8 +1,6 @@
 import numpy as np
 import math
 
-from common.Sphere import Sphere
-
 
 class Box:
     @staticmethod
@@ -12,11 +10,6 @@ class Box:
     @staticmethod
     def createUnitBox() -> "Box":
         return Box([-0.5] * 3, [0.5] * 3)
-
-    @staticmethod
-    def createBoxFromVertices(vertices: list[list[float]]) -> "Box":
-        npVertices = np.array(vertices)
-        return Box(np.min(npVertices, axis=0).tolist(), np.max(npVertices, axis=0).tolist())
 
     min: list[float]
     max: list[float]
@@ -56,9 +49,6 @@ class Box:
     def extendByPoint(self, point: list[float]):
         self.min = np.minimum(self.min, point).tolist()
         self.max = np.maximum(self.max, point).tolist()
-
-    def getEnclosingSphere(self) -> Sphere:
-        return Sphere(self.getCenter().copy(), self.getDiagonal() / 2)
 
     def isValid(self):
         for i in range(3):

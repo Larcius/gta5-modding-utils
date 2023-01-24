@@ -1,6 +1,6 @@
 import re
 
-from common.Box import Box
+from common.BoundingGeometry import BoundingGeometry
 
 
 class Tri:
@@ -74,6 +74,6 @@ class Tri:
 				}
 """
 
-    def extendBoundingBox(self, bbox: Box, vertices: list[list[float]]):
+    def extendBoundingGeometry(self, boundingGeometry: BoundingGeometry, vertices: list[list[float]]):
         for index in self.vertices:
-            bbox.extendByPoint(vertices[index])
+            boundingGeometry.extendByPoint(vertices[index])

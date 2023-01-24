@@ -1,7 +1,6 @@
 import re
-import numpy as np
 
-from common.Box import Box
+from common.BoundingGeometry import BoundingGeometry
 from common.Util import Util
 
 
@@ -69,7 +68,6 @@ class Sphere:
 				}
 """
 
-    def extendBoundingBox(self, bbox: Box, vertices: list[list[float]]):
+    def extendBoundingGeometry(self, boundingGeometry: BoundingGeometry, vertices: list[list[float]]):
         center = vertices[self.center]
-        bbox.extendByPoint(np.subtract(center, [self.radius]).tolist())
-        bbox.extendByPoint(np.add(center, [self.radius]).tolist())
+        boundingGeometry.extendBySphere(center, self.radius)

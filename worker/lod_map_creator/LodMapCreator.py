@@ -10,6 +10,7 @@ from re import Match
 from typing import IO, Optional
 from natsort import natsorted
 
+from common.BoundingGeometry import BoundingGeometry
 from common.Box import Box
 from common.Sphere import Sphere
 from common.Util import Util
@@ -335,9 +336,7 @@ class LodMapCreator:
 
         return matchobj.group(1) + str(parentIndex) + matchobj.group(3)
 
-    def replacePlaceholders(self, template: str, name: str, textureDictionary: str, drawableDictionary: str, bbox: Box, hdDistance: float, lodDistance: float) -> str:
-        bsphere = bbox.getEnclosingSphere()
-
+    def replacePlaceholders(self, template: str, name: str, textureDictionary: str, drawableDictionary: str, bbox: Box, bsphere: Sphere, hdDistance: float, lodDistance: float) -> str:
         return template \
             .replace("${NAME}", name) \
             .replace("${TEXTURE_DICTIONARY}", textureDictionary) \
@@ -594,21 +593,18 @@ class LodMapCreator:
                 LodMapCreator.appendTopPlaneIndicesForLod(diffuseSamplerToIndices[diffuseSampler], len(diffuseSamplerToVertices[diffuseSampler]))
                 self.appendTopPlaneVerticesForLod(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], entity, planeIntersection)
 
-        totalBbox = Box.createReversedInfinityBox()
-
-        diffuseSamplerToBbox = {}
+        totalBoundingGeometry = BoundingGeometry()
         for diffuseSampler in diffuseSamplerToVertices:
-            diffuseSamplerToBbox[diffuseSampler] = Box.createBoxFromVertices(diffuseSamplerToVertices[diffuseSampler])
+            totalBoundingGeometry.extendByPoints(diffuseSamplerToVertices[diffuseSampler])
 
-            totalBbox.extendByPoint(diffuseSamplerToBbox[diffuseSampler].min)
-            totalBbox.extendByPoint(diffuseSamplerToBbox[diffuseSampler].max)
-
-        center = totalBbox.getCenter()
+        totalBoundingSphere = totalBoundingGeometry.getSphere()
+        center = totalBoundingSphere.center
         translation = np.multiply(center, [-1]).tolist()
 
-        totalBbox = totalBbox.getTranslated(translation)
+        totalBoundingBox = totalBoundingGeometry.getBox().getTranslated(translation)
+        totalBoundingSphere = totalBoundingSphere.getTranslated(translation)
 
-        bounds = self.createAabb(totalBbox)
+        bounds = self.createAabb(totalBoundingBox)
 
         shaders = ""
         geometries = ""
@@ -616,12 +612,14 @@ class LodMapCreator:
         for diffuseSampler in diffuseSamplerToVertices:
             indices = diffuseSamplerToIndices[diffuseSampler]
 
-            diffuseSamplerToBbox[diffuseSampler] = diffuseSamplerToBbox[diffuseSampler].getTranslated(translation)
+            boundingGeometry = BoundingGeometry(diffuseSamplerToVertices[diffuseSampler])
+            boundingBox = boundingGeometry.getBox().getTranslated(translation)
+
             verticesNormalsTextureUVsStr = LodMapCreator.convertVerticesNormalsTextureUVsAsStr(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], translation)
 
             shaders += self.contentTemplateOdrShaderTreeLod.replace("${DIFFUSE_SAMPLER}", diffuseSampler)
 
-            bounds += self.createAabb(diffuseSamplerToBbox[diffuseSampler])
+            bounds += self.createAabb(boundingBox)
 
             geometries += self.contentTemplateMeshGeometry \
                 .replace("${SHADER_INDEX}", str(shaderIndex)) \
@@ -640,19 +638,17 @@ class LodMapCreator:
         fileModelMesh.write(contentModelMesh)
         fileModelMesh.close()
 
-        sphere = totalBbox.getEnclosingSphere()
-
         contentModelOdr = self.contentTemplateOdr \
-            .replace("${BBOX.MIN.X}", Util.floatToStr(totalBbox.min[0])) \
-            .replace("${BBOX.MIN.Y}", Util.floatToStr(totalBbox.min[1])) \
-            .replace("${BBOX.MIN.Z}", Util.floatToStr(totalBbox.min[2])) \
-            .replace("${BBOX.MAX.X}", Util.floatToStr(totalBbox.max[0])) \
-            .replace("${BBOX.MAX.Y}", Util.floatToStr(totalBbox.max[1])) \
-            .replace("${BBOX.MAX.Z}", Util.floatToStr(totalBbox.max[2])) \
-            .replace("${BSPHERE.CENTER.X}", Util.floatToStr(sphere.center[0])) \
-            .replace("${BSPHERE.CENTER.Y}", Util.floatToStr(sphere.center[1])) \
-            .replace("${BSPHERE.CENTER.Z}", Util.floatToStr(sphere.center[2])) \
-            .replace("${BSPHERE.RADIUS}", Util.floatToStr(sphere.radius)) \
+            .replace("${BBOX.MIN.X}", Util.floatToStr(totalBoundingBox.min[0])) \
+            .replace("${BBOX.MIN.Y}", Util.floatToStr(totalBoundingBox.min[1])) \
+            .replace("${BBOX.MIN.Z}", Util.floatToStr(totalBoundingBox.min[2])) \
+            .replace("${BBOX.MAX.X}", Util.floatToStr(totalBoundingBox.max[0])) \
+            .replace("${BBOX.MAX.Y}", Util.floatToStr(totalBoundingBox.max[1])) \
+            .replace("${BBOX.MAX.Z}", Util.floatToStr(totalBoundingBox.max[2])) \
+            .replace("${BSPHERE.CENTER.X}", Util.floatToStr(totalBoundingSphere.center[0])) \
+            .replace("${BSPHERE.CENTER.Y}", Util.floatToStr(totalBoundingSphere.center[1])) \
+            .replace("${BSPHERE.CENTER.Z}", Util.floatToStr(totalBoundingSphere.center[2])) \
+            .replace("${BSPHERE.RADIUS}", Util.floatToStr(totalBoundingSphere.radius)) \
             .replace("${MESH_FILENAME}", lodName.lower() + ".mesh") \
             .replace("${SHADERS}\n", shaders)
 
@@ -670,7 +666,7 @@ class LodMapCreator:
           <extensions/>
           <archetypes>
         """)
-        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", drawableDictionary, totalBbox, itemHdDistance, itemLodDistance))
+        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", drawableDictionary, totalBoundingBox, totalBoundingSphere, itemHdDistance, itemLodDistance))
 
         return EntityItem(lodName, center, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, LodLevel.LOD, Flag.FLAGS_LOD)
 
@@ -778,22 +774,27 @@ class LodMapCreator:
                 assert uvMap.topZ is not None
                 self.appendSlodTop(verticesTop[diffuseSampler], normalsTop[diffuseSampler], textureUVsTop[diffuseSampler], size2D, centerTransformed, entity.rotation, uvMap)
 
-        totalBbox = Box.createReversedInfinityBox()
+        totalBoundingGeometry = BoundingGeometry()
 
         for diffuseSampler in verticesTop:
-            for vertex in verticesTop[diffuseSampler]:
-                bbox[diffuseSampler].extendByPoint(vertex)
+            totalBoundingGeometry.extendByPoints(verticesTop[diffuseSampler])
 
         for diffuseSampler in verticesFront:
-            totalBbox.extendByPoint(bbox[diffuseSampler].min)
-            totalBbox.extendByPoint(bbox[diffuseSampler].max)
+            for i in range(len(verticesFront[diffuseSampler])):
+                size2D = sizesFront[diffuseSampler][i]
+                size3D = [size2D[0], size2D[0], size2D[1]]
+                minVertex = np.subtract(verticesFront[diffuseSampler][i], size3D).tolist()
+                maxVertex = np.add(verticesFront[diffuseSampler][i], size3D).tolist()
+                totalBoundingGeometry.extendByPoints([minVertex, maxVertex])
 
-        center = totalBbox.getCenter()
+        totalBoundingSphere = totalBoundingGeometry.getSphere()
+        center = totalBoundingSphere.center
         translation = np.multiply(center, [-1]).tolist()
 
-        totalBbox = totalBbox.getTranslated(translation)
+        totalBoundingBox = totalBoundingGeometry.getBox().getTranslated(translation)
+        totalBoundingSphere = totalBoundingSphere.getTranslated(translation)
 
-        bounds = self.createAabb(totalBbox)
+        bounds = self.createAabb(totalBoundingBox)
 
         shaders = ""
         geometries = ""
@@ -845,19 +846,17 @@ class LodMapCreator:
         fileModelMesh.write(contentModelMesh)
         fileModelMesh.close()
 
-        sphere = totalBbox.getEnclosingSphere()
-
         contentModelOdr = self.contentTemplateOdr \
-            .replace("${BBOX.MIN.X}", Util.floatToStr(totalBbox.min[0])) \
-            .replace("${BBOX.MIN.Y}", Util.floatToStr(totalBbox.min[1])) \
-            .replace("${BBOX.MIN.Z}", Util.floatToStr(totalBbox.min[2])) \
-            .replace("${BBOX.MAX.X}", Util.floatToStr(totalBbox.max[0])) \
-            .replace("${BBOX.MAX.Y}", Util.floatToStr(totalBbox.max[1])) \
-            .replace("${BBOX.MAX.Z}", Util.floatToStr(totalBbox.max[2])) \
-            .replace("${BSPHERE.CENTER.X}", Util.floatToStr(sphere.center[0])) \
-            .replace("${BSPHERE.CENTER.Y}", Util.floatToStr(sphere.center[1])) \
-            .replace("${BSPHERE.CENTER.Z}", Util.floatToStr(sphere.center[2])) \
-            .replace("${BSPHERE.RADIUS}", Util.floatToStr(sphere.radius)) \
+            .replace("${BBOX.MIN.X}", Util.floatToStr(totalBoundingBox.min[0])) \
+            .replace("${BBOX.MIN.Y}", Util.floatToStr(totalBoundingBox.min[1])) \
+            .replace("${BBOX.MIN.Z}", Util.floatToStr(totalBoundingBox.min[2])) \
+            .replace("${BBOX.MAX.X}", Util.floatToStr(totalBoundingBox.max[0])) \
+            .replace("${BBOX.MAX.Y}", Util.floatToStr(totalBoundingBox.max[1])) \
+            .replace("${BBOX.MAX.Z}", Util.floatToStr(totalBoundingBox.max[2])) \
+            .replace("${BSPHERE.CENTER.X}", Util.floatToStr(totalBoundingSphere.center[0])) \
+            .replace("${BSPHERE.CENTER.Y}", Util.floatToStr(totalBoundingSphere.center[1])) \
+            .replace("${BSPHERE.CENTER.Z}", Util.floatToStr(totalBoundingSphere.center[2])) \
+            .replace("${BSPHERE.RADIUS}", Util.floatToStr(totalBoundingSphere.radius)) \
             .replace("${MESH_FILENAME}", name.lower() + ".mesh") \
             .replace("${SHADERS}\n", shaders)
 
@@ -887,7 +886,7 @@ class LodMapCreator:
   <extensions/>
   <archetypes>
 """)
-        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, self.getYtypName(), drawableDictionary, totalBbox, itemHdDistance, itemLodDistance))
+        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, self.getYtypName(), drawableDictionary, totalBoundingBox, totalBoundingSphere, itemHdDistance, itemLodDistance))
 
         return EntityItem(name, center, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, lodLevel, flags)
 

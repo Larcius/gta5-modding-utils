@@ -1,6 +1,6 @@
 import re
 
-from common.Box import Box as BBox
+from common.BoundingGeometry import BoundingGeometry
 
 
 class Box:
@@ -60,6 +60,6 @@ class Box:
 				}
 """
 
-    def extendBoundingBox(self, bbox: BBox, vertices: list[list[float]]):
+    def extendBoundingGeometry(self, boundingGeometry: BoundingGeometry, vertices: list[list[float]]):
         for index in self.vertices:
-            bbox.extendByPoint(vertices[index])
+            boundingGeometry.extendByPoint(vertices[index])

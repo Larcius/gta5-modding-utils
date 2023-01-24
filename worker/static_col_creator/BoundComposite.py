@@ -1,7 +1,7 @@
 import re
 from typing import IO
 
-from common.Box import Box
+from common.BoundingGeometry import BoundingGeometry
 from worker.static_col_creator.BoundBVH import BoundBVH
 
 from common.Util import Util
@@ -224,8 +224,9 @@ class BoundComposite:
         file.close()
 
     def writeHeader(self, file: IO):
-        bbox = self.computeBoundingBox()
-        bsphere = bbox.getEnclosingSphere()
+        boundingGeometry = self.computeBoundingGeometry()
+        bbox = boundingGeometry.getBox()
+        bsphere = boundingGeometry.getSphere()
         file.write("""Version 43 31
 {
 	Type BoundComposite
@@ -257,11 +258,10 @@ class BoundComposite:
             self.children[i].writeChildFlagItem(file)
         file.write("	}\n")
 
-    def computeBoundingBox(self) -> Box:
-        bbox = Box.createReversedInfinityBox()
+    def computeBoundingGeometry(self) -> BoundingGeometry:
+        boundingGeometry = BoundingGeometry()
         for i in range(len(self.children)):
-            childBBox = self.children[i].computeBoundingBox()
-            bbox.extendByPoint(childBBox.min)
-            bbox.extendByPoint(childBBox.max)
+            childBoundingGeometry = self.children[i].getBoundingGeometry()
+            boundingGeometry.extendByBoundingGeometry(childBoundingGeometry)
 
-        return bbox
+        return boundingGeometry

@@ -18,6 +18,7 @@ conda install --name gta5-modding-utils -c conda-forge natsort -y
 conda env config vars set OMP_NUM_THREADS=1 --name gta5-modding-utils
 conda activate gta5-modding-utils
 python -m pip install matplotlib
+python -m pip install miniball
 ```
 
 Now your environment is ready to use and from now on all you need to do is to activate this environment:
