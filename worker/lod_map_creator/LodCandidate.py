@@ -16,11 +16,12 @@ class LodCandidate:
     uvSideMin: Optional[UV]
     uvSideMax: Optional[UV]
     _textureOriginSide: Optional[float]
+    sideOffsetZ: float
 
     def __init__(self, texture_origin: float = 0.5, planeZ: Optional[float] = 0.5,
             uvFrontMin: UV = UV(0, 0), uvFrontMax: UV = UV(1, 1),
             uvTopMin: Optional[UV] = None, uvTopMax: Optional[UV] = None, uvTopCenter: Optional[UV] = None,
-            uvSideMin: Optional[UV] = None, uvSideMax: Optional[UV] = None, textureOriginSide: Optional[float] = None):
+            uvSideMin: Optional[UV] = None, uvSideMax: Optional[UV] = None, textureOriginSide: Optional[float] = None, sideOffsetZ: float = 0):
         self.texture_origin = texture_origin
         self.planeZ = planeZ
         self.uvFrontMin = uvFrontMin
@@ -31,6 +32,7 @@ class LodCandidate:
         self.uvSideMin = uvSideMin
         self.uvSideMax = uvSideMax
         self._textureOriginSide = textureOriginSide
+        self.sideOffsetZ = sideOffsetZ
 
     def setDiffuseSampler(self, archetypeName: str):
         self.diffuseSampler = "lod_" + archetypeName.lower()

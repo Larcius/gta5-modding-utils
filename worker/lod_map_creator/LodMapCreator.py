@@ -107,8 +107,8 @@ class LodMapCreator:
             "prop_palm_fan_04_b": LodCandidate(0.484375, 0.20625, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1), UV(0.46875, 0.80859375)),
             "prop_palm_fan_04_c": LodCandidate(0.5, 0.140625, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_palm_fan_04_d": LodCandidate(0.421875, 0.12019230769, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
-            "prop_palm_huge_01a": LodCandidate(0.46875, 0.05092592592, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875)),
-            "prop_palm_huge_01b": LodCandidate(0.53125, 0.04166666666, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875)),
+            "prop_palm_huge_01a": LodCandidate(0.484375, 0.05092592592, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875), UV(0, 0), UV(1, 70/512), None, (432-70)/432),
+            "prop_palm_huge_01b": LodCandidate(0.4765625, 0.04166666666, UV(0, 0), UV(1, 0.84375), UV(0, 1), UV(1, 0.84375), UV(0.484375, 0.921875), UV(0, 0), UV(1, 67/512), None, (432-67)/432),
             "prop_palm_med_01b": LodCandidate(0.515625, 0.17613636363, UV(0, 0), UV(1, 0.6875), UV(0, 1), UV(1, 0.6875), UV(0.546875, 0.84375)),
             "prop_palm_med_01c": LodCandidate(0.515625, 0.16666666666, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_palm_med_01d": LodCandidate(0.5, 0.11057692307, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
@@ -412,29 +412,33 @@ class LodMapCreator:
 
     def appendFrontPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
         bbox = self.ytypItems[entity.archetypeName].boundingBox
+        height = bbox.getSizes()[2]
 
         lodCandidate = self.lodCandidates[entity.archetypeName]
         uvFrontMin = lodCandidate.uvFrontMin
         uvFrontMax = lodCandidate.uvFrontMax
         uvSideMin = lodCandidate.getUvSideMin()
         uvSideMax = lodCandidate.getUvSideMax()
+        sideOffsetZ = lodCandidate.sideOffsetZ
+        minZ = bbox.min[2] + height * max(0.0, sideOffsetZ)
+        maxZ = bbox.max[2] - height * min(0.0, sideOffsetZ)
 
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, -1, 0], [uvFrontMin.u, uvFrontMax.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, -1, 0], [uvFrontMax.u, uvFrontMax.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, -1, 1], [uvFrontMax.u, uvFrontMin.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, -1, 1], [uvFrontMin.u, uvFrontMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], bbox.min[2]], [1, -1, 0], [uvSideMin.u, uvSideMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], bbox.min[2]], [1, 1, 0], [uvSideMax.u, uvSideMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], bbox.max[2]], [1, 1, 1], [uvSideMax.u, uvSideMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], bbox.max[2]], [1, -1, 1], [uvSideMin.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], minZ], [1, -1, 0], [uvSideMin.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], minZ], [1, 1, 0], [uvSideMax.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], maxZ], [1, 1, 1], [uvSideMax.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], maxZ], [1, -1, 1], [uvSideMin.u, uvSideMin.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, 1, 0], [uvFrontMin.u, uvFrontMax.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, 1, 0], [uvFrontMax.u, uvFrontMax.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, 1, 1], [uvFrontMax.u, uvFrontMin.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, 1, 1], [uvFrontMin.u, uvFrontMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], bbox.min[2]], [-1, -1, 0], [uvSideMin.u, uvSideMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], bbox.min[2]], [-1, 1, 0], [uvSideMax.u, uvSideMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], bbox.max[2]], [-1, 1, 1], [uvSideMax.u, uvSideMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], bbox.max[2]], [-1, -1, 1], [uvSideMin.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], minZ], [-1, -1, 0], [uvSideMin.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], minZ], [-1, 1, 0], [uvSideMax.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], maxZ], [-1, 1, 1], [uvSideMax.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], maxZ], [-1, -1, 1], [uvSideMin.u, uvSideMin.v])
 
     def appendDiagonalPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
         bbox = self.ytypItems[entity.archetypeName].boundingBox
