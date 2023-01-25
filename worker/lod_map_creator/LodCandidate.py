@@ -60,12 +60,11 @@ class LodCandidate:
         return scaledBoundingBox.getDiagonalOfPlaneXY() >= 7
 
     def hasDiagonal(self, boundingBox: Box, scale: list[float]) -> bool:
-        return False
-        # if not self.hasDedicatedSideTexture():
-        #     return False
-        #
-        # scaledBoundingBox = boundingBox.getScaled(scale)
-        # return scaledBoundingBox.getDiagonalOfPlaneXY() >= 12 or scaledBoundingBox.getDiagonal() >= 40
+        if not self.hasDedicatedSideTexture():
+            return False
+
+        scaledBoundingBox = boundingBox.getScaled(scale)
+        return scaledBoundingBox.getDiagonalOfPlaneXY() >= 25
 
     def hasDedicatedSideTexture(self) -> bool:
         return self.uvSideMin is not None and self.uvSideMax is not None
