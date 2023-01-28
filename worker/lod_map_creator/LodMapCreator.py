@@ -25,6 +25,7 @@ from common.ymap.Ymap import Ymap
 from common.ytyp.YtypItem import YtypItem
 from common.ytyp.YtypParser import YtypParser
 from worker.lod_map_creator.LodCandidate import LodCandidate
+from worker.lod_map_creator.Manifest import Manifest
 
 
 class LodMapCreator:
@@ -250,7 +251,9 @@ class LodMapCreator:
         self.createOutputDir()
         self.readYtypItems()
         self.processFiles()
+        self.addLodAndSlodModelsToYtypDict()
         self.fixMapExtents()
+        self.createManifest()
         self.copyOthers()
         self.copyTextureDictionaries()
         print("lod map creator DONE")
@@ -1309,9 +1312,6 @@ class LodMapCreator:
     def fixMapExtents(self):
         print("\tfixing map extents")
 
-        if self.slodYtypItems is not None:
-            self.ytypItems |= YtypParser.readYtypDirectory(self.getOutputDirModels())
-
         for filename in natsorted(os.listdir(self.getOutputDirMaps())):
             if not filename.endswith(".ymap.xml"):
                 continue
@@ -1325,6 +1325,16 @@ class LodMapCreator:
             file = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
             file.write(content)
             file.close()
+
+    def createManifest(self) -> None:
+        print("\tcreating manifest")
+        manifest = Manifest(self.ytypItems, self.getOutputDirMaps())
+        manifest.parseYmaps()
+        manifest.writeManifest()
+
+    def addLodAndSlodModelsToYtypDict(self) -> None:
+        if self.slodYtypItems is not None:
+            self.ytypItems |= YtypParser.readYtypDirectory(self.getOutputDirModels())
 
     def copyTextureDictionaries(self):
         texturesDir = os.path.join(os.path.dirname(__file__), "textures")

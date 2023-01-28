@@ -475,4 +475,4 @@ class VegetationCreator:
         return finalMapName
 
     def copyInput(self):
-        Util.copyFiles(self.inputDir, self.outputDir, None)
+        Util.copyFiles(self.inputDir, self.outputDir)

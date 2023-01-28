@@ -281,7 +281,7 @@ class Util:
         return random.uniform(math.radians(result * 0.85), math.radians(result * 1.15))
 
     @staticmethod
-    def getListOfFiles(inputDir: str, filter: Optional[Callable[[str], bool]]):
+    def getListOfFiles(inputDir: str, filter: Optional[Callable[[str], bool]] = None):
         result = []
         for filename in natsorted(os.listdir(inputDir)):
             if os.path.isfile(os.path.join(inputDir, filename)) and (filter is None or filter(filename)):
@@ -290,9 +290,12 @@ class Util:
         return result
 
     @staticmethod
-    def copyFiles(inputDir: str, outputDir: str, filter: Optional[Callable[[str], bool]]):
+    def copyFiles(inputDir: str, outputDir: str, filter: Optional[Callable[[str], bool]] = None):
         for filename in Util.getListOfFiles(inputDir, filter):
-            shutil.copyfile(os.path.join(inputDir, filename), os.path.join(outputDir, filename))
+            destination = os.path.join(outputDir, filename)
+            if os.path.isfile(destination):
+                continue
+            shutil.copyfile(os.path.join(inputDir, filename), destination)
 
     @staticmethod
     def readFile(path: str) -> str:
@@ -321,6 +324,13 @@ class Util:
             return vector
         else:
             return vector / norm
+
+    @staticmethod
+    def getMapnameFromFilename(filename: str) -> Optional[str]:
+        if filename.endswith(".ymap.xml"):
+            return filename[:-9]
+        else:
+            return None
 
     @staticmethod
     def determinePrefixBundles(names: list[str]) -> list[str]:
