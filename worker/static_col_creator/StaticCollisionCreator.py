@@ -18,8 +18,7 @@ class StaticCollisionCreator:
     MAX_NUM_CHILDREN = -1
     ENTITIES_EXTENTS_MAX_DIAGONAL = 400
     IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION = True
-    IGNORE_IF_SCALING_CLOSE_TO_IDENTITY = False
-    IGNORE_IF_SCALING_CLOSE_TO_IDENTITY_TOLERANCE = 1.05
+    IGNORE_IF_SCALING_IS_IDENTITY = False
 
     inputDir: str
     outputDir: str
@@ -222,9 +221,7 @@ class StaticCollisionCreator:
         if not StaticCollisionCreator.IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION and flags & Flag.DISABLE_EMBEDDED_COLLISION:
             return False
 
-        if StaticCollisionCreator.IGNORE_IF_SCALING_CLOSE_TO_IDENTITY \
-                and min(scale) >= 1 / StaticCollisionCreator.IGNORE_IF_SCALING_CLOSE_TO_IDENTITY_TOLERANCE \
-                and max(scale) <= StaticCollisionCreator.IGNORE_IF_SCALING_CLOSE_TO_IDENTITY_TOLERANCE:
+        if StaticCollisionCreator.IGNORE_IF_SCALING_IS_IDENTITY and scale == [1, 1, 1]:
             return False
 
         return True
