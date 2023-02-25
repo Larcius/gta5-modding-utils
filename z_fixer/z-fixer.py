@@ -15,8 +15,6 @@ import transforms3d
 from dataclasses import dataclass
 from natsort import natsorted
 
-from common.Util import Util
-
 
 @dataclass
 class Tree:
@@ -231,6 +229,10 @@ def floatToStr(val):
     return "{:.8f}".format(val)
 
 
+def hashFloat(val: float) -> int:
+    return hash(struct.pack("f", val))
+
+
 def repl(matchobj, outCoords, heightmap):
     global trees
 
@@ -247,7 +249,7 @@ def repl(matchobj, outCoords, heightmap):
     origQuat = [float(matchobj.group(10)), -float(matchobj.group(7)), -float(matchobj.group(8)), -float(matchobj.group(9))]  # order is w, -x, -y, -z
 
     # set a seed here to get the same offsetZ for multiple runs
-    seed = Util.hashFloat(coords[0]) ^ Util.hashFloat(coords[1])
+    seed = hashFloat(coords[0]) ^ hashFloat(coords[1])
     random.seed(a=seed)
     offsetZ = tree.getRandomOffsetZ()
 
