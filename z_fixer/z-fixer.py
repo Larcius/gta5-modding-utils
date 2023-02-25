@@ -33,13 +33,15 @@ DISABLE_INCREASE_OF_Z = False
 
 IGNORE_BUSHES = False
 
-DELETE_IF_ON_STREET = True
+DELETE_IF_ON_STREET = False
 
-DELETE_IF_IN_WATER = True
+DELETE_IF_IN_WATER = False
 
-DELETE_IF_TOO_STEEP = True
+DELETE_IF_TOO_STEEP = False
 DELETE_IF_TOO_STEEP_ANGLE_MIN = math.pi / 4   # 45°
 DELETE_IF_TOO_STEEP_ANGLE_MAX = math.pi / 3   # 60°
+
+DELTA_Z_WHEN_TO_WARN = 1
 
 
 trees = {
@@ -273,7 +275,7 @@ def repl(matchobj, outCoords, heightmap):
 
     position = [float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))]
 
-    if abs(calcZCoord - coords[2]) > 1:
+    if abs(calcZCoord - coords[2]) >= DELTA_Z_WHEN_TO_WARN:
         print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - coords[2],
               "(new z coordinate is " + str(calcZCoord) + ")")
 
