@@ -297,8 +297,8 @@ class Clustering:
                 i += 1
 
         pyplot.minorticks_on()
-        pyplot.grid(b=True, which='major', alpha=0.8)
-        pyplot.grid(b=True, which='minor', alpha=0.4)
+        pyplot.grid(which='major', alpha=0.8)
+        pyplot.grid(which='minor', alpha=0.4)
 
         img = Image.open(os.path.join(os.path.dirname(__file__), "img", "map.jpg"))
         pyplot.imshow(img, extent=(-4000, 4500, -4000, 8000))

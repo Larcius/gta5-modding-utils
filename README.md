@@ -62,15 +62,15 @@ I recommend exporting them into another subdirectory so that the directory you s
 Now that you have your Python environment prepared and provided the necessary files you can finally apply the scripts.
 For example if you want to perform clustering (read entities from all ymaps, perform clustering and create new ymaps each containing one cluster) use this command:
 ````commandline
-python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --clustering=on
+python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --clustering=on --clusteringPrefix="<CLUSTERING_PREFIX>"
 ````
 This will automatically detect the number of clusters so that the extends of each map is reasonable.
 However, if you want a specific number here please add `--numClusters=<NUMBER>` to the command.
 But please keep in mind that having too large map extends may have a huge impact on performance and stability, so only use a specific value here if you are aware of that.
 
-For example if you want to run sanitizing, static collision model creator, lod model creator and lod/slod map creator use this command:
+For example if you want to run sanitizing, clustering, static collision model creator, lod model creator and lod/slod map creator use this command:
 ````commandline
-python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --sanitizer=on --staticCol=on --lodMap=on
+python main.py --inputDir="<DIRECTORY CONTAINING THE .ymap.xml files>" --prefix="<PROJECT_PREFIX>" --sanitizer=on --clustering=on --clusteringPrefix="<CLUSTERING_PREFIX>" --staticCol=on --lodMap=on
 ````
 
 After that you will see the output in the given directory (if not explicitly stated then it's in a subdirectory `generated` in the provided input directory).
