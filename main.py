@@ -16,7 +16,6 @@ from worker.sanitizer.Sanitizer import Sanitizer
 from worker.static_col_creator.StaticCollisionCreator import StaticCollisionCreator
 from worker.statistics.StatisticsPrinter import StatisticsPrinter
 
-
 PATTERN_MAP_NAME = "[a-z][a-z0-9_]*[a-z0-9]"
 
 
@@ -38,6 +37,7 @@ def main(argv):
     numClusters = -1
     polygon = None
     clusteringPrefix = None
+    clusteringExcluded = None
     staticCol = False
     lodMap = False
     sanitizer = False
@@ -46,12 +46,14 @@ def main(argv):
     prefix = None
 
     usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> " \
-               "--clustering=<on|off> --numClusters=<integer> --polygon=<list of x,y coordinates in CCW order> --clusteringPrefix=<CLUSTERING_PREFIX> " \
-               "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off> "
+               "--clustering=<on|off> --numClusters=<integer> --polygon=<list of x,y coordinates in CCW order> " \
+               "--clusteringPrefix=<CLUSTERING_PREFIX> --clusteringExcluded=<comma-separated list of ymaps to exclude> " \
+               "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off>"
 
     try:
-        opts, args = getopt.getopt(argv, "h?i:o:", ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "polygon=", "clusteringPrefix=",
-            "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
+        opts, args = getopt.getopt(argv, "h?i:o:",
+            ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "polygon=", "clusteringPrefix=", "clusteringExcluded=",
+                "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
     except getopt.GetoptError:
         print("ERROR: Unknown argument. Please see below for usage.")
         print(usageMsg)
@@ -73,6 +75,8 @@ def main(argv):
             clustering = bool(distutils.util.strtobool(arg))
         elif opt == "--clusteringPrefix":
             clusteringPrefix = arg
+        elif opt == "--clusteringExcluded":
+            clusteringExcluded = list(map(str.strip, arg.split(',')))
         elif opt == "--numClusters":
             numClusters = int(arg)
         elif opt == "--polygon":
@@ -150,7 +154,8 @@ def main(argv):
         nextInputDir = entropyCreator.outputDir
 
     if clustering:
-        clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix, numClusters, polygon, clusteringPrefix)
+        clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix,
+            numClusters, polygon, clusteringPrefix, clusteringExcluded)
         clusteringWorker.run()
 
         nextInputDir = clusteringWorker.outputDir

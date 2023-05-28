@@ -292,9 +292,12 @@ class Util:
     @staticmethod
     def copyFiles(inputDir: str, outputDir: str, filter: Optional[Callable[[str], bool]] = None):
         for filename in Util.getListOfFiles(inputDir, filter):
-            destination = os.path.join(outputDir, filename)
-            if os.path.isfile(destination):
-                continue
+            Util.copyFile(inputDir, outputDir, filename)
+
+    @staticmethod
+    def copyFile(inputDir: str, outputDir: str, filename: str, filenameDestination: Optional[str] = None):
+        destination = os.path.join(outputDir, filename if filenameDestination is None else filenameDestination)
+        if not os.path.isfile(destination):
             shutil.copyfile(os.path.join(inputDir, filename), destination)
 
     @staticmethod

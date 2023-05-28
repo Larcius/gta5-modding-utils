@@ -37,13 +37,14 @@ class Clustering:
         '\\s*</Item>[\r\n]+'
     )
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: int, polygon: Optional[list[list[float]]], clusteringPrefix: Optional[str]):
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: int, polygon: Optional[list[list[float]]], clusteringPrefix: Optional[str], clusteringExcluded: Optional[list[str]]):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
         self.numCluster = numCluster
         self.polygon = polygon
         self.clusteringPrefix = clusteringPrefix
+        self.clusteringExcluded = [] if clusteringExcluded is None else clusteringExcluded
 
     def run(self):
         print("running clustering...")
@@ -153,15 +154,21 @@ class Clustering:
     def processFiles(self):
         coords = []
         mapsHavingNotOnlyEntities = []
+        mapsNeededToCopy = []
         mapNames = []
         for filename in natsorted(os.listdir(self.inputDir)):
             if not filename.endswith(".ymap.xml"):
                 continue
 
-            print("\treading " + filename)
-
             mapName = filename[:-9]
+
+            if mapName in self.clusteringExcluded:
+                mapsNeededToCopy.append(mapName)
+                continue
+
             mapNames.append(mapName)
+
+            print("\treading " + filename)
 
             f = open(os.path.join(self.inputDir, filename), 'r')
             content = f.read()
@@ -204,6 +211,10 @@ class Clustering:
             if not filename.endswith(".ymap.xml"):
                 continue
 
+            mapName = filename[:-9]
+            if mapName in mapsNeededToCopy:
+                continue
+
             f = open(os.path.join(self.inputDir, filename), 'r')
             content = f.read()
             f.close()
@@ -216,17 +227,14 @@ class Clustering:
 
         self.writeClusteredYmap(mapPrefix, outputFiles)
 
+        for mapName in mapsNeededToCopy:
+            newMapName = self.findAvailableMapName(mapName, "_excluded")
+            Util.copyFile(self.inputDir, self.outputDir, mapName + ".ymap.xml", newMapName + ".ymap.xml")
+
         for mapName in mapsHavingNotOnlyEntities:
             content = Util.readFile(os.path.join(self.inputDir, mapName + ".ymap.xml"))
 
-            newMapName = mapName
-            if os.path.exists(os.path.join(self.outputDir, newMapName + ".ymap.xml")):
-                newMapName = re.sub("_no_entities\\d*$", "", newMapName) + "_no_entities"
-                i = -1
-                while os.path.exists(os.path.join(self.outputDir, newMapName + ("" if i < 0 else str(i)) + ".ymap.xml")):
-                    i += 1
-                if i >= 0:
-                    newMapName += str(i)
+            newMapName = self.findAvailableMapName(mapName, "_no_entities")
 
             content = Ymap.replaceParent(content, None)
             content = Ymap.replaceName(content, newMapName)
@@ -235,6 +243,17 @@ class Clustering:
             Util.writeFile(os.path.join(self.outputDir, newMapName + ".ymap.xml"), content)
 
         self.plotClusterResult(coords, hierarchy)
+
+    def findAvailableMapName(self, mapName: str, suffix: str) -> str:
+        newMapName = mapName
+        if os.path.exists(os.path.join(self.outputDir, newMapName + ".ymap.xml")):
+            newMapName = re.sub(suffix + "\\d*$", "", newMapName) + suffix
+            i = -1
+            while os.path.exists(os.path.join(self.outputDir, newMapName + ("" if i < 0 else str(i)) + ".ymap.xml")):
+                i += 1
+            if i >= 0:
+                newMapName += str(i)
+        return newMapName
 
     def writeClusteredYmap(self, mapPrefix: str, clusteredEntities: dict[int, dict[int, str]]):
         numGroups = len(clusteredEntities)
