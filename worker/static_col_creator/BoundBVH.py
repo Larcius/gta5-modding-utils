@@ -357,9 +357,10 @@ class BoundBVH:
         materialsMapping = self.mergeMaterials(bound)
 
         vertexIndexOffset = len(self.vertices)
+        polygonIndexOffset = len(self.polygons)
         for i in range(len(bound.polygons)):
             polygon = bound.polygons[i]
-            polygon.offsetVertexIndex(vertexIndexOffset)
+            polygon.offsetVertexIndex(vertexIndexOffset, polygonIndexOffset)
             # fix MaterialIndex according to materialsMapping
             polygon.materialIndex = materialsMapping[polygon.materialIndex]
 
@@ -409,7 +410,7 @@ class BoundBVH:
 			AABBMax """ + Util.vectorToStr(bbox.max) + """
 			AABBMin """ + Util.vectorToStr(bbox.min) + """
 			Centroid """ + Util.vectorToStr(bsphere.center) + """
-			CG """ + Util.vectorToStr(bsphere.center) + """ 
+			CG """ + Util.vectorToStr(bsphere.center) + """
 """)
 
         self.writePolygons(file)

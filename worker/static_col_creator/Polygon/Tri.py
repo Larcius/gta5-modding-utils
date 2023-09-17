@@ -56,11 +56,12 @@ class Tri:
         self.siblings = siblings
         self.materialIndex = materialIndex
 
-    def offsetVertexIndex(self, offset: int) -> None:
+    def offsetVertexIndex(self, offsetVertex: int, offsetPolygon: int) -> None:
         for i in range(len(self.vertices)):
-            self.vertices[i] = self.vertices[i] + offset
+            self.vertices[i] = self.vertices[i] + offsetVertex
         for i in range(len(self.siblings)):
-            self.siblings[i] = self.siblings[i] + offset
+            if self.siblings[i] >= 0:
+                self.siblings[i] = self.siblings[i] + offsetPolygon
 
     def scale(self, scale: float) -> None:
         pass

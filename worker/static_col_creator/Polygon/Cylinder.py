@@ -61,9 +61,9 @@ class Cylinder:
         self.radius = radius
         self.materialIndex = materialIndex
 
-    def offsetVertexIndex(self, offset: int) -> None:
-        self.centerTop = self.centerTop + offset
-        self.centerBottom = self.centerBottom + offset
+    def offsetVertexIndex(self, offsetVertex: int, offsetPolygon: int) -> None:
+        self.centerTop = self.centerTop + offsetVertex
+        self.centerBottom = self.centerBottom + offsetVertex
 
     def scale(self, scale: float) -> None:
         self.radius = self.radius * scale
