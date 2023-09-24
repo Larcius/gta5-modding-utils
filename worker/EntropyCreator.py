@@ -1,4 +1,3 @@
-import numpy as np
 import transforms3d
 import os
 import math
@@ -42,7 +41,7 @@ class EntropyCreator:
         "test_tree",
         "prop_tree_stump",
         "prop_veg_crop_orange",
-        "prop_bush_lrg"
+        "prop_bush_lrg_04"
     })
     CANDIDATES_ROTATION = tuple({
         "prop_desert_iron",
@@ -73,7 +72,7 @@ class EntropyCreator:
         "test_tree",
         "prop_tree_stump",
         "prop_veg_crop_orange",
-        "prop_bush_lrg"
+        "prop_bush_lrg_04"
     })
 
 
@@ -121,81 +120,78 @@ class EntropyCreator:
 
     def repl(self, match: Match) -> str:
         entity = match.group(2).lower()
-        origScaleXY = float(match.group(8))
-        origScaleZ = float(match.group(10))
 
-        maxScaleZ = random.uniform(0.9, 1.1)
-
-        isRotationCandidate = self.isRotationCandidate(entity)
-        isScaleCandidate = self.isScaleCandidate(entity)
-
-        if self.limitScale and isScaleCandidate and origScaleZ > maxScaleZ:
-            ratio = maxScaleZ / origScaleZ
-            scaleZ = maxScaleZ
-            scaleXY = origScaleXY * ratio
-        else:
-            scaleXY = origScaleXY
-            scaleZ = origScaleZ
-
-        if self.adaptScaleIfIdentity and isScaleCandidate and origScaleZ == 1:
-            scaleXY = scaleZ = maxScaleZ
-
-        if self.limitTilt and isRotationCandidate:
-            treeHeight = self.ytypItems[entity].boundingBox.getSizes()[2] * scaleZ
-            maxAngleNoZ = Util.calculateMaxTilt(treeHeight)
-        else:
-            maxAngleNoZ = math.pi
+        origScale = [float(match.group(8)), float(match.group(10))]
+        scale = self.adaptScale(entity, origScale)
 
         origQuat = [float(match.group(6)), -float(match.group(3)), -float(match.group(4)), -float(match.group(5))]  # order is w, -x, -y, -z
+        rotationQuaternion = self.adaptRotation(entity, origQuat, scale[1])
 
-        origRotZ, origRotY, origRotX = transforms3d.euler.quat2euler(origQuat, axes='rzyx')
-
-        axisNoZ, angleNoZ = transforms3d.euler.euler2axangle(0, origRotY, origRotX, axes='rzyx')
-
-        if self.limitTilt and abs(angleNoZ) > maxAngleNoZ:
-            newAngleNoZ = math.copysign(maxAngleNoZ, angleNoZ)
-        else:
-            newAngleNoZ = angleNoZ
-
-        rotZ = origRotZ
-        if self.adaptRotationIfIdentity and isRotationCandidate:
-            if origRotZ == 0:
-                rotZ = random.uniform(-math.pi, math.pi)
-            if angleNoZ == 0:
-                defaultMaxTilt = Util.calculateMaxTilt(999)
-                newAngleNoZ = random.uniform(-defaultMaxTilt, defaultMaxTilt)
-
-        if self.limitTilt or self.adaptRotationIfIdentity:
-            unused, rotY, rotX = transforms3d.euler.axangle2euler(axisNoZ, newAngleNoZ, axes='rzyx')
-
-            rotationQuaternion = transforms3d.euler.euler2quat(rotZ, rotY, rotX, axes='rzyx')
-        else:
-            rotationQuaternion = origQuat
-
-        if np.allclose(rotationQuaternion, origQuat, rtol=0, atol=1e-05) and np.allclose([scaleXY, scaleZ], [origScaleXY, origScaleZ], rtol=0, atol=1e-05):
+        if scale == origScale and rotationQuaternion == origQuat:
             return match.group(0)
-
-        if self.limitTilt and abs(angleNoZ) > maxAngleNoZ:
-            print("\t\tlimiting original tilt (angle ignoring rotation around z axis) of " + Util.angleToStr(angleNoZ) + "° to " +
-                  Util.angleToStr(newAngleNoZ) + "°")
-
-        if not np.allclose(rotationQuaternion, origQuat, rtol=0, atol=1e-05):
-            print("\t\tchanging rotation from tilt " + Util.angleToStr(angleNoZ) + "° to " + Util.angleToStr(newAngleNoZ) + "° and yaw " +
-                  Util.angleToStr(origRotZ) + "° to " + Util.angleToStr(rotZ) + "°")
-        else:
-            rotationQuaternion = origQuat
-
-        if not np.allclose([scaleXY, scaleZ], [origScaleXY, origScaleZ], rtol=0, atol=1e-05):
-            print("\t\tchanging scale from " + Util.floatToStr(origScaleXY) + ", " + Util.floatToStr(origScaleZ) + " to " +
-                  Util.floatToStr(scaleXY) + ", " + Util.floatToStr(scaleZ))
-        else:
-            scaleXY = origScaleXY
-            scaleZ = origScaleZ
 
         return match.group(1) + \
                'x="' + Util.floatToStr(-rotationQuaternion[1]) + '" y="' + Util.floatToStr(-rotationQuaternion[2]) + \
                '" z="' + Util.floatToStr(-rotationQuaternion[3]) + '" w="' + Util.floatToStr(rotationQuaternion[0]) + '"' + \
-               match.group(7) + Util.floatToStr(scaleXY) + match.group(9) + Util.floatToStr(scaleZ) + match.group(11)
+               match.group(7) + Util.floatToStr(scale[0]) + match.group(9) + Util.floatToStr(scale[1]) + match.group(11)
+
+    def adaptScale(self, entity: str, origScale: list[float]) -> list[float]:
+        if not self.isScaleCandidate(entity):
+            return origScale
+
+        maxScaleZ = 1.1
+        if self.adaptScaleIfIdentity and origScale == [1, 1]:
+            scaleXY = scaleZ = random.uniform(1 / maxScaleZ, maxScaleZ)
+        elif self.limitScale and origScale[1] > maxScaleZ:
+            ratio = maxScaleZ / origScale[1]
+            scaleZ = maxScaleZ
+            scaleXY = origScale[0] * ratio
+        else:
+            return origScale
+
+        print("\t\tchanging scale from " + Util.floatToStr(origScale[0]) + ", " + Util.floatToStr(origScale[1]) + " to " +
+              Util.floatToStr(scaleXY) + ", " + Util.floatToStr(scaleZ))
+
+        return [scaleXY, scaleZ]
+
+    def adaptRotation(self, entity: str, origQuat: list[float], scaleZ: float) -> list[float]:
+        if not self.isRotationCandidate(entity):
+            return origQuat
+
+        if self.adaptRotationIfIdentity and origQuat == [1, 0, 0, 0]:
+            maxTilt = self.calculateMaxTilt(entity, scaleZ)
+            rotZBefore = random.uniform(-math.pi, math.pi)
+            tilt = random.uniform(0, maxTilt)
+            rotZAfter = random.uniform(-math.pi, math.pi)
+
+            rotationQuaternion = transforms3d.euler.euler2quat(rotZBefore, tilt, rotZAfter, axes='rzyz')
+        elif self.limitTilt:
+            maxTilt = self.calculateMaxTilt(entity, scaleZ)
+            rotZBefore, origTilt, rotZAfter = transforms3d.euler.quat2euler(origQuat, axes='rzyz')
+
+            if abs(origTilt) < maxTilt:
+                return origQuat
+
+            tilt = math.copysign(maxTilt, origTilt)
+
+            print("\t\tlimiting original tilt of " +
+                  Util.angleToStr(abs(origTilt)) + " to " + Util.angleToStr(abs(tilt)))
+
+            rotationQuaternion = transforms3d.euler.euler2quat(rotZBefore, tilt, rotZAfter, axes='rzyz')
+        else:
+            return origQuat
+
+        origRotY, origRotX, origRotZ = transforms3d.euler.quat2euler(origQuat, axes='syxz')
+        rotY, rotX, rotZ = transforms3d.euler.quat2euler(rotationQuaternion, axes='syxz')
+        print("\t\tchanging rotation from " +
+              Util.angleToStr(-origRotX) + ", " + Util.angleToStr(-origRotY) + ", " + Util.angleToStr(-origRotZ) + " to " +
+              Util.angleToStr(-rotX) + ", " + Util.angleToStr(-rotY) + ", " + Util.angleToStr(-rotZ))
+
+        return rotationQuaternion.tolist()
+
+    def calculateMaxTilt(self, entity: str, scaleZ: float) -> float:
+        treeHeight = self.ytypItems[entity].boundingBox.getSizes()[2] * scaleZ
+        return Util.calculateMaxTilt(treeHeight)
 
     def processFiles(self):
         for filename in natsorted(os.listdir(self.inputDir)):
