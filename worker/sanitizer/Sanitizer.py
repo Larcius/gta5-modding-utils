@@ -7,6 +7,7 @@ import re
 
 from common.Util import Util
 from common.ymap.Flag import Flag
+from common.ymap.LodLevel import LodLevel
 from common.ymap.Ymap import Ymap
 from common.ytyp.YtypItem import YtypItem
 from common.ytyp.YtypParser import YtypParser
@@ -73,6 +74,12 @@ class Sanitizer:
             # TODO when is it necessary to add this flag? looking at some original rockstar maps only some rotations need this flag
             flags |= Flag.ALLOW_FULL_ROTATION
 
+        lodLevel = match.group(12)
+        numChildren = int(match.group(14))
+        if lodLevel == LodLevel.HD and numChildren == 0:
+            lodLevel = LodLevel.ORPHAN_HD
+            print("\t\tchanged lodLevel from " + LodLevel.HD + " to " + LodLevel.ORPHAN_HD)
+
         return match.group(1) + \
                fixedArchetypeName + \
                match.group(3) + \
@@ -82,7 +89,8 @@ class Sanitizer:
                '" y="' + Util.floatToStr(-rotationQuaternion[2]) + \
                '" z="' + Util.floatToStr(-rotationQuaternion[3]) + \
                '" w="' + Util.floatToStr(rotationQuaternion[0]) + '"' + \
-               match.group(10) + Util.floatToStr(0) + match.group(11)
+               match.group(10) + Util.floatToStr(0) + \
+               match.group(11) + lodLevel + match.group(13)
 
     def processFiles(self):
         for filename in natsorted(os.listdir(self.inputDir)):
@@ -104,6 +112,8 @@ class Sanitizer:
                              '\\s*<rotation )x="([^"]+)" y="([^"]+)" z="([^"]+)" w="([^"]+)"(/>' +
                              '(?:\\s*<[^/].*>)*?' +
                              '\\s*<childLodDist value=")[^"]+("/>' +
+                             '\\s*<lodLevel>)([^<]+)(</lodLevel>' +
+                             '\\s*<numChildren value="([^"]+)"/>' +
                              '(?:\\s*<[^/].*>)*?' +
                              '\\s*</Item>)', lambda match: self.repl(match, fixedArchetypeNames), content, flags=re.M)
 

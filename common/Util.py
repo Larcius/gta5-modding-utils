@@ -259,7 +259,7 @@ class Util:
 
     @staticmethod
     def angleToStr(angleInRad):
-        return str(round(math.degrees(angleInRad), 2))
+        return str(round(math.degrees(angleInRad), 2)) + "°"
 
     @staticmethod
     def calculateMaxTilt(height: float) -> float:
