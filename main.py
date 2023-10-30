@@ -40,6 +40,7 @@ def main(argv):
     clusteringExcluded = None
     staticCol = False
     lodMap = False
+    clearLod = False
     sanitizer = False
     entropy = False
     statistics = False
@@ -53,7 +54,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "h?i:o:",
             ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "polygon=", "clusteringPrefix=", "clusteringExcluded=",
-                "staticCol=", "prefix=", "lodMap=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
+                "staticCol=", "prefix=", "lodMap=", "clearLod=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
     except getopt.GetoptError:
         print("ERROR: Unknown argument. Please see below for usage.")
         print(usageMsg)
@@ -85,6 +86,8 @@ def main(argv):
             staticCol = bool(distutils.util.strtobool(arg))
         elif opt == "--lodMap":
             lodMap = bool(distutils.util.strtobool(arg))
+        elif opt == "--clearLod":
+            clearLod = bool(distutils.util.strtobool(arg))
         elif opt == "--sanitizer":
             sanitizer = bool(distutils.util.strtobool(arg))
         elif opt == "--entropy":
@@ -166,8 +169,8 @@ def main(argv):
 
         nextInputDir = sanitizerWorker.outputDir
 
-    if lodMap:
-        lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix)
+    if lodMap or clearLod:
+        lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix, clearLod)
         lodMapCreator.run()
 
         outputSlodDir = os.path.join(outputDir, prefix + "_slod")

@@ -34,6 +34,7 @@ class LodMapCreator:
 
     prefix: str
     bundlePrefixes: list[str]
+    clearLod: bool
 
     contentTemplateYtypItem: str
     contentTemplateMesh: str
@@ -234,10 +235,11 @@ class LodMapCreator:
     MIN_HD_LOD_DISTANCE_FOR_SLOD2 = Util.calculateLodDistance(unitBox, unitSphere, [8] * 3, True)  # 240
     MIN_HD_LOD_DISTANCE_FOR_SLOD3 = Util.calculateLodDistance(unitBox, unitSphere, [13] * 3, True)  # 290
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str):
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, clearLod: bool):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
+        self.clearLod = clearLod
         self.slodYtypItems = None
         self.foundLod = False
         self.foundSlod = False
@@ -246,8 +248,14 @@ class LodMapCreator:
         print("running lod map creator...")
         self.determinePrefixBundles()
         self.readTemplates()
-        self.prepareLodCandidates()
-        self.prepareSlodCandidates()
+
+        if self.clearLod:
+            self.lodCandidates = {}
+            self.slodCandidates = {}
+        else:
+            self.prepareLodCandidates()
+            self.prepareSlodCandidates()
+
         self.createOutputDir()
         self.readYtypItems()
         self.processFiles()
