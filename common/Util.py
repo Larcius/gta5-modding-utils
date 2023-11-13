@@ -73,15 +73,22 @@ class Util:
         return maxDistance
 
     @staticmethod
-    def _performClustering(X: np.ndarray, numClusters: int, unevenClusters: bool) -> (Any, float, list[float]):
-        print("\t\tcalculating clustering of " + str(numClusters) + " clusters")
-        if unevenClusters:
-            model = AgglomerativeClustering(n_clusters=numClusters, linkage="average")
-        else:
-            model = MiniBatchKMeans(n_clusters=numClusters, random_state=0, reassignment_ratio=0, n_init=10)
-        clusters = model.fit_predict(X)
+    def _performClustering(X: np.ndarray, numClusters: int, unevenClusters: bool) -> (Any, int, list[float]):
+        numPoints = X.shape[0]
+        print("\t\tcalculating clustering of " + str(numClusters) + " clusters for " + str(numPoints) + " points")
 
-        clusters = Util._fixClusterLabels(clusters, X)
+        if numClusters == 1:
+            clusters = np.zeros(numPoints, dtype=int)
+        elif numClusters == numPoints:
+            clusters = np.arange(numPoints, dtype=int)
+        else:
+            if unevenClusters:
+                model = AgglomerativeClustering(n_clusters=numClusters, linkage="average")
+            else:
+                model = MiniBatchKMeans(n_clusters=numClusters, random_state=0, reassignment_ratio=0, n_init=10)
+            clusters = model.fit_predict(X)
+
+            clusters = Util._fixClusterLabels(clusters, X)
 
         maxClusterSize = -1
         furthestDistances = [0] * numClusters
@@ -180,7 +187,7 @@ class Util:
             return np.zeros(len(points))
 
     @staticmethod
-    def performClusteringFixedNumClusters(points: list[list[float]], numClusters: int, unevenClusters: bool = False) -> (Any, float, list[float]):
+    def performClusteringFixedNumClusters(points: list[list[float]], numClusters: int, unevenClusters: bool = False) -> (Any, int, list[float]):
         X = np.array(points)
         return Util._performClustering(X, numClusters, unevenClusters)
 
@@ -197,7 +204,11 @@ class Util:
         clustersForSmallestValidNumClusters = None
         furthestDistancesForSmallestValidNumClusters = None
 
-        numClusters = 1 if maxPoints <= 0 else math.ceil(len(points) / maxPoints)
+        if maxPoints > 0:
+            numClusters = math.ceil(numPoints / maxPoints)
+        else:
+            numClusters = 1
+
         while largestNonValidNumClusters + 1 != smallestValidNumClusters:
             clusters, maxClusterSize, furthestDistances = Util._performClustering(X, numClusters, unevenClusters)
 
@@ -219,7 +230,7 @@ class Util:
                         ratio = max(furthestDistances) / maxFurthestDistance
                         nextNumClusters = max(nextNumClusters, math.ceil(numClusters * ratio))
                     # ensure that there are at most as many clusters as points
-                    numClusters = min(len(points), nextNumClusters)
+                    numClusters = min(numPoints, nextNumClusters)
                 else:
                     numClusters = math.ceil((largestNonValidNumClusters + smallestValidNumClusters) / 2)
             else:

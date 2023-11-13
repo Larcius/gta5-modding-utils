@@ -24,6 +24,8 @@ class Clustering:
     prefix: str
     numCluster: int
     polygon: Optional[list[list[float]]]
+    clusteringPrefix: Optional[str]
+    clusteringExcluded: list[str]
 
     GROUP_MAX_EXTEND = 1800
     MAX_EXTEND = 600
