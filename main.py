@@ -9,6 +9,7 @@ import json
 from matplotlib import pyplot
 
 from worker.EntropyCreator import EntropyCreator
+from worker.reducer.Reducer import Reducer
 from worker.vegetation_creator.VegetationCreator import VegetationCreator
 from worker.clustering.Clustering import Clustering
 from worker.lod_map_creator.LodMapCreator import LodMapCreator
@@ -36,6 +37,9 @@ def main(argv):
     clustering = False
     numClusters = -1
     polygon = None
+    reducer = False
+    reducerFactor = 0.5
+    reducerAdaptScaling = False
     clusteringPrefix = None
     clusteringExcluded = None
     staticCol = False
@@ -47,13 +51,15 @@ def main(argv):
     prefix = None
 
     usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> " \
+               "--reducer=<on|off> --reducerFactor=<float (default 0.5)> --reducerAdaptScaling=<on|off>" \
                "--clustering=<on|off> --numClusters=<integer> --polygon=<list of x,y coordinates in CCW order> " \
                "--clusteringPrefix=<CLUSTERING_PREFIX> --clusteringExcluded=<comma-separated list of ymaps to exclude> " \
                "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off>"
 
     try:
         opts, args = getopt.getopt(argv, "h?i:o:",
-            ["help", "inputDir=", "outputDir=", "clustering=", "numClusters=", "polygon=", "clusteringPrefix=", "clusteringExcluded=",
+            ["help", "inputDir=", "outputDir=", "reducer=", "reducerFactor=", "reducerAdaptScaling=",
+                "clustering=", "numClusters=", "polygon=", "clusteringPrefix=", "clusteringExcluded=",
                 "staticCol=", "prefix=", "lodMap=", "clearLod=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
     except getopt.GetoptError:
         print("ERROR: Unknown argument. Please see below for usage.")
@@ -72,6 +78,15 @@ def main(argv):
             prefix = arg
         elif opt == "--vegetationCreator":
             vegetationCreator = bool(distutils.util.strtobool(arg))
+        elif opt == "--reducer":
+            reducer = bool(distutils.util.strtobool(arg))
+        elif opt == "--reducerFactor":
+            reducerFactor = float(arg)
+            if not 0 <= reducerFactor <= 1:
+                print("ERROR: reducerFactor must be between 0 and 1")
+                sys.exit(2)
+        elif opt == "--reducerAdaptScaling":
+            reducerAdaptScaling = bool(distutils.util.strtobool(arg))
         elif opt == "--clustering":
             clustering = bool(distutils.util.strtobool(arg))
         elif opt == "--clusteringPrefix":
@@ -95,7 +110,7 @@ def main(argv):
         elif opt == "--statistics":
             statistics = bool(distutils.util.strtobool(arg))
 
-    if not vegetationCreator and not clustering and not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
+    if not vegetationCreator and not reducer and not clustering and not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
         print("ERROR: No goal specified, nothing to do.")
         print(usageMsg)
         sys.exit(2)
@@ -155,6 +170,12 @@ def main(argv):
         entropyCreator.run()
 
         nextInputDir = entropyCreator.outputDir
+
+    if reducer:
+        reducerWorker = Reducer(nextInputDir, os.path.join(tempOutputDir, "reducer"), prefix, reducerFactor, reducerAdaptScaling)
+        reducerWorker.run()
+
+        nextInputDir = reducerWorker.outputDir
 
     if clustering:
         clusteringWorker = Clustering(nextInputDir, os.path.join(tempOutputDir, "clustering"), prefix,
