@@ -73,9 +73,12 @@ class Util:
         return maxDistance
 
     @staticmethod
-    def _performClustering(X: np.ndarray, numClusters: int, unevenClusters: bool) -> (Any, int, list[float]):
+    def _performClustering(X: np.ndarray, numClusters: Optional[int], distanceThreshold: Optional[float], unevenClusters: bool) -> (Any, int, list[float]):
         numPoints = X.shape[0]
-        print("\t\tcalculating clustering of " + str(numClusters) + " clusters for " + str(numPoints) + " points")
+        if numClusters is None:
+            print("\t\tcalculating clustering using distance threshold " + str(distanceThreshold) + " for " + str(numPoints) + " points")
+        else:
+            print("\t\tcalculating clustering of " + str(numClusters) + " clusters for " + str(numPoints) + " points")
 
         if numClusters == 1:
             clusters = np.zeros(numPoints, dtype=int)
@@ -83,12 +86,14 @@ class Util:
             clusters = np.arange(numPoints, dtype=int)
         else:
             if unevenClusters:
-                model = AgglomerativeClustering(n_clusters=numClusters, linkage="average")
+                model = AgglomerativeClustering(n_clusters=numClusters, distance_threshold=distanceThreshold, linkage="complete")
             else:
                 model = MiniBatchKMeans(n_clusters=numClusters, random_state=0, reassignment_ratio=0, n_init=10)
             clusters = model.fit_predict(X)
 
             clusters = Util._fixClusterLabels(clusters, X)
+
+        numClusters = max(clusters) + 1
 
         maxClusterSize = -1
         furthestDistances = [0] * numClusters
@@ -189,7 +194,12 @@ class Util:
     @staticmethod
     def performClusteringFixedNumClusters(points: list[list[float]], numClusters: int, unevenClusters: bool = False) -> (Any, int, list[float]):
         X = np.array(points)
-        return Util._performClustering(X, numClusters, unevenClusters)
+        return Util._performClustering(X, numClusters, None, unevenClusters)
+
+    @staticmethod
+    def performClusteringMaxFurthestDistance(points: list[list[float]], maxFurthestDistance: float) -> (Any, int, list[float]):
+        X = np.array(points)
+        return Util._performClustering(X, None, maxFurthestDistance, True)
 
     @staticmethod
     def performClustering(points: list[list[float]], maxPoints: int, maxFurthestDistance: float, unevenClusters: bool = False) -> (Any, list[float]):
@@ -210,7 +220,7 @@ class Util:
             numClusters = 1
 
         while largestNonValidNumClusters + 1 != smallestValidNumClusters:
-            clusters, maxClusterSize, furthestDistances = Util._performClustering(X, numClusters, unevenClusters)
+            clusters, maxClusterSize, furthestDistances = Util._performClustering(X, numClusters, None, unevenClusters)
 
             furthestDistanceWeightedMean = 0
             for cluster in np.unique(clusters):

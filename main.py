@@ -38,7 +38,7 @@ def main(argv):
     numClusters = -1
     polygon = None
     reducer = False
-    reducerFactor = 0.5
+    reducerResolution = 30.0
     reducerAdaptScaling = False
     clusteringPrefix = None
     clusteringExcluded = None
@@ -51,14 +51,14 @@ def main(argv):
     prefix = None
 
     usageMsg = "main.py --inputDir <input directory> --outputDir <output directory> --prefix=<PREFIX> " \
-               "--reducer=<on|off> --reducerFactor=<float (default 0.5)> --reducerAdaptScaling=<on|off>" \
+               "--reducer=<on|off> --reducerResolution=<float (default 30)> --reducerAdaptScaling=<on|off>" \
                "--clustering=<on|off> --numClusters=<integer> --polygon=<list of x,y coordinates in CCW order> " \
                "--clusteringPrefix=<CLUSTERING_PREFIX> --clusteringExcluded=<comma-separated list of ymaps to exclude> " \
                "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off>"
 
     try:
         opts, args = getopt.getopt(argv, "h?i:o:",
-            ["help", "inputDir=", "outputDir=", "reducer=", "reducerFactor=", "reducerAdaptScaling=",
+            ["help", "inputDir=", "outputDir=", "reducer=", "reducerResolution=", "reducerAdaptScaling=",
                 "clustering=", "numClusters=", "polygon=", "clusteringPrefix=", "clusteringExcluded=",
                 "staticCol=", "prefix=", "lodMap=", "clearLod=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
     except getopt.GetoptError:
@@ -80,10 +80,10 @@ def main(argv):
             vegetationCreator = bool(distutils.util.strtobool(arg))
         elif opt == "--reducer":
             reducer = bool(distutils.util.strtobool(arg))
-        elif opt == "--reducerFactor":
-            reducerFactor = float(arg)
-            if not 0 <= reducerFactor <= 1:
-                print("ERROR: reducerFactor must be between 0 and 1")
+        elif opt == "--reducerResolution":
+            reducerResolution = float(arg)
+            if reducerResolution <= 0:
+                print("ERROR: reducerResolution must be positive")
                 sys.exit(2)
         elif opt == "--reducerAdaptScaling":
             reducerAdaptScaling = bool(distutils.util.strtobool(arg))
@@ -172,7 +172,7 @@ def main(argv):
         nextInputDir = entropyCreator.outputDir
 
     if reducer:
-        reducerWorker = Reducer(nextInputDir, os.path.join(tempOutputDir, "reducer"), prefix, reducerFactor, reducerAdaptScaling)
+        reducerWorker = Reducer(nextInputDir, os.path.join(tempOutputDir, "reducer"), prefix, reducerResolution, reducerAdaptScaling)
         reducerWorker.run()
 
         nextInputDir = reducerWorker.outputDir

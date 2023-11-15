@@ -18,7 +18,7 @@ class Reducer:
     defaultYmapPart: str
     ytypItems: dict[str, YtypItem]
     prefix: str
-    reduceFactor: float
+    reducerResolution: float
     adaptScaling: bool
 
     _PATTERN = re.compile(
@@ -33,11 +33,22 @@ class Reducer:
         '\\s*</Item>[\r\n]+)'
     )
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str, reduceFactor: float, adaptScaling: bool):
+    groups = [
+        ("prop_tree_pine_", "prop_tree_cedar_0", "prop_w_r_cedar_", "test_tree_cedar_trunk_001", "test_tree_forest_trunk_01", "prop_s_pine_dead_01", "prop_tree_fallen_pine_01", "prop_tree_birch_01", "prop_tree_birch_02", "prop_tree_birch_04", "prop_tree_jacada_", "prop_tree_lficus_", "prop_tree_oak_01", "prop_tree_olive_01", "prop_tree_eng_oak_01", "prop_tree_eucalip_01", "prop_bush_lrg_04"),
+        ("prop_tree_birch_03", "prop_tree_maple_", "prop_tree_mquite_01", "prop_tree_stump_01", "test_tree_forest_trunk_base_01", "test_tree_forest_trunk_04", "prop_desert_iron_01", "prop_rio_del_01", "prop_rus_olive", "prop_rus_olive_wint"),
+        ("prop_tree_cedar_s_", "prop_tree_cypress_01"),
+        ("prop_bush_med_", "prop_bush_lrg_02", "prop_bush_lrg_03"),
+        ("prop_cactus_", "prop_joshua_tree_"),
+        ("prop_palm_", "prop_fan_palm_"),
+        ("prop_rock_"),
+        ("")  # everything else
+    ]
+
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, reducerResolution: float, adaptScaling: bool):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
-        self.reduceFactor = reduceFactor
+        self.reducerResolution = reducerResolution
         self.adaptScaling = adaptScaling
 
     def run(self):
@@ -62,12 +73,7 @@ class Reducer:
         if numPoints == 0:
             return []
 
-        numPointsToKeep = math.ceil(numPoints * self.reduceFactor)
-
-        if numPointsToKeep == 0:
-            return [0] * numPoints
-
-        clustering, unused, unused = Util.performClusteringFixedNumClusters(points, numPointsToKeep, True)
+        clustering, unused, unused = Util.performClusteringMaxFurthestDistance(points, self.reducerResolution)
 
         clusterSizes = np.bincount(clustering)
 
@@ -93,7 +99,7 @@ class Reducer:
             clustersMidpoint[cluster] = np.add(clustersMidpoint[cluster], points[i])
             clustersQuantity[cluster] += 1
 
-        for cluster in range(max(clustering) + 1):
+        for cluster in range(numClusters):
             clustersMidpoint[cluster] = np.divide(clustersMidpoint[cluster], clustersQuantity[cluster])
 
         return clustersMidpoint
@@ -113,7 +119,12 @@ class Reducer:
         return closestPointToClusterMidpoint
 
     def processFiles(self):
+        numGroups = len(self.groups)
+
         coords = []
+        for group in range(numGroups):
+            coords.append([])
+
         countMaps = 0
         for filename in natsorted(os.listdir(self.inputDir)):
             if not filename.endswith(".ymap.xml"):
@@ -129,19 +140,22 @@ class Reducer:
             for matchobj in re.finditer(Reducer._PATTERN, content):
                 archetypeName = matchobj.group(2)
                 scaling = [float(matchobj.group(6)), float(matchobj.group(6)), float(matchobj.group(8))]
-                if not self.entityShouldBeConsidered(archetypeName, scaling):
+                group = self.determineGroup(archetypeName, scaling)
+                if group < 0:
                     continue
 
-                coords.append([float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))])
+                coords[group].append([float(matchobj.group(3)), float(matchobj.group(4)), float(matchobj.group(5))])
 
         if not coords:
             return
 
         print("\treducing of " + str(countMaps) + " ymap files and in total " + str(len(coords)) + " entities")
 
-        pointsToKeep = self.calculatePointsToKeep(coords)
+        pointsToKeep = []
+        for group in range(numGroups):
+            pointsToKeep.append(self.calculatePointsToKeep(coords[group]))
 
-        counter = [0]
+        counter = [0] * numGroups
         for filename in natsorted(os.listdir(self.inputDir)):
             if not filename.endswith(".ymap.xml"):
                 continue
@@ -152,7 +166,6 @@ class Reducer:
 
             content_new = re.sub(Reducer._PATTERN, lambda match: self.repl(match, pointsToKeep, counter), content)
 
-            content_new = Ymap.replaceName(content_new, filename.lower()[:-9])
             content_new = Ymap.calculateAndReplaceLodDistance(content_new, self.ytypItems)
             content_new = Ymap.fixMapExtents(content_new, self.ytypItems)
 
@@ -160,22 +173,23 @@ class Reducer:
             f.write(content_new)
             f.close()
 
-    def repl(self, matchobj: Match, pointsToKeep: list[int], counter: list[int]) -> str:
+    def repl(self, matchobj: Match, pointsToKeep: list[list[int]], counter: list[int]) -> str:
         archetypeName = matchobj.group(2)
         scaling = [float(matchobj.group(6)), float(matchobj.group(6)), float(matchobj.group(8))]
 
-        if not self.entityShouldBeConsidered(archetypeName, scaling):
+        group = self.determineGroup(archetypeName, scaling)
+        if group < 0:
             return matchobj.group(0)
 
-        i = counter[0]
-        counter[0] += 1
-        if pointsToKeep[i] == 0:
+        i = counter[group]
+        counter[group] += 1
+        if pointsToKeep[group][i] == 0:
             return ""
-        elif not self.adaptScaling:
+        elif not self.adaptScaling or group != 0:
             return matchobj.group(0)
 
-        scaleXY = math.pow(pointsToKeep[i], 2/5)
-        scaleZ = math.pow(pointsToKeep[i], 2/5)
+        scaleXY = math.pow(pointsToKeep[group][i], 2/5)
+        scaleZ = math.pow(pointsToKeep[group][i], 2/5)
 
         bBoxSizes = self.ytypItems[archetypeName].boundingBox.getSizes()
         maxScalingXY = 40 / max(bBoxSizes[0], bBoxSizes[1])
@@ -194,10 +208,9 @@ class Reducer:
         # copy other files
         Util.copyFiles(self.inputDir, self.outputDir, lambda filename: not filename.endswith(".ymap.xml"))
 
-    def entityShouldBeConsidered(self, archetypeName: str, scaling: list[float]):
-        if archetypeName not in self.ytypItems:
-            return False
+    def determineGroup(self, archetypeName: str, scaling: list[float]) -> int:
+        for group in range(len(self.groups)):
+            if archetypeName.startswith(self.groups[group]):
+                return group
 
-        scaledRadius = self.ytypItems[archetypeName].boundingSphere.radius * max(scaling)
-
-        return scaledRadius > 7
+        return -1
