@@ -211,20 +211,21 @@ class LodMapCreator:
 
         self.slodCandidates = slodCandidates
 
-    LOD_DISTANCE = 750
-    SLOD_DISTANCE = 1100  # somehow arbitrary and not that important because SLOD1 and SLOD2 are almost the same models.
-    # however, reducing this results in smaller streaming extents of LOD/SLOD1 maps
+    HD_DISTANCE = 350  # doesn't really matter, only used in archetype description
+    LOD_DISTANCE = 500
+    SLOD_DISTANCE = 1000  # that seems to be the default value used by Rockstar Games. Reducing this results in smaller streaming extents of LOD/SLOD1 maps
     SLOD2_DISTANCE = 2800  # using 2800 because max height in game is 2600 and therefore until that height (plus a bit to allow slight xy offset)
     # a model with xy plane is needed so that objects don't vanish when above (SLOD2 models do contain such a xy plane but not SLOD3)
-    SLOD3_DISTANCE = 15000  # that seems to be the default value from Rockstars (in fact the whole map is not that large anyway)
+    SLOD3_DISTANCE = 15000  # that seems to be the default value used by Rockstar Games (in fact the whole map is not that large anyway)
 
     NUM_CHILDREN_MAX_VALUE = 255  # TODO confirm following claim: must be <= 255 since numChildren is of size 1 byte
     LOD_DISTANCES_MAX_DIFFERENCE_LOD = 60
     ENTITIES_EXTENTS_MAX_DIAGONAL_LOD = 100
-    ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD1 = 400
+    ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD1 = 300
     ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD2 = 800
     ENTITIES_EXTENTS_MAX_DIAGONAL_SLOD3 = 1600
 
+    USE_LOD_TEMPLATE_FOR_SLOD1 = True
     USE_SLOD_AS_LOD_MODEL = False
 
     unitBox = Box.createUnitBox()
@@ -576,7 +577,11 @@ class LodMapCreator:
         colorsFront = "255 29 0 255 / 0 255 0 0"
         return "				" + Util.vectorToStr(center) + " / " + Util.vectorToStr(Util.normalize(normal)) + " / " + colorsFront + " / " + Util.vectorToStr(uvPosition) + " / " + Util.vectorToStr(uv) + " / " + Util.vectorToStr(size) + " / " + Util.vectorToStr([1, 1]) + "\n"
 
-    def createLodModel(self, lodName: str, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
+    def createLodModel(self, nameWithoutSlodLevel: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
+        lodName = nameWithoutSlodLevel
+        if slodLevel > 0:
+            lodName += str(slodLevel)
+
         diffuseSamplerToVertices = {}
         diffuseSamplerToNormals = {}
         diffuseSamplerToTextureUVs = {}
@@ -671,8 +676,7 @@ class LodMapCreator:
         fileModelOdr.write(contentModelOdr)
         fileModelOdr.close()
 
-        itemHdDistance = 300
-        itemLodDistance = LodMapCreator.LOD_DISTANCE
+        itemHdDistance, itemLodDistance = self.getHdAndLodDistances(slodLevel)
 
         if not os.path.exists(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml")):
             self.slodYtypItems = open(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml"), 'w')
@@ -683,7 +687,8 @@ class LodMapCreator:
         """)
         self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", drawableDictionary, totalBoundingBox, totalBoundingSphere, itemHdDistance, itemLodDistance))
 
-        return EntityItem(lodName, center, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, LodLevel.LOD, Flag.FLAGS_LOD)
+        lodLevel, flags = self.getLevelAndFlags(slodLevel)
+        return self.createEntityItem(lodName, center, itemHdDistance, itemLodDistance, parentIndex, numChildren, lodLevel, flags)
 
     def calculateVectorOnEllipseAtDiagonal(self, semiaxisX: float, semiaxisY: float, quadrant: int) -> list[float]:
         coordinate = semiaxisX * semiaxisY / math.sqrt(semiaxisX**2 + semiaxisY**2)
@@ -740,7 +745,7 @@ class LodMapCreator:
             [uvMap.topMin.u, uvMap.topMin.v]
         ]
 
-    def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
+    def createSlodModel(self, nameWithoutSlodLevel: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
         name = nameWithoutSlodLevel
         if slodLevel > 0:
             name += str(slodLevel)
@@ -879,20 +884,7 @@ class LodMapCreator:
         fileModelOdr.write(contentModelOdr)
         fileModelOdr.close()
 
-        if slodLevel == 0:
-            itemHdDistance = 350
-            itemLodDistance = LodMapCreator.LOD_DISTANCE
-        elif slodLevel == 1:
-            itemHdDistance = LodMapCreator.LOD_DISTANCE
-            itemLodDistance = LodMapCreator.SLOD_DISTANCE
-        elif slodLevel == 2:
-            itemHdDistance = LodMapCreator.SLOD_DISTANCE
-            itemLodDistance = LodMapCreator.SLOD2_DISTANCE
-        elif slodLevel == 3:
-            itemHdDistance = LodMapCreator.SLOD2_DISTANCE
-            itemLodDistance = LodMapCreator.SLOD3_DISTANCE
-        else:
-            Exception("unknown slod level " + str(slodLevel))
+        itemHdDistance, itemLodDistance = self.getHdAndLodDistances(slodLevel)
 
         if not os.path.exists(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml")):
             self.slodYtypItems = open(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml"), 'w')
@@ -903,6 +895,39 @@ class LodMapCreator:
 """)
         self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, self.getYtypName(), drawableDictionary, totalBoundingBox, totalBoundingSphere, itemHdDistance, itemLodDistance))
 
+        lodLevel, flags = self.getLevelAndFlags(slodLevel)
+        return self.createEntityItem(name, center, itemHdDistance, itemLodDistance, parentIndex, numChildren, lodLevel, flags)
+
+    def getHdAndLodDistances(self, slodLevel: int) -> (int, int):
+        return self._getLodDistance(slodLevel - 1), self._getLodDistance(slodLevel)
+
+    def _getLodDistance(self, slodLevel: int) -> int:
+        if slodLevel == -1:
+            return LodMapCreator.HD_DISTANCE
+        if slodLevel == 0:
+            return LodMapCreator.LOD_DISTANCE
+        elif slodLevel == 1:
+            return LodMapCreator.SLOD_DISTANCE
+        elif slodLevel == 2:
+            return LodMapCreator.SLOD2_DISTANCE
+        elif slodLevel == 3:
+            return LodMapCreator.SLOD3_DISTANCE
+        else:
+            Exception("unknown slod level " + str(slodLevel))
+
+    def getLevelAndFlags(self, slodLevel: int) -> (str, int):
+        if slodLevel == 0:
+            return LodLevel.LOD, Flag.FLAGS_LOD
+        elif slodLevel == 1:
+            return LodLevel.SLOD1, Flag.FLAGS_SLOD1
+        elif slodLevel == 2:
+            return LodLevel.SLOD2, Flag.FLAGS_SLOD2
+        elif slodLevel == 3:
+            return LodLevel.SLOD3, Flag.FLAGS_SLOD3
+        else:
+            Exception("unknown slod level " + str(slodLevel))
+
+    def createEntityItem(self, name: str, center: list[float], itemHdDistance: int, itemLodDistance: int, parentIndex: int, numChildren: int, lodLevel: str, flags: int) -> EntityItem:
         return EntityItem(name, center, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, itemHdDistance, parentIndex, numChildren, lodLevel, flags)
 
     def fixHdOrOrphanHdLodLevelsAndRearrangeEntites(self, content: str) -> str:
@@ -1060,7 +1085,7 @@ class LodMapCreator:
                 entitiesForLodModels[h[0]] = []
             entitiesForLodModels[h[0]].append(hdEntity)
 
-            if hdEntity.archetypeName in self.slodCandidates:
+            if self.USE_LOD_TEMPLATE_FOR_SLOD1 or hdEntity.archetypeName in self.slodCandidates:
                 if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD1:
                     if h[0] not in lodToSlod1:
                         lodToSlod1[h[0]] = h[2]
@@ -1069,6 +1094,8 @@ class LodMapCreator:
                     if h[2] not in entitiesForSlod1Models:
                         entitiesForSlod1Models[h[2]] = []
                     entitiesForSlod1Models[h[2]].append(hdEntity)
+
+            if hdEntity.archetypeName in self.slodCandidates:
                 if hdEntity.lodDistance >= LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD2:
                     if h[2] not in slod1ToSlod2:
                         slod1ToSlod2[h[2]] = h[3]
@@ -1102,8 +1129,7 @@ class LodMapCreator:
             slod3Entities.append(self.createSlodModel(
                 slodName, 3, slod2DrawableDictionary,
                 entitiesForSlod3Models[key],
-                -1, slod3NumChildren[key],
-                LodLevel.SLOD3, Flag.FLAGS_SLOD3
+                -1, slod3NumChildren[key]
             ))
             slod3KeyToIndex[key] = index
             index += 1
@@ -1116,8 +1142,7 @@ class LodMapCreator:
             slod2Entities.append(self.createSlodModel(
                 slodName, 2, slod2DrawableDictionary,
                 entitiesForSlod2Models[key],
-                parentIndex, slod2NumChildren[key],
-                LodLevel.SLOD2, Flag.FLAGS_SLOD2
+                parentIndex, slod2NumChildren[key]
             ))
             slod2KeyToIndex[key] = index
             index += 1
@@ -1132,12 +1157,22 @@ class LodMapCreator:
             if len(slod1Entities[-1]) >= LodMapCreator.MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY:
                 slod1Entities.append([])
 
-            slod1Entities[-1].append(self.createSlodModel(
-                slodName, 1, slod1DrawableDictionary + "_" + str(len(slod1Entities) - 1),
-                entitiesForSlod1Models[key],
-                parentIndex, slod1NumChildren[key],
-                LodLevel.SLOD1, Flag.FLAGS_SLOD1
-            ))
+            if self.USE_LOD_TEMPLATE_FOR_SLOD1:
+                slod1Entities[-1].append(self.createLodModel(
+                    slodName, 1,
+                    slod1DrawableDictionary + "_" + str(len(slod1Entities) - 1),
+                    entitiesForSlod1Models[key],
+                    parentIndex, slod1NumChildren[key]
+                ))
+            else:
+                slod1Entities[-1].append(self.createSlodModel(
+                    slodName, 1,
+                    slod1DrawableDictionary + "_" + str(len(slod1Entities) - 1),
+                    entitiesForSlod1Models[key],
+                    parentIndex, slod1NumChildren[key]
+                ))
+
+
             slod1KeyToIndex[key] = index
             index += 1
 
@@ -1150,14 +1185,14 @@ class LodMapCreator:
 
             if self.USE_SLOD_AS_LOD_MODEL:
                 lodEntities[-1].append(self.createSlodModel(
-                    lodName, 0, lodDrawableDictionary + "_" + str(len(lodEntities) - 1),
+                    lodName, 0,
+                    lodDrawableDictionary + "_" + str(len(lodEntities) - 1),
                     entitiesForLodModels[key],
-                    parentIndex, lodNumChildren[key],
-                    LodLevel.LOD, Flag.FLAGS_LOD
+                    parentIndex, lodNumChildren[key]
                 ))
             else:
                 lodEntities[-1].append(self.createLodModel(
-                    lodName,
+                    lodName, 0,
                     lodDrawableDictionary + "_" + str(len(lodEntities) - 1),
                     entitiesForLodModels[key],
                     parentIndex, lodNumChildren[key]
@@ -1292,12 +1327,11 @@ class LodMapCreator:
                 pointsOfParent.append([])
 
             absIndices[parentIndex].append(i)
-            pointsOfParent[parentIndex].append(points[i] if clusterWithRespectToPosition else lodDistances[i])
-
-        if not clusterWithRespectToPosition:
-            for i in range(len(points)):
-                parentIndex = 0 if len(hierarchy[i]) == 0 else hierarchy[i][0]
-                pointsOfParent[parentIndex] = np.array(pointsOfParent[parentIndex]).reshape(-1, 1)
+            if clusterWithRespectToPosition:
+                sample = points[i]
+            else:
+                sample = [lodDistances[i]]
+            pointsOfParent[parentIndex].append(sample)
 
         clusterOffset = 0
         for parentIndex in range(len(pointsOfParent)):
