@@ -557,13 +557,12 @@ class LodMapCreator:
             uvMax = textureUVs[i][1]
 
             # for a bit more variety randomly flip/mirror the texture
-            # set a seed here to get the same result for multiple runs and different SLOD levels (therefore do not use translatedVertex)
-            seed = Util.hashFloat(vertices[i][0]) ^ Util.hashFloat(vertices[i][1])
-            random.seed(a=seed)
-            if bool(random.getrandbits(1)):
+            # yields same result for multiple runs and different SLOD levels (therefore do not use translatedVertex)
+            xyHash = Util.hashFloat(vertices[i][0]) ^ Util.hashFloat(vertices[i][1])
+            if xyHash % 2 == 0:
                 temp = uvMin.u
-                uvMin.u = uvMax.u
-                uvMax.u = temp
+                uvMin = UV(uvMax.u, uvMin.v)
+                uvMax = UV(temp, uvMax.v)
 
             result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [-1, -1, 0], sizes[i], [0, 1], [uvMin.u, uvMax.v])
             result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [1, -1, 0], sizes[i], [1, 1], [uvMax.u, uvMax.v])

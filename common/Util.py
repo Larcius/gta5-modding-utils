@@ -2,7 +2,6 @@ import math
 import os
 import random
 import shutil
-import struct
 from typing import Any, Callable, Optional
 
 import numpy as np
@@ -435,4 +434,4 @@ class Util:
 
     @staticmethod
     def hashFloat(val: float) -> int:
-        return hash(struct.pack("f", val))
+        return hash(round(val, ndigits=5))
