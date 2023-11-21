@@ -45,6 +45,7 @@ def main(argv):
     staticCol = False
     lodMap = False
     clearLod = False
+    createReflection = False
     sanitizer = False
     entropy = False
     statistics = False
@@ -54,13 +55,15 @@ def main(argv):
                "--reducer=<on|off> --reducerResolution=<float (default 30)> --reducerAdaptScaling=<on|off>" \
                "--clustering=<on|off> --numClusters=<integer> --polygon=<list of x,y coordinates in CCW order> " \
                "--clusteringPrefix=<CLUSTERING_PREFIX> --clusteringExcluded=<comma-separated list of ymaps to exclude> " \
-               "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> --lodMap=<on|off> --statistics=<on|off>"
+               "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> " \
+               "--lodMap=<on|off> --clearLod=<on|off> --reflection=<on|off> " \
+               "--statistics=<on|off>"
 
     try:
         opts, args = getopt.getopt(argv, "h?i:o:",
             ["help", "inputDir=", "outputDir=", "reducer=", "reducerResolution=", "reducerAdaptScaling=",
                 "clustering=", "numClusters=", "polygon=", "clusteringPrefix=", "clusteringExcluded=",
-                "staticCol=", "prefix=", "lodMap=", "clearLod=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
+                "staticCol=", "prefix=", "lodMap=", "clearLod=", "reflection=", "sanitizer=", "entropy=", "statistics=", "vegetationCreator="])
     except getopt.GetoptError:
         print("ERROR: Unknown argument. Please see below for usage.")
         print(usageMsg)
@@ -103,6 +106,8 @@ def main(argv):
             lodMap = bool(distutils.util.strtobool(arg))
         elif opt == "--clearLod":
             clearLod = bool(distutils.util.strtobool(arg))
+        elif opt == "--reflection":
+            createReflection = bool(distutils.util.strtobool(arg))
         elif opt == "--sanitizer":
             sanitizer = bool(distutils.util.strtobool(arg))
         elif opt == "--entropy":
@@ -191,7 +196,7 @@ def main(argv):
         nextInputDir = sanitizerWorker.outputDir
 
     if lodMap or clearLod:
-        lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix, clearLod)
+        lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix, clearLod, createReflection)
         lodMapCreator.run()
 
         outputSlodDir = os.path.join(outputDir, prefix + "_slod")

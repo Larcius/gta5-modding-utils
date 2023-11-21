@@ -1,0 +1,6 @@
+		default.sps
+		{
+			DiffuseSampler ${DIFFUSE_SAMPLER}
+			HardAlphaBlend 1.00000000
+			UseTessellation 0.00000000
+		}

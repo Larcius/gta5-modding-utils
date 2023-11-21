@@ -1,7 +1,7 @@
 		trees_lod2.sps
 		{
 			DiffuseSampler ${DIFFUSE_SAMPLER}
-			AlphaTest 1.00000000
+			AlphaTest 0.90000000
 			UseTreeNormals 0.00000000
 			TreeLod2Params 1.0 1.0 0.0 0.0
 		}

@@ -7,7 +7,7 @@ from common.Ellipsoid import Ellipsoid
 class Sphere:
     @staticmethod
     def createUnitSphere():
-        return Sphere([0] * 3, 1)
+        return Sphere([0] * 3, 0.5)
 
     center: list[float]
     radius: float

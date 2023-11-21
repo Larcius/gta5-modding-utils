@@ -188,6 +188,8 @@ class Reducer:
         elif not self.adaptScaling or group != 0:
             return matchobj.group(0)
 
+        # TODO consider scaleZ for position update (depending on rotation and offsetZ; see z-fixer)
+        # TODO take into account the total area divided by the area of this entity
         scaleXY = math.pow(pointsToKeep[group][i], 2/5)
         scaleZ = math.pow(pointsToKeep[group][i], 2/5)
 
