@@ -57,9 +57,9 @@ class YtypParser:
 
     @staticmethod
     def getYtypName(ytypContent: str) -> str:
-        match = re.search('\\s*<name>([^<]+)</name>' + \
-        '\\s*<dependencies/>' + \
-        '\\s*<compositeEntityTypes/>' + \
+        match = re.search('\\s*<name>([^<]+)</name>' +
+        '\\s*(?:<dependencies/>|<dependencies>[\\S\\s]*</dependencies>)' +
+        '\\s*(?:<compositeEntityTypes/>|<compositeEntityTypes>[\\S\\s]*</compositeEntityTypes>)' +
         '\\s*</CMapTypes>', ytypContent, re.M)
 
         return match.group(1)
