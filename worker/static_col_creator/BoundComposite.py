@@ -9,6 +9,13 @@ from common.Util import Util
 
 class BoundComposite:
 
+    DEFAULT_CHILD_FLAGS = """		Item
+		{
+			Flags1 MAP_DYNAMIC
+			Flags2 OBJECT
+		}
+"""
+
     @staticmethod
     def parse(content: str) -> "BoundComposite":
         # modes:
@@ -129,6 +136,12 @@ class BoundComposite:
                 m = re.match(r'	ChildFlags \d+$', line)
                 if m is not None:
                     mode = 11
+                    continue
+
+                m = re.match(r'	ChildFlags null$', line)
+                if m is not None:
+                    childFlags = [BoundComposite.DEFAULT_CHILD_FLAGS] * len(childTransforms)
+                    mode = 15
                     continue
             elif mode == 11:
                 if line == "	{":
