@@ -364,10 +364,10 @@ class Util:
             if candidate is None:
                 candidate = name
 
-            parts = [candidate.rstrip("_"), "", ""]
-            while not (parts[0] == "" or name == parts[0] or name.startswith(parts[0] + "_")):
+            parts = [candidate, "", ""]
+            while not (parts[0] == "" or name == parts[0] or name.startswith(parts[0] + parts[1])):
                 if "_" not in parts[0]:
-                    parts = [""]
+                    parts = ["", "", ""]
                 else:
                     parts = parts[0].rpartition("_")
 
