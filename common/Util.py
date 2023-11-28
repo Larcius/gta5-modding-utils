@@ -371,7 +371,7 @@ class Util:
                 else:
                     parts = parts[0].rpartition("_")
 
-            newCandidate = parts[0]
+            newCandidate = parts[0] + parts[1]
 
             if newCandidate == "":
                 if numMatches > 0:

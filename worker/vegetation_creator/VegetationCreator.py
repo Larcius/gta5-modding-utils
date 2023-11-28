@@ -462,9 +462,9 @@ class VegetationCreator:
     def getNewMapName(self, mapNames: list[str]):
         prefixes = Util.determinePrefixBundles(mapNames)
         if len(prefixes) == 1:
-            mapName = prefixes[0] + VegetationCreator.MAP_NAME_SUFFIX
+            mapName = prefixes[0].rstrip("_") + VegetationCreator.MAP_NAME_SUFFIX
         else:
-            mapName = self.prefix + VegetationCreator.MAP_NAME_SUFFIX
+            mapName = self.prefix.rstrip("_") + VegetationCreator.MAP_NAME_SUFFIX
 
         idx = 1
         finalMapName = mapName

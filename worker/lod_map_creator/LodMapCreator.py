@@ -1104,7 +1104,7 @@ class LodMapCreator:
         lodCoords = []
         lodDistances = []
         for filename in natsorted(os.listdir(self.inputDir)):
-            if not filename.endswith(".ymap.xml") or not (filename.startswith(mapPrefix.lower() + "_") or filename == mapPrefix.lower() + ".ymap.xml"):
+            if not filename.endswith(".ymap.xml") or not filename.startswith(mapPrefix.lower()):
                 continue
 
             mapName = filename[:-9]
@@ -1214,9 +1214,9 @@ class LodMapCreator:
             lodNumChildren[4] = {}
 
         if self.createReflection:
-            self.createLodSlodMapsModels(entitiesForLodModels, hierarchyMappingFromPreviousLevel, lodNumChildren, mapPrefix.lower(), True)
+            self.createLodSlodMapsModels(entitiesForLodModels, hierarchyMappingFromPreviousLevel, lodNumChildren, mapPrefix.lower().rstrip("_"), True)
 
-        numSlod1Entities = self.createLodSlodMapsModels(entitiesForLodModels, hierarchyMappingFromPreviousLevel, lodNumChildren, mapPrefix.lower(), False)
+        numSlod1Entities = self.createLodSlodMapsModels(entitiesForLodModels, hierarchyMappingFromPreviousLevel, lodNumChildren, mapPrefix.lower().rstrip("_"), False)
 
         self.adaptHdMapsForPrefix(mapPrefix, hierarchyMappingFromPreviousLevel[0], numSlod1Entities)
 
@@ -1383,7 +1383,7 @@ class LodMapCreator:
     def adaptHdMapsForPrefix(self, mapPrefix: str, hdToLod: dict[int, int], offsetParentIndex: int):
         mutableIndex = [0]
         for filename in natsorted(os.listdir(self.inputDir)):
-            if not filename.endswith(".ymap.xml") or not (filename.startswith(mapPrefix.lower() + "_") or filename == mapPrefix.lower() + ".ymap.xml"):
+            if not filename.endswith(".ymap.xml") or not filename.startswith(mapPrefix.lower()):
                 continue
 
             fileNoLod = open(os.path.join(self.getOutputDirMaps(), filename), 'r')
@@ -1399,7 +1399,7 @@ class LodMapCreator:
                                   '(?:\\s*<[^/].*>)*?' +
                                   '\\s*</Item>)', lambda match: self.replParentIndex(match, mutableIndex, hdToLod, offsetParentIndex), contentNoLod, flags=re.M)
 
-            contentNoLod = Ymap.replaceParent(contentNoLod, None if indexBefore == mutableIndex[0] else mapPrefix.lower() + "_lod")
+            contentNoLod = Ymap.replaceParent(contentNoLod, None if indexBefore == mutableIndex[0] else mapPrefix.lower().rstrip("_") + "_lod")
             contentNoLod = self.fixHdOrOrphanHdLodLevelsAndRearrangeEntites(contentNoLod)
 
             fileNoLod = open(os.path.join(self.getOutputDirMaps(), filename), 'w')

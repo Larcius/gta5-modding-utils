@@ -264,7 +264,7 @@ class Clustering:
             numClusters = len(clustersInGroup)
             for cluster in clustersInGroup:
                 clusterName = self.getClusterName(group, cluster, numGroups, numClusters)
-                mapName = mapPrefix + ("_" if clusterName else "") + clusterName
+                mapName = mapPrefix.rstrip("_") + ("_" if clusterName else "") + clusterName
 
                 entities = clustersInGroup[cluster]
                 ymapContent = self.createYmapContent(mapName, entities)
