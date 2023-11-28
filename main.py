@@ -207,6 +207,11 @@ def main(argv):
         os.makedirs(outputMeshesDir)
         moveDirectory(lodMapCreator.getOutputDirMeshes(), outputMeshesDir)
 
+        if createReflection:
+            outputReflMapsDir = os.path.join(outputDir, prefix + "_refl")
+            os.makedirs(outputReflMapsDir)
+            moveDirectory(lodMapCreator.getOutputDirReflMaps(), outputReflMapsDir)
+
         nextInputDir = lodMapCreator.getOutputDirMaps()
 
     if staticCol:

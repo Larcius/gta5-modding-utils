@@ -248,6 +248,7 @@ class LodMapCreator:
         self.clearLod = clearLod
         self.createReflection = createReflection
         self.slodYtypItems = None
+        self.reflYtypItems = None
         self.foundLod = False
         self.foundSlod = False
 
@@ -267,14 +268,22 @@ class LodMapCreator:
         self.readYtypItems()
         self.processFiles()
         self.addLodAndSlodModelsToYtypDict()
-        self.fixMapExtents()
-        self.createManifest()
+
+        self.fixMapExtents(self.getOutputDirMaps())
+        self.createManifest(self.getOutputDirMaps())
+        if self.createReflection:
+            self.fixMapExtents(self.getOutputDirReflMaps())
+            self.createManifest(self.getOutputDirReflMaps())
+
         self.copyOthers()
         self.copyTextureDictionaries()
         print("lod map creator DONE")
 
-    def getYtypName(self) -> str:
-        return self.prefix + "_slod"
+    def getYtypName(self, reflection: bool) -> str:
+        if reflection:
+            return self.prefix + "_refl"
+        else:
+            return self.prefix + "_slod"
 
     def createOutputDir(self):
         if os.path.exists(self.outputDir):
@@ -282,11 +291,16 @@ class LodMapCreator:
 
         os.makedirs(self.outputDir)
         os.mkdir(self.getOutputDirMaps())
+        if self.createReflection:
+            os.mkdir(self.getOutputDirReflMaps())
         os.mkdir(self.getOutputDirMeshes())
         os.mkdir(self.getOutputDirModels())
 
     def getOutputDirMaps(self) -> str:
         return os.path.join(self.outputDir, "maps")
+
+    def getOutputDirReflMaps(self) -> str:
+        return os.path.join(self.outputDir, "reflMaps")
 
     def getOutputDirModels(self) -> str:
         return os.path.join(self.outputDir, "slod")
@@ -333,7 +347,7 @@ class LodMapCreator:
         self.contentTemplateOdrShaderTreeLod2 = f.read()
         f.close()
 
-        f = open(os.path.join(templatesDir, "template_shader_default.odr.part"), 'r')
+        f = open(os.path.join(templatesDir, "template_shader_alpha.odr.part"), 'r')
         self.contentTemplateOdrShaderAlpha = f.read()
         f.close()
 
@@ -713,14 +727,7 @@ class LodMapCreator:
         else:
             childLodDistance = maxHdEntityLodDistance
 
-        if not os.path.exists(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml")):
-            self.slodYtypItems = open(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml"), 'w')
-            self.slodYtypItems.write("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-        <CMapTypes>
-          <extensions/>
-          <archetypes>
-        """)
-        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, lodName, self.prefix + "_lod", drawableDictionary, totalBoundingBox, totalBoundingSphere, childLodDistance, itemLodDistance))
+        self.writeYtypItem(lodName, self.prefix + "_lod", drawableDictionary, totalBoundingBox, totalBoundingSphere, childLodDistance, itemLodDistance, reflection)
 
         return self.createEntityItem(lodName, center, childLodDistance, itemLodDistance, parentIndex, numChildren, slodLevel, reflection)
 
@@ -925,16 +932,35 @@ class LodMapCreator:
         else:
             childLodDistance = self.getLodDistance(slodLevel - 1)
 
-        if not os.path.exists(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml")):
-            self.slodYtypItems = open(os.path.join(self.getOutputDirModels(), self.getYtypName() + ".ytyp.xml"), 'w')
-            self.slodYtypItems.write("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        self.writeYtypItem(name, self.prefix + "_slod", drawableDictionary, totalBoundingBox, totalBoundingSphere, childLodDistance, itemLodDistance, False)
+
+        return self.createEntityItem(name, center, childLodDistance, itemLodDistance, parentIndex, numChildren, slodLevel, False)
+
+    def writeYtypItem(self, name: str, textureDictionary: str, drawableDictionary: str, totalBoundingBox: Box, totalBoundingSphere: Sphere, childLodDistance: float,
+            itemLodDistance: float, reflection: bool):
+
+        if reflection:
+            ytypItems = self.reflYtypItems
+        else:
+            ytypItems = self.slodYtypItems
+
+        ytypName = self.getYtypName(reflection)
+        if not os.path.exists(os.path.join(self.getOutputDirModels(), ytypName + ".ytyp.xml")):
+            ytypItems = open(os.path.join(self.getOutputDirModels(), ytypName + ".ytyp.xml"), 'w')
+            ytypItems.write("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <CMapTypes>
   <extensions/>
   <archetypes>
 """)
-        self.slodYtypItems.write(self.replacePlaceholders(self.contentTemplateYtypItem, name, self.getYtypName(), drawableDictionary, totalBoundingBox, totalBoundingSphere, childLodDistance, itemLodDistance))
+            if reflection:
+                self.reflYtypItems = ytypItems
+            else:
+                self.slodYtypItems = ytypItems
 
-        return self.createEntityItem(name, center, childLodDistance, itemLodDistance, parentIndex, numChildren, slodLevel, False)
+        item = self.replacePlaceholders(self.contentTemplateYtypItem, name, textureDictionary, drawableDictionary, totalBoundingBox, totalBoundingSphere,
+            childLodDistance, itemLodDistance)
+
+        ytypItems.write(item)
 
     def getLodDistance(self, slodLevel: int) -> int:
         if slodLevel == 0:
@@ -1053,14 +1079,23 @@ class LodMapCreator:
         for mapPrefix in self.bundlePrefixes:
             self.processFilesWithPrefix(mapPrefix)
 
-        if self.slodYtypItems is not None:
-            self.slodYtypItems.write("""  </archetypes>
-  <name>""" + self.getYtypName() + """</name>
+        self.finalizeYtypItems(False)
+        self.finalizeYtypItems(True)
+
+    def finalizeYtypItems(self, reflection: bool):
+        if reflection:
+            ytypItems = self.reflYtypItems
+        else:
+            ytypItems = self.slodYtypItems
+
+        if ytypItems is not None:
+            ytypItems.write("""  </archetypes>
+  <name>""" + self.getYtypName(reflection) + """</name>
   <dependencies/>
   <compositeEntityTypes/>
 </CMapTypes>""")
 
-            self.slodYtypItems.close()
+        ytypItems.close()
 
     def processFilesWithPrefix(self, mapPrefix: str):
         lodCandidateNames = list(self.lodCandidates.keys())
@@ -1306,13 +1341,13 @@ class LodMapCreator:
             slod4MapName = None
         else:
             slod4MapName = prefix + "_slod4"
-            self.writeLodOrSlodMap(slod4MapName, None, ContentFlag.SLOD | ContentFlag.SLOD2, slod4Entities)
+            self.writeLodOrSlodMap(slod4MapName, None, ContentFlag.SLOD | ContentFlag.SLOD2, slod4Entities, False)
 
         if len(slod2Entities) == 0:
             slod2MapName = None
         else:
             slod2MapName = prefix + "_slod2"
-            self.writeLodOrSlodMap(slod2MapName, slod4MapName, ContentFlag.SLOD | ContentFlag.SLOD2, slod3Entities + slod2Entities)
+            self.writeLodOrSlodMap(slod2MapName, slod4MapName, ContentFlag.SLOD | ContentFlag.SLOD2, slod3Entities + slod2Entities, False)
 
         slod1AndLodEntities = []
         numSlod1Entities = 0
@@ -1335,7 +1370,7 @@ class LodMapCreator:
                 mapName = prefix + "_lod"
                 contentFlags = ContentFlag.LOD | ContentFlag.SLOD
 
-            self.writeLodOrSlodMap(mapName, slod2MapName, contentFlags, slod1AndLodEntities)
+            self.writeLodOrSlodMap(mapName, slod2MapName, contentFlags, slod1AndLodEntities, reflection)
 
         return numSlod1Entities
 
@@ -1371,7 +1406,7 @@ class LodMapCreator:
             fileNoLod.write(contentNoLod)
             fileNoLod.close()
 
-    def writeLodOrSlodMap(self, mapName: str, parentMap: Optional[str], contentFlags: int, entities: list[EntityItem]):
+    def writeLodOrSlodMap(self, mapName: str, parentMap: Optional[str], contentFlags: int, entities: list[EntityItem], reflection: bool):
         contentEntities = self.createEntitiesContent(entities)
 
         content = self.contentTemplateSlod2Map \
@@ -1382,7 +1417,12 @@ class LodMapCreator:
 
         content = Ymap.replaceParent(content, parentMap)
 
-        fileMap = open(os.path.join(self.getOutputDirMaps(), mapName + ".ymap.xml"), 'w')
+        if reflection:
+            mapsDir = self.getOutputDirReflMaps()
+        else:
+            mapsDir = self.getOutputDirMaps()
+
+        fileMap = open(os.path.join(mapsDir, mapName + ".ymap.xml"), 'w')
         fileMap.write(content)
         fileMap.close()
 
@@ -1467,31 +1507,31 @@ class LodMapCreator:
             lambda filename: not filename.endswith(".ymap.xml") or not filename.startswith(tuple(each.lower() for each in self.bundlePrefixes)))
 
     # adapt extents and set current datetime
-    def fixMapExtents(self):
+    def fixMapExtents(self, mapsDir: str):
         print("\tfixing map extents")
 
-        for filename in natsorted(os.listdir(self.getOutputDirMaps())):
+        for filename in natsorted(os.listdir(mapsDir)):
             if not filename.endswith(".ymap.xml"):
                 continue
 
-            file = open(os.path.join(self.getOutputDirMaps(), filename), 'r')
+            file = open(os.path.join(mapsDir, filename), 'r')
             content = file.read()
             file.close()
 
             content = Ymap.fixMapExtents(content, self.ytypItems)
 
-            file = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
+            file = open(os.path.join(mapsDir, filename), 'w')
             file.write(content)
             file.close()
 
-    def createManifest(self) -> None:
+    def createManifest(self, mapsDir: str) -> None:
         print("\tcreating manifest")
-        manifest = Manifest(self.ytypItems, self.getOutputDirMaps())
+        manifest = Manifest(self.ytypItems, mapsDir)
         manifest.parseYmaps()
         manifest.writeManifest()
 
     def addLodAndSlodModelsToYtypDict(self) -> None:
-        if self.slodYtypItems is not None:
+        if self.slodYtypItems is not None or self.reflYtypItems is not None:
             self.ytypItems |= YtypParser.readYtypDirectory(self.getOutputDirModels())
 
     def copyTextureDictionaries(self):
