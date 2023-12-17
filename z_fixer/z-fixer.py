@@ -32,6 +32,7 @@ class Tree:
 DISABLE_INCREASE_OF_Z = False
 
 IGNORE_BUSHES = False
+ONLY_BUSHES = False
 
 DELETE_IF_ON_STREET = False
 
@@ -239,7 +240,12 @@ def repl(matchobj, outCoords, heightmap):
 
     prop = matchobj.group(2).lower()
 
-    if prop not in trees or (IGNORE_BUSHES and prop.startswith("prop_bush_")):
+    if prop not in trees:
+        return matchobj.group(0)
+    elif prop.startswith("prop_bush_"):
+        if IGNORE_BUSHES:
+            return matchobj.group(0)
+    elif ONLY_BUSHES:
         return matchobj.group(0)
 
     tree = trees[prop]
