@@ -1088,8 +1088,10 @@ class LodMapCreator:
         else:
             ytypItems = self.slodYtypItems
 
-        if ytypItems is not None:
-            ytypItems.write("""  </archetypes>
+        if ytypItems is None:
+            return
+
+        ytypItems.write("""  </archetypes>
   <name>""" + self.getYtypName(reflection) + """</name>
   <dependencies/>
   <compositeEntityTypes/>
