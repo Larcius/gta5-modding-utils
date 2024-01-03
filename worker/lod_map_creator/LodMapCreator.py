@@ -215,8 +215,9 @@ class LodMapCreator:
     VERTEX_DECLARATION_TREE_LOD = "N209731BE"
     VERTEX_DECLARATION_TREE_LOD2 = "N5A9A1E1A"
 
+    REFL_LOD_DISTANCE = 1000
     LOD_DISTANCE = 500
-    SLOD_DISTANCE = 1000  # also used for reflection models
+    SLOD_DISTANCE = 1000
     SLOD2_DISTANCE = 2500
     SLOD3_DISTANCE = 5000
     SLOD4_DISTANCE = 15000
@@ -236,9 +237,9 @@ class LodMapCreator:
     unitSphere = Sphere.createUnitSphere()
 
     # only entities with a lodDistance (according to hd entity) greater or equal this value are considered for SLOD1 to 4 model
-    MIN_HD_LOD_DISTANCE_FOR_SLOD1 = Util.calculateLodDistance(unitBox, unitSphere, [3] * 3, True)
-    MIN_HD_LOD_DISTANCE_FOR_SLOD2 = Util.calculateLodDistance(unitBox, unitSphere, [5] * 3, True)
-    MIN_HD_LOD_DISTANCE_FOR_SLOD3 = Util.calculateLodDistance(unitBox, unitSphere, [10] * 3, True)
+    MIN_HD_LOD_DISTANCE_FOR_SLOD1 = Util.calculateLodDistance(unitBox, unitSphere, [5] * 3, True)
+    MIN_HD_LOD_DISTANCE_FOR_SLOD2 = Util.calculateLodDistance(unitBox, unitSphere, [10] * 3, True)
+    MIN_HD_LOD_DISTANCE_FOR_SLOD3 = Util.calculateLodDistance(unitBox, unitSphere, [15] * 3, True)
     MIN_HD_LOD_DISTANCE_FOR_SLOD4 = Util.calculateLodDistance(unitBox, unitSphere, [20] * 3, True)
 
     def __init__(self, inputDir: str, outputDir: str, prefix: str, clearLod: bool, createReflection: bool):
@@ -639,6 +640,8 @@ class LodMapCreator:
             return self.createSlodModel(lodName, slodLevel, drawableDictionary, entities, parentIndex, numChildren)
 
     def createLodModel(self, lodName: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int, reflection: bool) -> EntityItem:
+        self.foundLod = True
+
         diffuseSamplerToVertices = {}
         diffuseSamplerToNormals = {}
         diffuseSamplerToTextureUVs = {}
@@ -747,7 +750,7 @@ class LodMapCreator:
         itemLodDistance = self.getLodDistance(slodLevel)
         if reflection:
             childLodDistance = 0
-            itemLodDistance = self.SLOD_DISTANCE
+            itemLodDistance = self.REFL_LOD_DISTANCE
         elif slodLevel > 0:
             childLodDistance = self.getLodDistance(slodLevel - 1)
         else:
@@ -813,6 +816,8 @@ class LodMapCreator:
         ]
 
     def createSlodModel(self, name: str, slodLevel: int, drawableDictionary: str, entities: list[EntityItem], parentIndex: int, numChildren: int) -> EntityItem:
+        self.foundSlod = True
+
         verticesFront = {}
         sizesFront = {}
         textureUVsFront = {}
@@ -1126,8 +1131,6 @@ class LodMapCreator:
         ytypItems.close()
 
     def processFilesWithPrefix(self, mapPrefix: str):
-        lodCandidateNames = list(self.lodCandidates.keys())
-
         hdEntitiesWithLod = []
         lodCoords = []
         lodDistances = []
@@ -1149,7 +1152,6 @@ class LodMapCreator:
 
             contentNoLod = self.resetParentIndexAndNumChildren(contentNoLod)
             contentNoLod = Ymap.replaceName(contentNoLod, mapName)
-            contentNoLod = Ymap.calculateAndReplaceLodDistance(contentNoLod, self.ytypItems, archetypes=lodCandidateNames, forceHasParent=True)
 
             fileNoLod = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
             fileNoLod.write(contentNoLod)
@@ -1169,14 +1171,16 @@ class LodMapCreator:
 
             for matchobj in re.finditer(pattern, contentNoLod):
                 archetypeName = matchobj.group(1).lower()
-                if (self.USE_SLOD_TEMPLATE_FOR_LEVEL_AND_ABOVE > 0 and archetypeName not in self.lodCandidates) or \
+                if archetypeName not in self.ytypItems or \
+                        (self.USE_SLOD_TEMPLATE_FOR_LEVEL_AND_ABOVE > 0 and archetypeName not in self.lodCandidates) or \
                         (self.USE_SLOD_TEMPLATE_FOR_LEVEL_AND_ABOVE <= 0 and archetypeName not in self.slodCandidates):
                     continue
 
+                archetype = self.ytypItems[archetypeName]
                 position = [float(matchobj.group(2)), float(matchobj.group(3)), float(matchobj.group(4))]
                 rotation = [float(matchobj.group(8)), -float(matchobj.group(5)), -float(matchobj.group(6)), -float(matchobj.group(7))]  # order is w, -x, -y, -z
                 scale = [float(matchobj.group(9)), float(matchobj.group(9)), float(matchobj.group(10))]
-                lodDistance = float(matchobj.group(11))
+                lodDistance = Util.calculateLodDistance(archetype.boundingBox, archetype.boundingSphere, scale, True)
                 entity = EntityItem(archetypeName, position, scale, rotation, lodDistance)
 
                 hdEntitiesWithLod.append(entity)
@@ -1194,6 +1198,7 @@ class LodMapCreator:
             LodMapCreator.MIN_HD_LOD_DISTANCE_FOR_SLOD4,
         ]
 
+        entitiesForReflModels = {}
         entitiesForLodModels = [{}, {}, {}, {}, {}]
         hierarchyMappingFromPreviousLevel = [{}, {}, {}, {}, {}]
         lodNumChildren = [{}, {}, {}, {}, {}]
@@ -1218,6 +1223,11 @@ class LodMapCreator:
                     # hierarchy level 1 is only used to separate by lod distance but does not result in the LOD level itself
                     currentHierarchy = h[0]
                     nextLodLevel = lodLevel + 1
+
+                    # add entity to reflection model
+                    if h[nextLodLevel] not in entitiesForReflModels:
+                        entitiesForReflModels[h[nextLodLevel]] = []
+                    entitiesForReflModels[h[nextLodLevel]].append(hdEntity)
                 else:
                     currentHierarchy = h[lodLevel]
                     nextLodLevel = lodLevel + 1
@@ -1242,18 +1252,47 @@ class LodMapCreator:
             lodNumChildren[4] = {}
 
         if self.createReflection:
-            self.createLodSlodMapsModels(entitiesForLodModels, hierarchyMappingFromPreviousLevel, lodNumChildren, mapPrefix.lower().rstrip("_"), True)
+            self.createReflLodMapsModels(entitiesForReflModels, mapPrefix.lower().rstrip("_"))
 
-        numSlod1Entities = self.createLodSlodMapsModels(entitiesForLodModels, hierarchyMappingFromPreviousLevel, lodNumChildren, mapPrefix.lower().rstrip("_"), False)
+        numSlod1Entities = self.createLodSlodMapsModels(entitiesForLodModels, hierarchyMappingFromPreviousLevel, lodNumChildren, mapPrefix.lower().rstrip("_"))
 
         self.adaptHdMapsForPrefix(mapPrefix, hierarchyMappingFromPreviousLevel[0], numSlod1Entities)
 
-    def createLodSlodMapsModels(self, entitiesForLodModels: list[dict[int]], hierarchyMappingFromPreviousLevel: list[dict[int]], lodNumChildren: list[dict[int]], prefix: str, reflection: bool) -> int:
+    def createReflLodMapsModels(self, entitiesForReflLodModels: dict[int], prefix: str):
+        reflDrawableDictionary = prefix + "_refl_children"
+        drawableDictionariesReflEntities = [[]]
+
+        index = 0
+        for key in sorted(entitiesForReflLodModels):
+            reflName = prefix + "_refl_" + str(index)
+
+            if len(drawableDictionariesReflEntities[-1]) >= LodMapCreator.MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY:
+                drawableDictionariesReflEntities.append([])
+
+            drawableDictionariesReflEntities[-1].append(self.createLodOrSlodModel(
+                reflName, 1,
+                reflDrawableDictionary + "_" + str(len(drawableDictionariesReflEntities) - 1),
+                entitiesForReflLodModels[key],
+                -1, 0,
+                True
+            ))
+
+            index += 1
+
+        for reflEntitiesIndex in range(len(drawableDictionariesReflEntities)):
+            self.createDrawableDictionary(reflDrawableDictionary + "_" + str(reflEntitiesIndex), drawableDictionariesReflEntities[reflEntitiesIndex])
+
+        reflEntities = []
+        for drawableDictionaryReflEntities in drawableDictionariesReflEntities:
+            reflEntities += drawableDictionaryReflEntities
+
+        if len(reflEntities) > 0:
+            mapName = prefix + "_refl"
+            self.writeLodOrSlodMap(mapName, None, ContentFlag.SLOD | ContentFlag.SLOD2, reflEntities, True)
+
+    def createLodSlodMapsModels(self, entitiesForLodModels: list[dict[int]], hierarchyMappingFromPreviousLevel: list[dict[int]], lodNumChildren: list[dict[int]], prefix: str) -> int:
         lodDrawableDictionary = prefix + "_lod_children"
-        if reflection:
-            slod1DrawableDictionary = prefix + "_refl_children"
-        else:
-            slod1DrawableDictionary = prefix + "_slod1_children"
+        slod1DrawableDictionary = prefix + "_slod1_children"
         slod2DrawableDictionary = prefix + "_slod2_children"
         slod3DrawableDictionary = prefix + "_slod3_children"
         slod4DrawableDictionary = prefix + "_slod4_children"
@@ -1264,64 +1303,56 @@ class LodMapCreator:
         slod3Entities = []
         slod4Entities = []
 
-        if not reflection:
-            index = 0
-            slod4KeyToIndex = {}
-            for key in sorted(entitiesForLodModels[4]):
-                slodName = prefix + "_" + str(index)
-                slod4Entities.append(self.createLodOrSlodModel(
-                    slodName, 4,
-                    slod4DrawableDictionary,
-                    entitiesForLodModels[4][key],
-                    -1, lodNumChildren[4][key],
-                    reflection
-                ))
-                slod4KeyToIndex[key] = index
-                index += 1
+        index = 0
+        slod4KeyToIndex = {}
+        for key in sorted(entitiesForLodModels[4]):
+            slodName = prefix + "_" + str(index)
+            slod4Entities.append(self.createLodOrSlodModel(
+                slodName, 4,
+                slod4DrawableDictionary,
+                entitiesForLodModels[4][key],
+                -1, lodNumChildren[4][key],
+                False
+            ))
+            slod4KeyToIndex[key] = index
+            index += 1
 
-            index = 0
-            slod3KeyToIndex = {}
-            for key in sorted(entitiesForLodModels[3]):
-                slodName = prefix + "_" + str(index)
-                if reflection:
-                    parentIndex = -1
-                else:
-                    parentIndex = self.getParentIndexForKey(key, hierarchyMappingFromPreviousLevel[4], slod4KeyToIndex, 0)
-                slod3Entities.append(self.createLodOrSlodModel(
-                    slodName, 3,
-                    slod3DrawableDictionary,
-                    entitiesForLodModels[3][key],
-                    parentIndex, lodNumChildren[3][key],
-                    reflection
-                ))
-                slod3KeyToIndex[key] = index
-                index += 1
+        index = 0
+        slod3KeyToIndex = {}
+        for key in sorted(entitiesForLodModels[3]):
+            slodName = prefix + "_" + str(index)
+            parentIndex = self.getParentIndexForKey(key, hierarchyMappingFromPreviousLevel[4], slod4KeyToIndex, 0)
+            slod3Entities.append(self.createLodOrSlodModel(
+                slodName, 3,
+                slod3DrawableDictionary,
+                entitiesForLodModels[3][key],
+                parentIndex, lodNumChildren[3][key],
+                False
+            ))
+            slod3KeyToIndex[key] = index
+            index += 1
 
-            index = 0
-            slod2KeyToIndex = {}
-            for key in sorted(entitiesForLodModels[2]):
-                slodName = prefix + "_" + str(index)
-                parentIndex = self.getParentIndexForKey(key, hierarchyMappingFromPreviousLevel[3], slod3KeyToIndex, 0)
-                slod2Entities.append(self.createLodOrSlodModel(
-                    slodName, 2,
-                    slod2DrawableDictionary,
-                    entitiesForLodModels[2][key],
-                    parentIndex, lodNumChildren[2][key],
-                    reflection
-                ))
-                slod2KeyToIndex[key] = index
-                index += 1
+        index = 0
+        slod2KeyToIndex = {}
+        for key in sorted(entitiesForLodModels[2]):
+            slodName = prefix + "_" + str(index)
+            parentIndex = self.getParentIndexForKey(key, hierarchyMappingFromPreviousLevel[3], slod3KeyToIndex, 0)
+            slod2Entities.append(self.createLodOrSlodModel(
+                slodName, 2,
+                slod2DrawableDictionary,
+                entitiesForLodModels[2][key],
+                parentIndex, lodNumChildren[2][key],
+                False
+            ))
+            slod2KeyToIndex[key] = index
+            index += 1
 
         index = 0
         slod1KeyToIndex = {}
         parentIndexOffset = len(slod3Entities)
         for key in sorted(entitiesForLodModels[1]):
-            if reflection:
-                slodName = prefix + "_refl_" + str(index)
-                parentIndex = -1
-            else:
-                slodName = prefix + "_" + str(index)
-                parentIndex = self.getParentIndexForKey(key, hierarchyMappingFromPreviousLevel[2], slod2KeyToIndex, parentIndexOffset)
+            slodName = prefix + "_" + str(index)
+            parentIndex = self.getParentIndexForKey(key, hierarchyMappingFromPreviousLevel[2], slod2KeyToIndex, parentIndexOffset)
 
             if len(slod1Entities[-1]) >= LodMapCreator.MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY:
                 slod1Entities.append([])
@@ -1331,39 +1362,36 @@ class LodMapCreator:
                 slod1DrawableDictionary + "_" + str(len(slod1Entities) - 1),
                 entitiesForLodModels[1][key],
                 parentIndex, lodNumChildren[1][key],
-                reflection
+                False
             ))
 
             slod1KeyToIndex[key] = index
             index += 1
 
-        if not reflection:
-            for key in sorted(entitiesForLodModels[0]):
-                lodName = prefix + "_" + str(key)
-                parentIndex = self.getParentIndexForKey(key, hierarchyMappingFromPreviousLevel[1], slod1KeyToIndex, 0)
+        for key in sorted(entitiesForLodModels[0]):
+            lodName = prefix + "_" + str(key)
+            parentIndex = self.getParentIndexForKey(key, hierarchyMappingFromPreviousLevel[1], slod1KeyToIndex, 0)
 
-                if len(lodEntities[-1]) >= LodMapCreator.MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY:
-                    lodEntities.append([])
+            if len(lodEntities[-1]) >= LodMapCreator.MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY:
+                lodEntities.append([])
 
-                lodEntities[-1].append(self.createLodOrSlodModel(
-                    lodName, 0,
-                    lodDrawableDictionary + "_" + str(len(lodEntities) - 1),
-                    entitiesForLodModels[0][key],
-                    parentIndex, lodNumChildren[0][key],
-                    reflection
-                ))
+            lodEntities[-1].append(self.createLodOrSlodModel(
+                lodName, 0,
+                lodDrawableDictionary + "_" + str(len(lodEntities) - 1),
+                entitiesForLodModels[0][key],
+                parentIndex, lodNumChildren[0][key],
+                False
+            ))
 
-        if not reflection:
-            for lodEntitiesIndex in range(len(lodEntities)):
-                self.createDrawableDictionary(lodDrawableDictionary + "_" + str(lodEntitiesIndex), lodEntities[lodEntitiesIndex])
+        for lodEntitiesIndex in range(len(lodEntities)):
+            self.createDrawableDictionary(lodDrawableDictionary + "_" + str(lodEntitiesIndex), lodEntities[lodEntitiesIndex])
 
         for slod1EntitiesIndex in range(len(slod1Entities)):
             self.createDrawableDictionary(slod1DrawableDictionary + "_" + str(slod1EntitiesIndex), slod1Entities[slod1EntitiesIndex])
 
-        if not reflection:
-            self.createDrawableDictionary(slod2DrawableDictionary, slod2Entities)
-            self.createDrawableDictionary(slod3DrawableDictionary, slod3Entities)
-            self.createDrawableDictionary(slod4DrawableDictionary, slod4Entities)
+        self.createDrawableDictionary(slod2DrawableDictionary, slod2Entities)
+        self.createDrawableDictionary(slod3DrawableDictionary, slod3Entities)
+        self.createDrawableDictionary(slod4DrawableDictionary, slod4Entities)
 
         if len(slod4Entities) == 0:
             slod4MapName = None
@@ -1387,18 +1415,8 @@ class LodMapCreator:
             slod1AndLodEntities += lods
 
         if len(slod1AndLodEntities) > 0:
-            self.foundLod = True
-            if numSlod1Entities > 0:
-                self.foundSlod = True
-
-            if reflection:
-                mapName = prefix + "_refl"
-                contentFlags = ContentFlag.SLOD | ContentFlag.SLOD2
-            else:
-                mapName = prefix + "_lod"
-                contentFlags = ContentFlag.LOD | ContentFlag.SLOD
-
-            self.writeLodOrSlodMap(mapName, slod2MapName, contentFlags, slod1AndLodEntities, reflection)
+            lodMapName = prefix + "_lod"
+            self.writeLodOrSlodMap(lodMapName, slod2MapName, ContentFlag.LOD | ContentFlag.SLOD, slod1AndLodEntities, False)
 
         return numSlod1Entities
 
