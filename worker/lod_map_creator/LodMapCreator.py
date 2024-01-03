@@ -448,6 +448,11 @@ class LodMapCreator:
         indicesTemplateTop = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1]
         indices += [x + offset for x in indicesTemplateTop]
 
+    @staticmethod
+    def appendTopPlaneIndicesForReflLod(indices: list[int], offset: int):
+        indicesTemplateTop = [0, 2, 1, 0, 3, 2]  # clockwise order because in reflection that top plane is needed for viewing from below and not above
+        indices += [x + offset for x in indicesTemplateTop]
+
     def appendFrontPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
         bbox = self.ytypItems[entity.archetypeName].boundingBox
         height = bbox.getSizes()[2]
@@ -560,6 +565,22 @@ class LodMapCreator:
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], bbox.max[1], planeTopMinZ], [1, 1, 0.1], [uvTopMax.u, uvTopMin.v])
         self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], bbox.max[1], planeTopMinZ], [-1, 1, 0.1], [uvTopMin.u, uvTopMin.v])
 
+    def appendTopPlaneVerticesForReflLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem):
+        bbox = self.ytypItems[entity.archetypeName].boundingBox
+        sizes = bbox.getSizes()
+
+        lodCandidate = self.lodCandidates[entity.archetypeName]
+
+        uvTopMin = lodCandidate.uvTopMin
+        uvTopMax = lodCandidate.uvTopMax
+
+        planeTopZ = bbox.min[2] + sizes[2] * (1 - lodCandidate.planeZ)
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], bbox.min[1], planeTopZ], [-1, -1, 0.1], [uvTopMin.u, uvTopMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], bbox.min[1], planeTopZ], [1, -1, 0.1], [uvTopMax.u, uvTopMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], bbox.max[1], planeTopZ], [1, 1, 0.1], [uvTopMax.u, uvTopMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], bbox.max[1], planeTopZ], [-1, 1, 0.1], [uvTopMin.u, uvTopMin.v])
+
     def appendVertexForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, vertex: list[float], normal: list[float], uv: list[float]):
         vertices.append(entity.applyTransformationTo(vertex))
         normals.append(Util.applyRotation(normal, entity.rotation))
@@ -648,7 +669,12 @@ class LodMapCreator:
                 LodMapCreator.appendFrontPlaneIndicesForLod(diffuseSamplerToIndices[diffuseSampler], len(diffuseSamplerToVertices[diffuseSampler]))
                 self.appendDiagonalPlaneVerticesForLod(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], entity, planeIntersection)
 
-            if slodLevel < self.USE_NO_TOP_TEMPLATE_FOR_LEVEL_AND_ABOVE and lodCandidate.hasTop(bbox, entity.scale) and not reflection:
+            if not lodCandidate.hasTop(bbox, entity.scale):
+                pass
+            elif reflection:
+                LodMapCreator.appendTopPlaneIndicesForReflLod(diffuseSamplerToIndices[diffuseSampler], len(diffuseSamplerToVertices[diffuseSampler]))
+                self.appendTopPlaneVerticesForReflLod(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], entity)
+            elif slodLevel < self.USE_NO_TOP_TEMPLATE_FOR_LEVEL_AND_ABOVE:
                 LodMapCreator.appendTopPlaneIndicesForLod(diffuseSamplerToIndices[diffuseSampler], len(diffuseSamplerToVertices[diffuseSampler]))
                 self.appendTopPlaneVerticesForLod(diffuseSamplerToVertices[diffuseSampler], diffuseSamplerToNormals[diffuseSampler], diffuseSamplerToTextureUVs[diffuseSampler], entity, planeIntersection)
 
