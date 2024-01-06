@@ -36,7 +36,7 @@ You need to provide the .ytyp files from your GTA 5 installation so that the req
 (e.g. bounding box of an entity) is available to the scripts.
 To do so please use OpenIV and export all needed ytyp files in openFormats
 (right click on the file and then "Export to META/XML (.xml)")
-to the directory `ytyp\resources`
+to the directory `resources\ytyp`
 For example, using OpenIV goto `<Grand Theft Auto V>\x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\` and extract `v_trees.ytyp`
 
 If you don't know what .ytyp files you need then just run the script and it will tell you which archetype is missing/unknown.
@@ -45,7 +45,7 @@ For those use OpenIV search ("Tools" -> "Search") to find the location of the .y
 #### YDR
 
 If you want to create static collision models then you need to extract the models (.ydr files) that then should be part of the
-static collision model into the directory `models\resources`
+static collision model into the directory `resources\models`
 (again extract it in openFormats by right-clicking and then "Exports to openFormats (.odr)")
 For example, using OpenIV goto `<Grand Theft Auto V>\x64i.rpf\levels\gta5\props\vegetation\v_trees.rpf\` and extract `prop_tree_cedar_02.ydr`
 
