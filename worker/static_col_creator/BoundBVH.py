@@ -116,7 +116,7 @@ class BoundBVH:
 
             # GeometryCenter
             elif mode == 5:
-                m = re.match(r'			GeometryCenter ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) 0.00250000$', line)
+                m = re.match(r'			GeometryCenter ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) ([+-]?\d+\.\d+) \d+\.\d+$', line)
                 if m is not None:
                     geometryCenter = [float(m.group(1)), float(m.group(2)), float(m.group(3))]
                     mode = 6
