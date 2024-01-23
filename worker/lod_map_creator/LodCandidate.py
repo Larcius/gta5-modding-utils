@@ -34,9 +34,6 @@ class LodCandidate:
         self._textureOriginSide = textureOriginSide
         self.sideOffsetZ = sideOffsetZ
 
-    def setDiffuseSampler(self, archetypeName: str):
-        self.diffuseSampler = "lod_" + archetypeName.lower()
-
     def getUvSideMin(self) -> UV:
         if self.hasDedicatedSideTexture():
             return self.uvSideMin

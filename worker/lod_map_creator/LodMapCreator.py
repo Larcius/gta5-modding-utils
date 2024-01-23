@@ -126,7 +126,7 @@ class LodMapCreator:
         }
         # for each lodCandidate set its diffuseSampler as lod_<archetype name>
         for name in lodCandidates:
-            lodCandidates[name].setDiffuseSampler(name)
+            lodCandidates[name].diffuseSampler = "lod_" + name.lower()
 
         # add other Props that should use the same UV mapping
         lodCandidates["prop_palm_med_01a"] = lodCandidates["prop_palm_med_01b"]
