@@ -321,6 +321,8 @@ class Clustering:
         pyplot.grid(which='major', alpha=0.8)
         pyplot.grid(which='minor', alpha=0.4)
 
+        imgCayo = Image.open(os.path.join(os.path.dirname(__file__), "img", "map_cayo.jpg"))
+        pyplot.imshow(imgCayo, extent=(3500, 5900, -6300, -4000))
         img = Image.open(os.path.join(os.path.dirname(__file__), "img", "map.jpg"))
         pyplot.imshow(img, extent=(-4000, 4500, -4000, 8000))
 
