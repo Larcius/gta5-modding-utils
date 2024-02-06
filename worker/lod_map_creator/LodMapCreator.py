@@ -443,17 +443,36 @@ class LodMapCreator:
 
     @staticmethod
     def appendFrontPlaneIndicesForLod(indices: list[int], offset: int):
-        indicesTemplate = [0, 1, 2, 0, 1, 2, 2, 3, 0, 2, 3, 0, 4, 5, 6, 4, 5, 6, 6, 7, 4, 6, 7, 4, 8, 11, 10, 8, 11, 10, 10, 9, 8, 10, 9, 8, 12, 15, 14, 12, 15, 14, 14, 13, 12, 14, 13, 12]
-        indices += [x + offset for x in indicesTemplate]
+        indicesTemplate = [
+            0, 1, 2,
+            2, 3, 0
+        ]
+        for i in range(2):
+            indices += [x + offset for x in indicesTemplate]
+            offset += max(indicesTemplate) + 1
+
+        indicesTemplate.reverse()
+        for i in range(2):
+            indices += [x + offset for x in indicesTemplate]
+            offset += max(indicesTemplate) + 1
 
     @staticmethod
     def appendTopPlaneIndicesForLod(indices: list[int], offset: int):
-        indicesTemplateTop = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1]
+        indicesTemplateTop = [
+            0, 1, 2,
+            0, 2, 3,
+            0, 3, 4,
+            0, 4, 1
+        ]
         indices += [x + offset for x in indicesTemplateTop]
 
     @staticmethod
     def appendTopPlaneIndicesForReflLod(indices: list[int], offset: int):
-        indicesTemplateTop = [0, 2, 1, 0, 3, 2]  # clockwise order because in reflection that top plane is needed for viewing from below and not above
+        # clockwise order because in reflection that top plane is needed for viewing from below and not above
+        indicesTemplateTop = [
+            0, 2, 1,
+            0, 3, 2
+        ]
         indices += [x + offset for x in indicesTemplateTop]
 
     def appendFrontPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
