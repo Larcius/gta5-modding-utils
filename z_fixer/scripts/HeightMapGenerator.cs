@@ -157,15 +157,9 @@ namespace HeightMap
 		// So check not only a single point but also points on an eps hexagon around it
 		private float getHeightEpsHexagon(float x, float y) {
 			const float eps = 0.025f;
-			float result = World.GetGroundHeight(new Vector2(x, y));
-			for (int i = 0; i < unitHexagon.Length; i++) {
-				float z = getHeight(x + unitHexagon[i].X * eps, y + unitHexagon[i].Y * eps);
-				if (!Single.IsNaN(z)) {
-					result = Math.Max(result, z);
-				}
-			}
-			if (result == 0f) {
-				return Single.NaN;
+			float result = getHeight(x, y);
+			for (int i = 0; Single.IsNaN(result) && i < unitHexagon.Length; i++) {
+				result = getHeight(x + unitHexagon[i].X * eps, y + unitHexagon[i].Y * eps);
 			}
 			return result;
 		}
