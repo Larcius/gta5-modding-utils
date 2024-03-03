@@ -1,9 +1,10 @@
 using GTA;
-using GTA.Native;
 using GTA.Math;
+using GTA.Native;
+using GTA.UI;
 using System;
-using System.Windows.Forms;
 using System.IO;
+using System.Windows.Forms;
 
 namespace HeightMap
 {
@@ -49,7 +50,7 @@ namespace HeightMap
 			if (e.KeyCode != Keys.F10) return;
 
 			if (writer == null) {
-				string newFilenameInput = Game.GetUserInput(filenameInput, 255);
+				string newFilenameInput = Game.GetUserInput(WindowTitle.EnterMessage60, filenameInput, 255);
 				if (newFilenameInput == null || newFilenameInput == "") {
 					return;
 				}
@@ -58,7 +59,7 @@ namespace HeightMap
 				try {
 					reader = new StreamReader(filenameInput);
 				} catch (IOException ex) {
-					UI.Notify("invalid filename");
+					Notification.Show("invalid filename");
 					return;
 				}
 				writer = File.CreateText(filenameOutput);
