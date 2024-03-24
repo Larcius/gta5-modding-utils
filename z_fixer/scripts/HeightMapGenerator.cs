@@ -203,9 +203,11 @@ namespace HeightMap
 			return Function.Call<bool>(Hash.IS_POINT_ON_ROAD, x, y, z);
 		}
 
-		private bool isPointInWater(float x, float y, float z) {
-			OutputArgument height = new OutputArgument();
-			return Function.Call<bool>(Hash.GET_WATER_HEIGHT, x, y, z, height);
+		private bool isPointInWater(float x, float y, float groundHeight) {
+			OutputArgument outHeight = new OutputArgument();
+			bool hitWater = Function.Call<bool>(Hash.GET_WATER_HEIGHT_NO_WAVES, x, y, groundHeight, outHeight);
+			float height = outHeight.GetResult<float>();
+			return hitWater && groundHeight < height;
 		}
 
 		private bool areNodesLoadedAroundPoint(float x, float y, float z) {
