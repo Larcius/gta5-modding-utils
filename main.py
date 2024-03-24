@@ -230,8 +230,14 @@ def main(argv):
 
         nextInputDir = sanitizerWorker.outputDir
 
-    if lodMap or clearLod:
-        lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix, clearLod, createReflection)
+    if clearLod:
+        lodMapCleaner = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "clear_lod"), prefix, True, False)
+        lodMapCleaner.run()
+
+        nextInputDir = lodMapCleaner.getOutputDirMaps()
+
+    if lodMap:
+        lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix, False, createReflection)
         lodMapCreator.run()
 
         outputSlodDir = os.path.join(outputDir, prefix + "_slod")

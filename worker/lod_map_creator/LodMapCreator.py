@@ -256,7 +256,11 @@ class LodMapCreator:
         self.foundSlod = False
 
     def run(self):
-        print("running lod map creator...")
+        if self.clearLod:
+            print("clearing lod map...")
+        else:
+            print("running lod map creator...")
+
         self.determinePrefixBundles()
         self.readTemplates()
 
@@ -280,7 +284,11 @@ class LodMapCreator:
 
         self.copyOthers()
         self.copyTextureDictionaries()
-        print("lod map creator DONE")
+
+        if self.clearLod:
+            print("clearing lod map DONE")
+        else:
+            print("lod map creator DONE")
 
     def getYtypName(self, reflection: bool) -> str:
         if reflection:
