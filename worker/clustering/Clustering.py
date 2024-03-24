@@ -22,7 +22,7 @@ class Clustering:
     ymapTemplate: str
     ytypItems: dict[str, YtypItem]
     prefix: str
-    numCluster: int
+    numCluster: Optional[int]
     polygon: Optional[list[list[float]]]
     clusteringPrefix: Optional[str]
     clusteringExcluded: list[str]
@@ -39,7 +39,7 @@ class Clustering:
         '\\s*</Item>[\r\n]+'
     )
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: int, polygon: Optional[list[list[float]]], clusteringPrefix: Optional[str], clusteringExcluded: Optional[list[str]]):
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, numCluster: Optional[int], polygon: Optional[list[list[float]]], clusteringPrefix: Optional[str], clusteringExcluded: Optional[list[str]]):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
@@ -191,7 +191,7 @@ class Clustering:
         if self.polygon:
             clusters = Util.performClusteringFixedPolygon(coords, self.polygon)
             hierarchy = [[i, 0] for i in clusters]
-        elif self.numCluster > 0:
+        elif self.numCluster:
             clusters, unused, furthestDistances = Util.performClusteringFixedNumClusters(coords, self.numCluster)
             hierarchy = [[i, 0] for i in clusters]
         else:

@@ -1,6 +1,7 @@
 import math
 from re import Match
 from natsort import natsorted
+from typing import Optional
 import numpy as np
 import os
 import re
@@ -14,6 +15,8 @@ from common.ytyp.YtypParser import YtypParser
 class Reducer:
     inputDir: str
     outputDir: str
+
+    defaultReducerResolution = 30.0
 
     defaultYmapPart: str
     ytypItems: dict[str, YtypItem]
@@ -44,11 +47,11 @@ class Reducer:
         ("")  # everything else
     ]
 
-    def __init__(self, inputDir: str, outputDir: str, prefix: str, reducerResolution: float, adaptScaling: bool):
+    def __init__(self, inputDir: str, outputDir: str, prefix: str, reducerResolution: Optional[float], adaptScaling: bool):
         self.inputDir = inputDir
         self.outputDir = outputDir
         self.prefix = prefix
-        self.reducerResolution = reducerResolution
+        self.reducerResolution = reducerResolution if reducerResolution else self.defaultReducerResolution
         self.adaptScaling = adaptScaling
 
     def run(self):

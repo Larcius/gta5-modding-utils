@@ -35,10 +35,10 @@ def main(argv):
     outputDir = None
     vegetationCreator = False
     clustering = False
-    numClusters = -1
+    numClusters = None
     polygon = None
     reducer = False
-    reducerResolution = 30.0
+    reducerResolution = None
     reducerAdaptScaling = False
     clusteringPrefix = None
     clusteringExcluded = None
@@ -56,7 +56,7 @@ def main(argv):
                "--clustering=<on|off> --numClusters=<integer> --polygon=<list of x,y coordinates in CCW order> " \
                "--clusteringPrefix=<CLUSTERING_PREFIX> --clusteringExcluded=<comma-separated list of ymaps to exclude> " \
                "--entropy=<on|off> --sanitizer=<on|off> --staticCol=<on|off> " \
-               "--lodMap=<on|off> --clearLod=<on|off> --reflection=<on|off> " \
+               "--clearLod=<on|off> --lodMap=<on|off> --reflection=<on|off> " \
                "--statistics=<on|off>"
 
     try:
@@ -98,6 +98,9 @@ def main(argv):
             clusteringExcluded = list(map(str.strip, arg.split(',')))
         elif opt == "--numClusters":
             numClusters = int(arg)
+            if numClusters <= 0:
+                print("ERROR: numClusters must be positive")
+                sys.exit(2)
         elif opt == "--polygon":
             polygon = json.loads(arg)
         elif opt == "--staticCol":
@@ -115,7 +118,43 @@ def main(argv):
         elif opt == "--statistics":
             statistics = bool(distutils.util.strtobool(arg))
 
-    if not vegetationCreator and not reducer and not clustering and not staticCol and not lodMap and not sanitizer and not entropy and not statistics:
+    if not clustering and numClusters:
+        print("ERROR: --numClusters requires --clustering=on")
+        sys.exit(2)
+
+    if not clustering and polygon:
+        print("ERROR: --polygon requires --clustering=on")
+        sys.exit(2)
+
+    if polygon and numClusters:
+        print("ERROR: --polygon and --numClusters cannot be used at the same time")
+        sys.exit(2)
+
+    if not clustering and clusteringExcluded:
+        print("ERROR: --clusteringExcluded requires --clustering=on")
+        sys.exit(2)
+
+    if not clustering and clusteringPrefix:
+        print("ERROR: --clusteringPrefix requires --clustering=on")
+        sys.exit(2)
+
+    if clusteringPrefix and not re.match(PATTERN_MAP_NAME, clusteringPrefix):
+        print("ERROR: clusteringPrefix must contain only a-z 0-9 _ and must start with a letter and must not end in _")
+        sys.exit(2)
+
+    if not lodMap and createReflection:
+        print("ERROR: --reflection=on requires --lodMap=on")
+        sys.exit(2)
+
+    if not reducer and reducerResolution:
+        print("ERROR: --reducerResolution requires --reducer=on")
+        sys.exit(2)
+
+    if not reducer and reducerAdaptScaling:
+        print("ERROR: --reducerAdaptScaling=on requires --reducer=on")
+        sys.exit(2)
+
+    if not (vegetationCreator or reducer or clustering or staticCol or clearLod or lodMap or sanitizer or entropy or statistics):
         print("ERROR: No goal specified, nothing to do.")
         print(usageMsg)
         sys.exit(2)
@@ -125,10 +164,6 @@ def main(argv):
 
     if not re.match(PATTERN_MAP_NAME, prefix):
         print("ERROR: prefix must contain only a-z 0-9 _ and must start with a letter and must not end in _")
-        sys.exit(2)
-
-    if clusteringPrefix is not None and not re.match(PATTERN_MAP_NAME, clusteringPrefix):
-        print("ERROR: clusteringPrefix must contain only a-z 0-9 _ and must start with a letter and must not end in _")
         sys.exit(2)
 
     if not inputDir:
