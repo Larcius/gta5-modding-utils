@@ -23,6 +23,7 @@ class VegetationCreator:
                 "prop_tree_maple_03",
                 "prop_tree_mquite_01",
                 "prop_desert_iron_01",
+                "prop_rus_olive_wint",
                 "prop_rio_del_01"
             }, {
                 "prop_tree_birch_01",
