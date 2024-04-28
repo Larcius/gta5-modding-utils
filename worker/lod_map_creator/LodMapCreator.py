@@ -496,22 +496,25 @@ class LodMapCreator:
         minZ = bbox.min[2] + height * max(0.0, sideOffsetZ)
         maxZ = bbox.max[2] - height * min(0.0, sideOffsetZ)
 
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, -1, 0], [uvFrontMin.u, uvFrontMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, -1, 0], [uvFrontMax.u, uvFrontMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, -1, 1], [uvFrontMax.u, uvFrontMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, -1, 1], [uvFrontMin.u, uvFrontMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], minZ], [1, -1, 0], [uvSideMin.u, uvSideMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], minZ], [1, 1, 0], [uvSideMax.u, uvSideMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], maxZ], [1, 1, 1], [uvSideMax.u, uvSideMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], maxZ], [1, -1, 1], [uvSideMin.u, uvSideMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, 1, 0], [uvFrontMin.u, uvFrontMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, 1, 0], [uvFrontMax.u, uvFrontMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, 1, 1], [uvFrontMax.u, uvFrontMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, 1, 1], [uvFrontMin.u, uvFrontMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], minZ], [-1, -1, 0], [uvSideMin.u, uvSideMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], minZ], [-1, 1, 0], [uvSideMax.u, uvSideMax.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], maxZ], [-1, 1, 1], [uvSideMax.u, uvSideMin.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], maxZ], [-1, -1, 1], [uvSideMin.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, -0.1, 0], [uvFrontMin.u, uvFrontMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, -0.1, 0], [uvFrontMax.u, uvFrontMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, 0, 1], [uvFrontMax.u, uvFrontMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, 0, 1], [uvFrontMin.u, uvFrontMin.v])
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], minZ], [0.1, -1, 0], [uvSideMin.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], minZ], [0.1, 1, 0], [uvSideMax.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], maxZ], [0, 1, 1], [uvSideMax.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], maxZ], [0, -1, 1], [uvSideMin.u, uvSideMin.v])
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.min[2]], [-1, 0.1, 0], [uvFrontMin.u, uvFrontMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.min[2]], [1, 0.1, 0], [uvFrontMax.u, uvFrontMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.max[0], planeIntersection[1], bbox.max[2]], [1, 0, 1], [uvFrontMax.u, uvFrontMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [bbox.min[0], planeIntersection[1], bbox.max[2]], [-1, 0, 1], [uvFrontMin.u, uvFrontMin.v])
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], minZ], [-0.1, -1, 0], [uvSideMin.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], minZ], [-0.1, 1, 0], [uvSideMax.u, uvSideMax.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.max[1], maxZ], [0, 1, 1], [uvSideMax.u, uvSideMin.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0], bbox.min[1], maxZ], [0, -1, 1], [uvSideMin.u, uvSideMin.v])
 
     def appendDiagonalPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
         bbox = self.ytypItems[entity.archetypeName].boundingBox
@@ -558,22 +561,25 @@ class LodMapCreator:
             adapt = (1 - desiredRatio) / desiredRatio * lengthVectorRightBottom / lengthVectorLeftTop
             vectorLeftTop = [vectorLeftTop[0] * adapt, vectorLeftTop[1] * adapt]
 
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [1, 0, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [0, 1, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [0, 1, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [1, 0, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [1, 0, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [1, 0, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [0, -1, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [-1, 0, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [-1, 0, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v])
-        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [0, -1, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [0.9, 1, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [-1, -0.9, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [-1, -1, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [1, 1, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [1, 0.9, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [-0.9, 1, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [-1, 1, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [1, 1, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.min[2]], [1, 0.9, 0], [uvDiagonal1Min.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.min[2]], [-0.9, -1, 0], [uvDiagonal1Max.u, uvDiagonal1Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftBottom[0], planeIntersection[1] + vectorLeftBottom[1], bbox.max[2]], [-1, -1, 1], [uvDiagonal1Max.u, uvDiagonal1Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightTop[0], planeIntersection[1] + vectorRightTop[1], bbox.max[2]], [1, 1, 1], [uvDiagonal1Min.u, uvDiagonal1Min.v])
+
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.min[2]], [0.9, -1, 0], [uvDiagonal2Min.u, uvDiagonal2Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.min[2]], [-1, 0.9, 0], [uvDiagonal2Max.u, uvDiagonal2Max.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorLeftTop[0], planeIntersection[1] + vectorLeftTop[1], bbox.max[2]], [-1, 1, 1], [uvDiagonal2Max.u, uvDiagonal2Min.v])
+        self.appendVertexForLod(vertices, normals, textureUVs, entity, [planeIntersection[0] + vectorRightBottom[0], planeIntersection[1] + vectorRightBottom[1], bbox.max[2]], [1, -1, 1], [uvDiagonal2Min.u, uvDiagonal2Min.v])
 
     def appendTopPlaneVerticesForLod(self, vertices: list[list[float]], normals: list[list[float]], textureUVs: list[list[float]], entity: EntityItem, planeIntersection: list[float]):
         bbox = self.ytypItems[entity.archetypeName].boundingBox
@@ -641,10 +647,10 @@ class LodMapCreator:
                 uvMin = UV(uvMax.u, uvMin.v)
                 uvMax = UV(temp, uvMax.v)
 
-            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [-1, -1, 0], sizes[i], [0, 1], [uvMin.u, uvMax.v])
-            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [1, -1, 0], sizes[i], [1, 1], [uvMax.u, uvMax.v])
-            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [1, -1, 1], sizes[i], [1, 0], [uvMax.u, uvMin.v])
-            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [-1, -1, 1], sizes[i], [0, 0], [uvMin.u, uvMin.v])
+            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [-1, -0.1, 0], sizes[i], [0, 1], [uvMin.u, uvMax.v])
+            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [1, -0.1, 0], sizes[i], [1, 1], [uvMax.u, uvMax.v])
+            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [1, 0, 1], sizes[i], [1, 0], [uvMax.u, uvMin.v])
+            result += LodMapCreator.createSlodModelVertexNormalTextureUVStr(translatedVertex, [-1, 0, 1], sizes[i], [0, 0], [uvMin.u, uvMin.v])
 
         return result
 
