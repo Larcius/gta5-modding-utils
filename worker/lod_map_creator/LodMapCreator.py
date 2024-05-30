@@ -1085,7 +1085,7 @@ class LodMapCreator:
         flags = self.getFlags(slodLevel, parentIndex >= 0, reflection)
         return EntityItem(name, center, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, childLodDistance, parentIndex, numChildren, lodLevel, flags)
 
-    def fixHdOrOrphanHdLodLevelsAndRearrangeEntites(self, content: str) -> str:
+    def fixHdOrOrphanHdLodLevelsAndRearrangeEntites(self, content: str) -> (str, Optional[str]):
         hdEntities = ""
         orphanHdEntites = ""
         for match in re.finditer('(\\s*<Item type="CEntityDef">' +
@@ -1121,12 +1121,15 @@ class LodMapCreator:
 
         matchEntities = re.search("<entities>", content)
         if matchEntities is None:
-            return content
+            return content, None
 
         start = matchEntities.end()
         end = re.search("\\s+</entities>[\\S\\s]*?\\Z", content, re.M).start()
 
-        return content[:start] + hdEntities + orphanHdEntites + content[end:]
+        orphanHdMap = None if orphanHdEntites == "" else content[:start] + orphanHdEntites + content[end:]
+        hdMap = None if orphanHdEntites == "" else content[:start] + hdEntities + content[end:]
+
+        return orphanHdMap, hdMap
 
     def resetParentIndexAndNumChildren(self, content: str) -> str:
         result = re.sub('(<parentIndex value=")[^"]+("/>)', '\\g<1>-1\\g<2>', content)
@@ -1480,12 +1483,27 @@ class LodMapCreator:
                                   '(?:\\s*<[^/].*>)*?' +
                                   '\\s*</Item>)', lambda match: self.replParentIndex(match, mutableIndex, hdToLod, offsetParentIndex), contentNoLod, flags=re.M)
 
-            contentNoLod = Ymap.replaceParent(contentNoLod, None if indexBefore == mutableIndex[0] else mapPrefix.lower().rstrip("_") + "_lod")
-            contentNoLod = self.fixHdOrOrphanHdLodLevelsAndRearrangeEntites(contentNoLod)
+            contentOrphanHd, contentHd = self.fixHdOrOrphanHdLodLevelsAndRearrangeEntites(contentNoLod)
 
-            fileNoLod = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
-            fileNoLod.write(contentNoLod)
-            fileNoLod.close()
+            mapNameLod = None if indexBefore == mutableIndex[0] else mapPrefix.lower().rstrip("_") + "_lod"
+
+            if contentOrphanHd is not None:
+                mapName = Util.getMapnameFromFilename(filename)
+                mapNameStrm = Util.findAvailableMapName(self.outputDir, mapName, "_strm", True)
+                contentOrphanHd = Ymap.replaceName(contentOrphanHd, mapNameStrm)
+                # in original ymaps parent is set even if a ymap only contains orphan hd entities
+                # so setting parent here as well even though all entities are orphan hd
+                contentOrphanHd = Ymap.replaceParent(contentOrphanHd, mapNameLod)
+                filenameOrphanHd = Util.getFilenameFromMapname(mapNameStrm)
+                fileOrphanHd = open(os.path.join(self.getOutputDirMaps(), filenameOrphanHd), 'w')
+                fileOrphanHd.write(contentOrphanHd)
+                fileOrphanHd.close()
+
+            if contentHd is not None:
+                contentHd = Ymap.replaceParent(contentHd, mapNameLod)
+                fileHd = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
+                fileHd.write(contentHd)
+                fileHd.close()
 
     def writeLodOrSlodMap(self, mapName: str, parentMap: Optional[str], contentFlags: int, entities: list[EntityItem], reflection: bool):
         contentEntities = self.createEntitiesContent(entities)

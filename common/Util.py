@@ -2,6 +2,7 @@ import math
 import os
 import random
 import shutil
+import re
 from typing import Any, Callable, Optional
 
 import numpy as np
@@ -349,11 +350,31 @@ class Util:
             return vector / norm
 
     @staticmethod
+    def getFilenameFromMapname(mapName: str) -> str:
+        return mapName + ".ymap.xml"
+
+    @staticmethod
     def getMapnameFromFilename(filename: str) -> Optional[str]:
         if filename.endswith(".ymap.xml"):
             return filename[:-9]
         else:
             return None
+
+    @staticmethod
+    def findAvailableMapName(dir: str, mapName: str, suffix: str, ensureSuffix: bool) -> str:
+        if ensureSuffix:
+            newMapName = re.sub(suffix + "\\d*$", "", mapName) + suffix
+        else:
+            newMapName = mapName
+
+        if os.path.exists(os.path.join(dir, Util.getFilenameFromMapname(newMapName))):
+            newMapName = re.sub(suffix + "\\d*$", "", newMapName) + suffix
+            i = -1
+            while os.path.exists(os.path.join(dir, Util.getFilenameFromMapname(newMapName + ("" if i < 0 else str(i))))):
+                i += 1
+            if i >= 0:
+                newMapName += str(i)
+        return newMapName
 
     @staticmethod
     def determinePrefixBundles(names: list[str]) -> list[str]:

@@ -230,32 +230,21 @@ class Clustering:
         self.writeClusteredYmap(mapPrefix, outputFiles)
 
         for mapName in mapsNeededToCopy:
-            newMapName = self.findAvailableMapName(mapName, "_excluded")
-            Util.copyFile(self.inputDir, self.outputDir, mapName + ".ymap.xml", newMapName + ".ymap.xml")
+            newMapName = Util.findAvailableMapName(self.outputDir, mapName, "_excluded", False)
+            Util.copyFile(self.inputDir, self.outputDir, Util.getFilenameFromMapname(mapName), Util.getFilenameFromMapname(newMapName))
 
         for mapName in mapsHavingNotOnlyEntities:
-            content = Util.readFile(os.path.join(self.inputDir, mapName + ".ymap.xml"))
+            content = Util.readFile(os.path.join(self.inputDir, Util.getFilenameFromMapname(mapName)))
 
-            newMapName = self.findAvailableMapName(mapName, "_no_entities")
+            newMapName = Util.findAvailableMapName(self.outputDir, mapName, "_no_entities", False)
 
             content = Ymap.replaceParent(content, None)
             content = Ymap.replaceName(content, newMapName)
             content = re.sub("<entities>[\\S\\s]*</entities>", "<entities/>", content)
 
-            Util.writeFile(os.path.join(self.outputDir, newMapName + ".ymap.xml"), content)
+            Util.writeFile(os.path.join(self.outputDir, Util.getFilenameFromMapname(newMapName)), content)
 
         self.plotClusterResult(coords, hierarchy)
-
-    def findAvailableMapName(self, mapName: str, suffix: str) -> str:
-        newMapName = mapName
-        if os.path.exists(os.path.join(self.outputDir, newMapName + ".ymap.xml")):
-            newMapName = re.sub(suffix + "\\d*$", "", newMapName) + suffix
-            i = -1
-            while os.path.exists(os.path.join(self.outputDir, newMapName + ("" if i < 0 else str(i)) + ".ymap.xml")):
-                i += 1
-            if i >= 0:
-                newMapName += str(i)
-        return newMapName
 
     def writeClusteredYmap(self, mapPrefix: str, clusteredEntities: dict[int, dict[int, str]]):
         numGroups = len(clusteredEntities)
