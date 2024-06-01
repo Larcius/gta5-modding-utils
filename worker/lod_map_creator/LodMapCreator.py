@@ -1140,7 +1140,7 @@ class LodMapCreator:
         mapNames = []
         for filename in natsorted(os.listdir(self.inputDir)):
             if filename.endswith(".ymap.xml") and not filename.endswith("_lod.ymap.xml") and not filename.endswith("_slod2.ymap.xml"):
-                mapNames.append(filename[:-9])
+                mapNames.append(Util.getMapnameFromFilename(filename))
 
         self.bundlePrefixes = Util.determinePrefixBundles(mapNames)
 
@@ -1176,9 +1176,9 @@ class LodMapCreator:
             if not filename.endswith(".ymap.xml") or not filename.startswith(mapPrefix.lower()):
                 continue
 
-            mapName = filename[:-9]
+            mapName = Util.getMapnameFromFilename(filename)
 
-            if os.path.exists(os.path.join(self.getOutputDirMaps(), mapName + ".ymap.xml")):
+            if os.path.exists(os.path.join(self.getOutputDirMaps(), Util.getFilenameFromMapname(mapName))):
                 print("\twarning: skipping " + filename + " since such a map was created by this script")
                 continue
 
@@ -1521,7 +1521,7 @@ class LodMapCreator:
         else:
             mapsDir = self.getOutputDirMaps()
 
-        fileMap = open(os.path.join(mapsDir, mapName + ".ymap.xml"), 'w')
+        fileMap = open(os.path.join(mapsDir, Util.getFilenameFromMapname(mapName)), 'w')
         fileMap.write(content)
         fileMap.close()
 

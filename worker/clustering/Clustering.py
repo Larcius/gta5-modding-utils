@@ -162,7 +162,7 @@ class Clustering:
             if not filename.endswith(".ymap.xml"):
                 continue
 
-            mapName = filename[:-9]
+            mapName = Util.getMapnameFromFilename(filename)
 
             if mapName in self.clusteringExcluded:
                 mapsNeededToCopy.append(mapName)
@@ -213,7 +213,7 @@ class Clustering:
             if not filename.endswith(".ymap.xml"):
                 continue
 
-            mapName = filename[:-9]
+            mapName = Util.getMapnameFromFilename(filename)
             if mapName in mapsNeededToCopy:
                 continue
 
@@ -258,7 +258,7 @@ class Clustering:
                 entities = clustersInGroup[cluster]
                 ymapContent = self.createYmapContent(mapName, entities)
 
-                file = open(os.path.join(self.outputDir, mapName + ".ymap.xml"), 'w')
+                file = open(os.path.join(self.outputDir, Util.getFilenameFromMapname(mapName)), 'w')
                 file.write(ymapContent)
                 file.close()
 

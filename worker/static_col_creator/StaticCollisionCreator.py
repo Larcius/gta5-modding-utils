@@ -434,7 +434,7 @@ class StaticCollisionCreator:
         if not foundScolModel:
             return
 
-        mapName = mapFilename[:-9]
+        mapName = Util.getMapnameFromFilename(mapFilename)
 
         for i in range(numClusters):
             # obnEmptyContentNew = createInitObn(bbox, 0) \

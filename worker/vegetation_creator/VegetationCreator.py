@@ -303,7 +303,7 @@ class VegetationCreator:
         archetypes = []
         for filename in natsorted(os.listdir(self.inputDir)):
             if filename.endswith(".ymap.xml"):
-                mapNames.append(filename[:-9])
+                mapNames.append(Util.getMapnameFromFilename(filename))
                 self.processFile(filename, points, archetypes)
 
         countInitPoints = len(points)
@@ -435,7 +435,7 @@ class VegetationCreator:
             .replace("${NAME}", mapName) \
             .replace("${ENTITIES}\n", contentEntities)
 
-        fileMap = open(os.path.join(self.outputDir, mapName + ".ymap.xml"), 'w')
+        fileMap = open(os.path.join(self.outputDir, Util.getFilenameFromMapname(mapName)), 'w')
         fileMap.write(map)
         fileMap.close()
 

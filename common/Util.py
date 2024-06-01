@@ -1,6 +1,5 @@
 import math
 import os
-import random
 import shutil
 import re
 from typing import Any, Callable, Optional
@@ -299,7 +298,7 @@ class Util:
         else:
             result = 10
 
-        return random.uniform(math.radians(result * 0.85), math.radians(result * 1.15))
+        return math.radians(result)
 
     @staticmethod
     def getListOfFiles(inputDir: str, filter: Optional[Callable[[str], bool]] = None):
