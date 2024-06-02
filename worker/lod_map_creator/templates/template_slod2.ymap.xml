@@ -2,7 +2,7 @@
 <CMapData>
   <name>${NAME}</name>
   <parent/>
-  <flags value="2"/>
+  <flags value="${FLAGS}"/>
   <contentFlags value="${CONTENT_FLAGS}"/>
   <streamingExtentsMin x="${EXTENTS.STREAMING.MIN.X}" y="${EXTENTS.STREAMING.MIN.Y}" z="${EXTENTS.STREAMING.MIN.Z}"/>
   <streamingExtentsMax x="${EXTENTS.STREAMING.MAX.X}" y="${EXTENTS.STREAMING.MAX.Y}" z="${EXTENTS.STREAMING.MAX.Z}"/>

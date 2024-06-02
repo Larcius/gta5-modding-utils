@@ -1085,10 +1085,14 @@ class LodMapCreator:
         flags = self.getFlags(slodLevel, parentIndex >= 0, reflection)
         return EntityItem(name, center, [1, 1, 1], [1, 0, 0, 0], itemLodDistance, childLodDistance, parentIndex, numChildren, lodLevel, flags)
 
-    def fixHdOrOrphanHdLodLevelsAndRearrangeEntites(self, content: str) -> (str, Optional[str]):
+    def fixHdOrOrphanHdLodLevelsAndSplitAccordingly(self, content: str) -> (str, Optional[str]):
+        matchEntities = re.search("<entities>\\n", content, re.M)
+        if matchEntities is None:
+            return None, content
+
         hdEntities = ""
-        orphanHdEntites = ""
-        for match in re.finditer('(\\s*<Item type="CEntityDef">' +
+        orphanHdEntities = ""
+        for match in re.finditer('([\\t ]*<Item type="CEntityDef">' +
                                  '(?:\\s*<[^/].*>)*?' +
                                  '\\s*<flags value=")([^"]+)("\\s*/>' +
                                  '(?:\\s*<[^/].*>)*?' +
@@ -1115,21 +1119,17 @@ class LodMapCreator:
                      (match.group(6) if isOrphanHd else PriorityLevel.REQUIRED) + match.group(7)
 
             if isOrphanHd:
-                orphanHdEntites += entity
+                orphanHdEntities += entity + "\n"
             else:
-                hdEntities += entity
-
-        matchEntities = re.search("<entities>", content)
-        if matchEntities is None:
-            return content, None
+                hdEntities += entity + "\n"
 
         start = matchEntities.end()
-        end = re.search("\\s+</entities>[\\S\\s]*?\\Z", content, re.M).start()
+        end = re.search("[\\t ]+</entities>[\\S\\s]*?\\Z", content, re.M).start()
 
-        orphanHdMap = None if orphanHdEntites == "" else content[:start] + orphanHdEntites + content[end:]
-        hdMap = None if orphanHdEntites == "" else content[:start] + hdEntities + content[end:]
+        orphanHdEntities = None if orphanHdEntities == "" else orphanHdEntities
+        hdMap = None if hdEntities == "" else content[:start] + hdEntities + content[end:]
 
-        return orphanHdMap, hdMap
+        return orphanHdEntities, hdMap
 
     def resetParentIndexAndNumChildren(self, content: str) -> str:
         result = re.sub('(<parentIndex value=")[^"]+("/>)', '\\g<1>-1\\g<2>', content)
@@ -1483,21 +1483,14 @@ class LodMapCreator:
                                   '(?:\\s*<[^/].*>)*?' +
                                   '\\s*</Item>)', lambda match: self.replParentIndex(match, mutableIndex, hdToLod, offsetParentIndex), contentNoLod, flags=re.M)
 
-            contentOrphanHd, contentHd = self.fixHdOrOrphanHdLodLevelsAndRearrangeEntites(contentNoLod)
+            orphanHdEntities, contentHd = self.fixHdOrOrphanHdLodLevelsAndSplitAccordingly(contentNoLod)
 
             mapNameLod = None if indexBefore == mutableIndex[0] else mapPrefix.lower().rstrip("_") + "_lod"
 
-            if contentOrphanHd is not None:
+            if orphanHdEntities is not None:
                 mapName = Util.getMapnameFromFilename(filename)
                 mapNameStrm = Util.findAvailableMapName(self.outputDir, mapName, "_strm", True)
-                contentOrphanHd = Ymap.replaceName(contentOrphanHd, mapNameStrm)
-                # in original ymaps parent is set even if a ymap only contains orphan hd entities
-                # so setting parent here as well even though all entities are orphan hd
-                contentOrphanHd = Ymap.replaceParent(contentOrphanHd, mapNameLod)
-                filenameOrphanHd = Util.getFilenameFromMapname(mapNameStrm)
-                fileOrphanHd = open(os.path.join(self.getOutputDirMaps(), filenameOrphanHd), 'w')
-                fileOrphanHd.write(contentOrphanHd)
-                fileOrphanHd.close()
+                self.writeStrmMap(mapNameStrm, orphanHdEntities)
 
             if contentHd is not None:
                 contentHd = Ymap.replaceParent(contentHd, mapNameLod)
@@ -1507,9 +1500,15 @@ class LodMapCreator:
 
     def writeLodOrSlodMap(self, mapName: str, parentMap: Optional[str], contentFlags: int, entities: list[EntityItem], reflection: bool):
         contentEntities = self.createEntitiesContent(entities)
+        self.writeMap(mapName, parentMap, 2, contentFlags, contentEntities, reflection)
 
+    def writeStrmMap(self, mapName: str, contentEntities: str):
+        self.writeMap(mapName, None, 0, ContentFlag.HD, contentEntities, False)
+
+    def writeMap(self, mapName: str, parentMap: Optional[str], flags: int, contentFlags: int, contentEntities: str, reflection: bool):
         content = self.contentTemplateSlod2Map \
             .replace("${NAME}", mapName) \
+            .replace("${FLAGS}", str(flags)) \
             .replace("${CONTENT_FLAGS}", str(contentFlags)) \
             .replace("${TIMESTAMP}", Util.getNowInIsoFormat()) \
             .replace("${ENTITIES}\n", contentEntities)
