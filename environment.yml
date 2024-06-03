@@ -1,0 +1,17 @@
+name: gta5-modding-utils-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib=3.8.4
+  - natsort=8.4.0
+  - numpy=1.23.5
+  - pip=24.0
+  - python=3.11.9
+  - scikit-learn=1.5.0
+  - shapely=2.0.4
+  - transforms3d=0.4.1
+  - pip:
+    - miniball==1.2.0
+variables:
+  OMP_NUM_THREADS: '1'

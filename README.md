@@ -10,20 +10,12 @@ https://docs.conda.io/en/latest/miniconda.html
 
 Once you installed Miniconda you need to create a new environment and install all required python packages:
 ```commandline
-conda create --name gta5-modding-utils -y
-conda install --name gta5-modding-utils -c conda-forge shapely -y
-conda install --name gta5-modding-utils -c conda-forge scikit-learn -y
-conda install --name gta5-modding-utils -c conda-forge transforms3d -y
-conda install --name gta5-modding-utils -c conda-forge natsort -y
-conda env config vars set OMP_NUM_THREADS=1 --name gta5-modding-utils
-conda activate gta5-modding-utils
-python -m pip install matplotlib
-python -m pip install miniball
+conda env create --file environment.yml --force
 ```
 
 Now your environment is ready to use and from now on all you need to do is to activate this environment:
 ````commandline
-conda activate gta5-modding-utils
+conda activate gta5-modding-utils-env
 ````
 
 ### Resources from GTA 5
