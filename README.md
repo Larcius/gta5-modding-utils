@@ -10,7 +10,7 @@ https://docs.conda.io/en/latest/miniconda.html
 
 Once you installed Miniconda you need to create a new environment and install all required python packages:
 ```commandline
-conda env create --file environment.yml --force
+conda env create -y -f environment.yml
 ```
 
 Now your environment is ready to use and from now on all you need to do is to activate this environment:
