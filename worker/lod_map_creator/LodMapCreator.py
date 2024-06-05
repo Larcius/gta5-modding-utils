@@ -372,17 +372,20 @@ class LodMapCreator:
             "\\g<1>" + str(flags) + "\\g<2>" + str(contentFlags) + "\\g<3>", content
         )
 
-    def replParentIndex(self, matchobj: Match, mutableIndex: list[int], hdToLod: dict[int, int], offsetParentIndex: int) -> str:
+    def replParentIndexAndLodDistance(self, matchobj: Match, entities: list[EntityItem], mutableIndex: list[int], hdToLod: dict[int, int], offsetParentIndex: int) -> str:
         archetypeName = matchobj.group(2).lower()
         if (self.USE_SLOD_TEMPLATE_FOR_LEVEL_AND_ABOVE > 0 and archetypeName in self.lodCandidates) or \
                 (self.USE_SLOD_TEMPLATE_FOR_LEVEL_AND_ABOVE <= 0 and archetypeName in self.slodCandidates):
             index = mutableIndex[0]
             parentIndex = hdToLod[index] + offsetParentIndex
+            entity = entities[index]
+            lodDistance = Util.floatToStr(entity.lodDistance)
             mutableIndex[0] += 1
         else:
             parentIndex = -1
+            lodDistance = matchobj.group(4)
 
-        return matchobj.group(1) + str(parentIndex) + matchobj.group(3)
+        return matchobj.group(1) + str(parentIndex) + matchobj.group(3) + lodDistance + matchobj.group(5)
 
     def replacePlaceholders(self, template: str, name: str, textureDictionary: str, drawableDictionary: str, bbox: Box, bsphere: Sphere, hdDistance: float, lodDistance: float) -> str:
         return template \
@@ -1294,7 +1297,7 @@ class LodMapCreator:
 
         numSlod1Entities = self.createLodSlodMapsModels(entitiesForLodModels, hierarchyMappingFromPreviousLevel, lodNumChildren, mapPrefix.lower().rstrip("_"))
 
-        self.adaptHdMapsForPrefix(mapPrefix, hierarchyMappingFromPreviousLevel[0], numSlod1Entities)
+        self.adaptHdMapsForPrefix(mapPrefix, hdEntitiesWithLod, hierarchyMappingFromPreviousLevel[0], numSlod1Entities)
 
     def createReflLodMapsModels(self, entitiesForReflLodModels: dict[int], prefix: str):
         reflDrawableDictionary = prefix + "_refl_children"
@@ -1464,7 +1467,7 @@ class LodMapCreator:
         else:
             return parentKeyToIndex[keyToParentKey[key]] + parentIndexOffset
 
-    def adaptHdMapsForPrefix(self, mapPrefix: str, hdToLod: dict[int, int], offsetParentIndex: int):
+    def adaptHdMapsForPrefix(self, mapPrefix: str, hdEntities: list[EntityItem], hdToLod: dict[int, int], offsetParentIndex: int):
         mutableIndex = [0]
         for filename in natsorted(os.listdir(self.inputDir)):
             if not filename.endswith(".ymap.xml") or not filename.startswith(mapPrefix.lower()):
@@ -1481,7 +1484,9 @@ class LodMapCreator:
                                   '(?:\\s*<[^/].*>)*?' +
                                   '\\s*<parentIndex value=")[^"]+("\\s*/>' +
                                   '(?:\\s*<[^/].*>)*?' +
-                                  '\\s*</Item>)', lambda match: self.replParentIndex(match, mutableIndex, hdToLod, offsetParentIndex), contentNoLod, flags=re.M)
+                                  '\\s*<lodDist value=")([^"]+)("\\s*/>' +
+                                  '(?:\\s*<[^/].*>)*?' +
+                                  '\\s*</Item>)', lambda match: self.replParentIndexAndLodDistance(match, hdEntities, mutableIndex, hdToLod, offsetParentIndex), contentNoLod, flags=re.M)
 
             orphanHdEntities, contentHd = self.fixHdOrOrphanHdLodLevelsAndSplitAccordingly(contentNoLod)
 
