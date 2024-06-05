@@ -214,8 +214,16 @@ class StaticCollisionCreator:
     def isExistColModel(self, entity: str) -> bool:
         return os.path.exists(self.getColModelPathCandidate(entity))
 
+    def getSkelModelPathCandidate(self, entity: str) -> str:
+        return os.path.join(os.path.dirname(__file__), "..", "..", "resources", "models", entity.lower(), entity.lower() + ".skel")
+
+    def isExistSkelModel(self, entity: str) -> bool:
+        return os.path.exists(self.getSkelModelPathCandidate(entity))
+
     def shouldEntityBeUsedInStaticCol(self, entity: str, flags: int, scale: list[float]) -> bool:
         if not self.isExistColModel(entity):
+            return False
+        if self.isExistSkelModel(entity):
             return False
 
         if not StaticCollisionCreator.IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION and flags & Flag.DISABLE_EMBEDDED_COLLISION:
