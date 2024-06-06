@@ -2,6 +2,7 @@ import math
 import os
 import shutil
 import re
+from string import digits
 from typing import Any, Callable, Optional
 
 import numpy as np
@@ -377,68 +378,11 @@ class Util:
 
     @staticmethod
     def determinePrefixBundles(names: list[str]) -> list[str]:
-        bundlePrefixes = []
-        numMatches = 0
-        candidate = None
-        for name in natsorted(names):
-            if candidate is None:
-                candidate = name
-
-            parts = [candidate, "", ""]
-            while not (parts[0] == "" or name == parts[0] or name.startswith(parts[0] + parts[1])):
-                if "_" not in parts[0]:
-                    parts = ["", "", ""]
-                else:
-                    parts = parts[0].rpartition("_")
-
-            newCandidate = parts[0] + parts[1]
-
-            if newCandidate == "":
-                if numMatches > 0:
-                    bundlePrefixes.append(candidate)
-                numMatches = 1
-                candidate = name
-            elif newCandidate == candidate:
-                numMatches += 1
-            else:
-                if numMatches > 1:
-                    bundlePrefixes.append(candidate)
-                    numMatches = 1
-                    candidate = name
-                else:
-                    numMatches += 1
-                    candidate = newCandidate
-
-        if candidate != "" and numMatches > 0:
-            bundlePrefixes.append(candidate)
-
-        bundlePrefixes = natsorted(bundlePrefixes)
-
-        # remove prefixes of prefixes
-        removedPrefix = False
-        i = 0
-        while i + 1 < len(bundlePrefixes):
-            if bundlePrefixes[i + 1].startswith(bundlePrefixes[i]):
-                removedPrefix = True
-                bundlePrefixes.pop(i)
-            else:
-                i += 1
-
-        if not removedPrefix:
-            return bundlePrefixes
-
-        # add names that are no longer covered by any prefix
+        prefixes = set()
         for name in names:
-            foundSuitablePrefix = False
-            for prefix in bundlePrefixes:
-                if name.startswith(prefix):
-                    foundSuitablePrefix = True
-                    break
+            prefixes.add(name.rstrip(digits))
 
-            if not foundSuitablePrefix:
-                bundlePrefixes.append(name)
-
-        return natsorted(bundlePrefixes)
+        return natsorted(list(prefixes))
 
     @staticmethod
     def getNowInIsoFormat() -> str:
