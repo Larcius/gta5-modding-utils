@@ -23,6 +23,7 @@ class StaticCollisionCreator:
     inputDir: str
     outputDir: str
 
+    _shouldArchetypeBeUsedInStaticCol: dict[str, bool]
     _entityColModels: dict[str, BoundComposite]
 
     _colChildren: list[BoundComposite]
@@ -47,6 +48,7 @@ class StaticCollisionCreator:
     def __init__(self, inputDir: str, outputDir: str):
         self.inputDir = inputDir
         self.outputDir = outputDir
+        self._shouldArchetypeBeUsedInStaticCol = {}
         self._entityColModels = {}
 
     def run(self):
@@ -220,10 +222,15 @@ class StaticCollisionCreator:
     def isExistSkelModel(self, entity: str) -> bool:
         return os.path.exists(self.getSkelModelPathCandidate(entity))
 
+    def shouldArchetypeBeUsedInStaticCol(self, archetype: str) -> bool:
+        if archetype not in self._shouldArchetypeBeUsedInStaticCol:
+            self._shouldArchetypeBeUsedInStaticCol[archetype] = \
+                self.isExistColModel(archetype) and not self.isExistSkelModel(archetype)
+
+        return self._shouldArchetypeBeUsedInStaticCol[archetype]
+
     def shouldEntityBeUsedInStaticCol(self, entity: str, flags: int, scale: list[float]) -> bool:
-        if not self.isExistColModel(entity):
-            return False
-        if self.isExistSkelModel(entity):
+        if not self.shouldArchetypeBeUsedInStaticCol(entity):
             return False
 
         if not StaticCollisionCreator.IGNORE_PREVIOUS_FLAG_DISABLE_EMBEDED_COLLISION and flags & Flag.DISABLE_EMBEDDED_COLLISION:
