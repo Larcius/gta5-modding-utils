@@ -1299,7 +1299,7 @@ class LodMapCreator:
 
         self.adaptHdMapsForPrefix(mapPrefix, hdEntitiesWithLod, hierarchyMappingFromPreviousLevel[0], numSlod1Entities)
 
-    def createReflLodMapsModels(self, entitiesForReflLodModels: dict[int], prefix: str):
+    def createReflLodMapsModels(self, entitiesForReflLodModels: dict[int, list[EntityItem]], prefix: str):
         reflDrawableDictionary = prefix + "_refl_children"
         drawableDictionariesReflEntities = [[]]
 
@@ -1331,7 +1331,7 @@ class LodMapCreator:
             mapName = prefix + "_refl"
             self.writeLodOrSlodMap(mapName, None, ContentFlag.SLOD | ContentFlag.SLOD2, reflEntities, True)
 
-    def createLodSlodMapsModels(self, entitiesForLodModels: list[dict[int]], hierarchyMappingFromPreviousLevel: list[dict[int]], lodNumChildren: list[dict[int]], prefix: str) -> int:
+    def createLodSlodMapsModels(self, entitiesForLodModels: list[dict[int, list[EntityItem]]], hierarchyMappingFromPreviousLevel: list[dict[int, int]], lodNumChildren: list[dict[int, int]], prefix: str) -> int:
         lodDrawableDictionary = prefix + "_lod_children"
         slod1DrawableDictionary = prefix + "_slod1_children"
         slod2DrawableDictionary = prefix + "_slod2_children"
