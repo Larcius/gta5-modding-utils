@@ -12,8 +12,8 @@ from natsort import natsorted
 from scipy.spatial import ConvexHull
 from scipy.spatial.distance import pdist
 from scipy.spatial.qhull import QhullError
-from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import KMeans
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
@@ -88,7 +88,7 @@ class Util:
             if unevenClusters:
                 model = AgglomerativeClustering(n_clusters=numClusters, distance_threshold=distanceThreshold, linkage="complete")
             else:
-                model = MiniBatchKMeans(n_clusters=numClusters, random_state=0, reassignment_ratio=0, n_init=10)
+                model = KMeans(n_clusters=numClusters, random_state=0, n_init=10)
             clusters = model.fit_predict(X)
 
             clusters = Util._fixClusterLabels(clusters, X)
