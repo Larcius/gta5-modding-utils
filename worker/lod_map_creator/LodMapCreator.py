@@ -1473,9 +1473,11 @@ class LodMapCreator:
             if not filename.endswith(".ymap.xml") or not filename.startswith(mapPrefix.lower()):
                 continue
 
-            fileNoLod = open(os.path.join(self.getOutputDirMaps(), filename), 'r')
+            pathNoLod = os.path.join(self.getOutputDirMaps(), filename)
+            fileNoLod = open(pathNoLod, 'r')
             contentNoLod = fileNoLod.read()
             fileNoLod.close()
+            os.remove(pathNoLod)
 
             indexBefore = mutableIndex[0]
             # fix parentIndex in hd map to match lod map
@@ -1494,7 +1496,10 @@ class LodMapCreator:
 
             if orphanHdEntities is not None:
                 mapName = Util.getMapnameFromFilename(filename)
-                mapNameStrm = Util.findAvailableMapName(self.outputDir, mapName, "_strm", True)
+                if self.clearLod:
+                    mapNameStrm = mapName
+                else:
+                    mapNameStrm = Util.findAvailableMapName(self.outputDir, mapName, "_strm", True)
                 self.writeStrmMap(mapNameStrm, orphanHdEntities)
 
             if contentHd is not None:
