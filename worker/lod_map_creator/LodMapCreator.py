@@ -1091,7 +1091,7 @@ class LodMapCreator:
     def fixHdOrOrphanHdLodLevelsAndSplitAccordingly(self, content: str) -> (str, Optional[str]):
         matchEntities = re.search("<entities>\\n", content, re.M)
         if matchEntities is None:
-            return None, content
+            return None, None, content, ""
 
         hdEntities = ""
         orphanHdEntities = ""
@@ -1130,9 +1130,9 @@ class LodMapCreator:
         end = re.search("[\\t ]+</entities>[\\S\\s]*?\\Z", content, re.M).start()
 
         orphanHdEntities = None if orphanHdEntities == "" else orphanHdEntities
-        hdMap = None if hdEntities == "" else content[:start] + hdEntities + content[end:]
+        hdEntities = None if hdEntities == "" else hdEntities
 
-        return orphanHdEntities, hdMap
+        return orphanHdEntities, hdEntities, content[:start], content[end:]
 
     def resetParentIndexAndNumChildren(self, content: str) -> str:
         result = re.sub('(<parentIndex value=")[^"]+("/>)', '\\g<1>-1\\g<2>', content)
@@ -1477,9 +1477,7 @@ class LodMapCreator:
             fileNoLod = open(pathNoLod, 'r')
             contentNoLod = fileNoLod.read()
             fileNoLod.close()
-            os.remove(pathNoLod)
 
-            indexBefore = mutableIndex[0]
             # fix parentIndex in hd map to match lod map
             contentNoLod = re.sub('(\\s*<Item type="CEntityDef">' +
                                   '\\s*<archetypeName>([^<]+)</archetypeName>' +
@@ -1490,23 +1488,33 @@ class LodMapCreator:
                                   '(?:\\s*<[^/].*>)*?' +
                                   '\\s*</Item>)', lambda match: self.replParentIndexAndLodDistance(match, hdEntities, mutableIndex, hdToLod, offsetParentIndex), contentNoLod, flags=re.M)
 
-            orphanHdEntities, contentHd = self.fixHdOrOrphanHdLodLevelsAndSplitAccordingly(contentNoLod)
+            orphanHdEntities, hdEntitiesContent, contentBeforeEntities, contentAfterEntities = self.fixHdOrOrphanHdLodLevelsAndSplitAccordingly(contentNoLod)
 
-            mapNameLod = None if indexBefore == mutableIndex[0] else mapPrefix.lower().rstrip("_") + "_lod"
+            if hdEntitiesContent is None and orphanHdEntities is None:
+                return
+
+            os.remove(pathNoLod)
+
+            if hdEntitiesContent is not None:
+                mapNameLod = mapPrefix.lower().rstrip("_") + "_lod"
+                contentHd = contentBeforeEntities + hdEntitiesContent + contentAfterEntities
+                contentHd = Ymap.replaceParent(contentHd, mapNameLod)
+                fileHd = open(pathNoLod, 'w')
+                fileHd.write(contentHd)
+                fileHd.close()
 
             if orphanHdEntities is not None:
                 mapName = Util.getMapnameFromFilename(filename)
-                if self.clearLod:
-                    mapNameStrm = mapName
-                else:
-                    mapNameStrm = Util.findAvailableMapName(self.outputDir, mapName, "_strm", True)
-                self.writeStrmMap(mapNameStrm, orphanHdEntities)
+                mapNameStrm = Util.findAvailableMapName(self.getOutputDirMaps(), mapName, "_strm", not self.clearLod)
 
-            if contentHd is not None:
-                contentHd = Ymap.replaceParent(contentHd, mapNameLod)
-                fileHd = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
-                fileHd.write(contentHd)
-                fileHd.close()
+                if hdEntitiesContent is None:
+                    contentHd = contentBeforeEntities + orphanHdEntities + contentAfterEntities
+                    contentHd = Ymap.replaceParent(contentHd, None)
+                    fileHd = open(os.path.join(self.getOutputDirMaps(), Util.getFilenameFromMapname(mapNameStrm)), 'w')
+                    fileHd.write(contentHd)
+                    fileHd.close()
+                else:
+                    self.writeStrmMap(mapNameStrm, orphanHdEntities)
 
     def writeLodOrSlodMap(self, mapName: str, parentMap: Optional[str], contentFlags: int, entities: list[EntityItem], reflection: bool):
         contentEntities = self.createEntitiesContent(entities)
