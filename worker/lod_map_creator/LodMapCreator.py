@@ -1477,6 +1477,7 @@ class LodMapCreator:
             fileNoLod = open(pathNoLod, 'r')
             contentNoLod = fileNoLod.read()
             fileNoLod.close()
+            os.remove(pathNoLod)
 
             # fix parentIndex in hd map to match lod map
             contentNoLod = re.sub('(\\s*<Item type="CEntityDef">' +
@@ -1491,9 +1492,11 @@ class LodMapCreator:
             orphanHdEntities, hdEntitiesContent, contentBeforeEntities, contentAfterEntities = self.fixHdOrOrphanHdLodLevelsAndSplitAccordingly(contentNoLod)
 
             if hdEntitiesContent is None and orphanHdEntities is None:
+                contentNoLod = Ymap.replaceParent(contentNoLod, None)
+                fileHd = open(pathNoLod, 'w')
+                fileHd.write(contentNoLod)
+                fileHd.close()
                 return
-
-            os.remove(pathNoLod)
 
             if hdEntitiesContent is not None:
                 mapNameLod = mapPrefix.lower().rstrip("_") + "_lod"
