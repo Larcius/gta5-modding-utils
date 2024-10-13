@@ -134,12 +134,12 @@ class LodMapCreator:
             "prop_palm_med_01b": LodCandidate(0.515625, 0.17613636363, UV(0, 0), UV(1, 0.6875), UV(0, 1), UV(1, 0.6875), UV(0.546875, 0.84375)),
             "prop_palm_med_01c": LodCandidate(0.515625, 0.16666666666, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_palm_med_01d": LodCandidate(0.5, 0.11057692307, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
-            "prop_palm_sm_01a": LodCandidate(0.46875, None, UV(0, 0), UV(1, 1)),
-            "prop_palm_sm_01d": LodCandidate(0.515625, None, UV(0, 0), UV(1, 1)),
-            "prop_palm_sm_01e": LodCandidate(0.515625, None, UV(0, 0), UV(1, 1)),
-            "prop_palm_sm_01f": LodCandidate(0.515625, None, UV(0, 0), UV(1, 1)),
-            "prop_veg_crop_tr_01": LodCandidate(0.484375, None, UV(0, 0), UV(1, 1)),
-            "prop_veg_crop_tr_02": LodCandidate(0.5, None, UV(0, 0), UV(1, 1))
+            "prop_palm_sm_01a": LodCandidate(0.46875),
+            "prop_palm_sm_01d": LodCandidate(0.515625),
+            "prop_palm_sm_01e": LodCandidate(0.515625),
+            "prop_palm_sm_01f": LodCandidate(0.515625),
+            "prop_veg_crop_tr_01": LodCandidate(0.484375),
+            "prop_veg_crop_tr_02": LodCandidate(0.5)
         }
         # for each lodCandidate set its diffuseSampler as lod_<archetype name>
         for name in lodCandidates:
