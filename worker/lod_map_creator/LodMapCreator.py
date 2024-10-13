@@ -59,6 +59,22 @@ class LodMapCreator:
 
     def prepareLodCandidates(self):
         lodCandidates = {
+            # cacti
+            "prop_cactus_01a": LodCandidate(0.265625),
+            "prop_cactus_01b": LodCandidate(0.5),
+            "prop_cactus_01c": LodCandidate(0.53125),
+            "prop_cactus_01d": LodCandidate(0.4375),
+            "prop_cactus_01e": LodCandidate(0.5),
+            "prop_joshua_tree_01a": LodCandidate(0.453125),
+            "prop_joshua_tree_01b": LodCandidate(0.5),
+            "prop_joshua_tree_01c": LodCandidate(0.53125),
+            "prop_joshua_tree_01d": LodCandidate(0.40625),
+            "prop_joshua_tree_01e": LodCandidate(0.46875),
+            "prop_joshua_tree_02a": LodCandidate(0.546875),
+            "prop_joshua_tree_02b": LodCandidate(0.609375),
+            "prop_joshua_tree_02c": LodCandidate(0.484375),
+            "prop_joshua_tree_02d": LodCandidate(0.734375, None, UV(0, 0), UV(0.5, 1), None, None, None, UV(0.5, 0), UV(1, 1), 0.3125),
+            "prop_joshua_tree_02e": LodCandidate(0.546875),
             # trees
             "prop_tree_birch_01": LodCandidate(0.546875, 0.6484375, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.7734375, 0.5078125)),
             "prop_tree_birch_02": LodCandidate(0.421875, 0.4765625, UV(0, 0), UV(0.5, 1), UV(0.5, 0), UV(1, 1), UV(0.765625, 0.3671875)),
@@ -71,6 +87,7 @@ class LodMapCreator:
             "prop_tree_cedar_03": LodCandidate(0.5234375, 0.46875, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_tree_cedar_04": LodCandidate(0.484375, 0.34375, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1), UV(0.484375, 0.87890625)),
             "prop_tree_cedar_s_01": LodCandidate(0.484375, 0.66875, UV(0, 0), UV(1, 0.625), UV(0, 0.625), UV(1, 1), UV(0.46875, 0.8203125)),
+            "prop_tree_cedar_s_02": LodCandidate(0.5),
             "prop_tree_cedar_s_04": LodCandidate(0.5, 0.67307692307, UV(0, 0), UV(1, 0.8125), UV(0, 1), UV(1, 0.8125)),
             "prop_tree_cedar_s_05": LodCandidate(0.46875),
             "prop_tree_cedar_s_06": LodCandidate(0.5),
