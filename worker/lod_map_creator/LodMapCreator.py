@@ -57,6 +57,9 @@ class LodMapCreator:
 
     MAX_NUM_CHILDREN_IN_DRAWABLE_DICTIONARY = 63
 
+    TEXTURE_DICTIONARY_LOD = "vegetation_lod"
+    TEXTURE_DICTIONARY_SLOD = "vegetation_slod"
+
     def prepareLodCandidates(self):
         lodCandidates = {
             # cacti
@@ -811,7 +814,7 @@ class LodMapCreator:
         else:
             childLodDistance = maxHdEntityLodDistance
 
-        self.writeYtypItem(lodName, self.prefix + "_lod", drawableDictionary, totalBoundingBox, totalBoundingSphere, childLodDistance, itemLodDistance, reflection)
+        self.writeYtypItem(lodName, LodMapCreator.TEXTURE_DICTIONARY_LOD, drawableDictionary, totalBoundingBox, totalBoundingSphere, childLodDistance, itemLodDistance, reflection)
 
         return self.createEntityItem(lodName, center, childLodDistance, itemLodDistance, parentIndex, numChildren, slodLevel, reflection)
 
@@ -1018,7 +1021,7 @@ class LodMapCreator:
         else:
             childLodDistance = self.getLodDistance(slodLevel - 1)
 
-        self.writeYtypItem(name, self.prefix + "_slod", drawableDictionary, totalBoundingBox, totalBoundingSphere, childLodDistance, itemLodDistance, False)
+        self.writeYtypItem(name, LodMapCreator.TEXTURE_DICTIONARY_SLOD, drawableDictionary, totalBoundingBox, totalBoundingSphere, childLodDistance, itemLodDistance, False)
 
         return self.createEntityItem(name, center, childLodDistance, itemLodDistance, parentIndex, numChildren, slodLevel, False)
 
@@ -1673,6 +1676,6 @@ class LodMapCreator:
     def copyTextureDictionaries(self):
         texturesDir = os.path.join(os.path.dirname(__file__), "textures")
         if self.foundLod:
-            shutil.copyfile(os.path.join(texturesDir, "lod.ytd"), os.path.join(self.getOutputDirModels(), self.prefix + "_lod.ytd"))
+            shutil.copyfile(os.path.join(texturesDir, LodMapCreator.TEXTURE_DICTIONARY_LOD + ".ytd"), os.path.join(self.getOutputDirModels(), LodMapCreator.TEXTURE_DICTIONARY_LOD + ".ytd"))
         if self.foundSlod:
-            shutil.copyfile(os.path.join(texturesDir, "slod.ytd"), os.path.join(self.getOutputDirModels(), self.prefix + "_slod.ytd"))
+            shutil.copyfile(os.path.join(texturesDir, LodMapCreator.TEXTURE_DICTIONARY_SLOD + ".ytd"), os.path.join(self.getOutputDirModels(), LodMapCreator.TEXTURE_DICTIONARY_SLOD + ".ytd"))
