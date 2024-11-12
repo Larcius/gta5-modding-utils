@@ -266,9 +266,9 @@ def repl(matchobj, outCoords, heightmap):
         for i in range(3):
             coords[i] += transformed[i]
 
-        outCoords.write(str(coords[0]) + "," + str(coords[1]) + "," + str(coords[2]) +
-                        "," + str(origQuat[1]) + "," + str(origQuat[2]) + "," + str(origQuat[3]) + "," + str(origQuat[0]) +
-                        "," + str(tree.trunkRadius * scaleXY) + "\n")
+        outCoords.write(floatToStr(coords[0]) + "," + floatToStr(coords[1]) + "," + floatToStr(coords[2]) +
+                        "," + floatToStr(origQuat[1]) + "," + floatToStr(origQuat[2]) + "," + floatToStr(origQuat[3]) + "," + floatToStr(origQuat[0]) +
+                        "," + floatToStr(tree.trunkRadius * scaleXY) + "\n")
         return matchobj.group(0)
 
     minHeight, normal, distanceToStreet, isOnStreet, isInWater = getMinHeight(heightmap)
@@ -282,7 +282,7 @@ def repl(matchobj, outCoords, heightmap):
 
     if abs(calcZCoord - coords[2]) >= DELTA_Z_WHEN_TO_WARN:
         print("WARNING: changed Z coordinate of entity", prop, "at position", position, "by", calcZCoord - coords[2],
-              "(new z coordinate is " + str(calcZCoord) + ")")
+              "(new z coordinate is " + floatToStr(calcZCoord) + ")")
 
     if DELETE_IF_ON_STREET and isOnStreet:
         print("INFO: removing", prop, "at position", position, "because it is placed on a street or path")
