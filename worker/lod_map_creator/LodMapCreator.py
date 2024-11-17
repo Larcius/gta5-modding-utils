@@ -108,7 +108,7 @@ class LodMapCreator:
             "prop_w_r_cedar_01": LodCandidate(0.515625, 0.67708333333, UV(0, 0), UV(1, 0.75), UV(0, 0.75), UV(1, 1)),
             "prop_w_r_cedar_dead": LodCandidate(0.59375, 0.425, UV(0, 0), UV(1, 0.625), UV(0, 1), UV(1, 0.625), UV(0.53125, 0.78125)),
             "test_tree_cedar_trunk_001": LodCandidate(0.5234375, 0.54807692307, UV(0, 0), UV(1, 0.8125), UV(0, 1), UV(1, 0.8125)),
-            "test_tree_forest_trunk_01": LodCandidate(0.515625, 0.38461538461, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
+            "test_tree_forest_trunk_01": LodCandidate(0.515625, 0.54807692307, UV(0, 0), UV(1, 0.8125), UV(0, 0.8125), UV(1, 1)),
             "test_tree_forest_trunk_04": LodCandidate(0.453125),
             # trees2
             "prop_tree_lficus_02": LodCandidate(0.4453125, 0.359375, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
