@@ -23,6 +23,9 @@ class YtypParser:
     def readYtypDirectory(path: str) -> dict[str, YtypItem]:
         items = {}
 
+        if not os.path.exists(path):
+            return items
+
         for filename in os.listdir(path):
             if not filename.endswith(".ytyp.xml"):
                 continue
