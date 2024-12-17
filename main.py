@@ -234,32 +234,45 @@ def main(argv):
         lodMapCleaner = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "clear_lod"), prefix, True, False)
         lodMapCleaner.run()
 
-        nextInputDir = lodMapCleaner.getOutputDirMaps()
+        nextInputDir = lodMapCleaner.getOutputDirMaps(False)
 
     if lodMap:
         lodMapCreator = LodMapCreator(nextInputDir, os.path.join(tempOutputDir, "lod_map"), prefix, False, createReflection)
         lodMapCreator.run()
 
-        outputSlodDir = os.path.join(outputDir, prefix + "_slod")
-        os.makedirs(outputSlodDir)
-        moveDirectory(lodMapCreator.getOutputDirModels(), outputSlodDir)
+        outputMetadataDir = os.path.join(outputDir, prefix + "_metadata")
+        os.makedirs(outputMetadataDir)
+        moveDirectory(lodMapCreator.getOutputDirMetadata(False), outputMetadataDir)
 
-        outputMeshesDir = os.path.join(outputDir, os.path.basename(lodMapCreator.getOutputDirMeshes()))
+        outputSlodDir = os.path.join(outputDir, prefix)
+        os.makedirs(outputSlodDir)
+        moveDirectory(lodMapCreator.getOutputDirModels(False), outputSlodDir)
+
+        outputMeshesDir = os.path.join(outputDir, os.path.basename(lodMapCreator.getOutputDirMeshes(False)))
         os.makedirs(outputMeshesDir)
-        moveDirectory(lodMapCreator.getOutputDirMeshes(), outputMeshesDir)
+        moveDirectory(lodMapCreator.getOutputDirMeshes(False), outputMeshesDir)
 
         if createReflection:
-            outputReflMapsDir = os.path.join(outputDir, prefix + "_refl")
-            os.makedirs(outputReflMapsDir)
-            moveDirectory(lodMapCreator.getOutputDirReflMaps(), outputReflMapsDir)
+            outputReflDir = os.path.join(outputDir, prefix + "_refl")
+            os.makedirs(outputReflDir)
+            moveDirectory(lodMapCreator.getOutputDirModels(True), outputReflDir)
 
-        nextInputDir = lodMapCreator.getOutputDirMaps()
+            outputReflMeshesDir = os.path.join(outputDir, os.path.basename(lodMapCreator.getOutputDirMeshes(True)))
+            os.makedirs(outputReflMeshesDir)
+            moveDirectory(lodMapCreator.getOutputDirMeshes(True), outputReflMeshesDir)
+
+            outputReflMetadataDir = os.path.join(outputDir, prefix + "_refl_metadata")
+            os.makedirs(outputReflMetadataDir)
+            moveDirectory(lodMapCreator.getOutputDirMaps(True), outputReflMetadataDir)
+            moveDirectory(lodMapCreator.getOutputDirMetadata(True), outputReflMetadataDir)
+
+        nextInputDir = lodMapCreator.getOutputDirMaps(False)
 
     if staticCol:
         staticCollisionCreator = StaticCollisionCreator(nextInputDir, os.path.join(tempOutputDir, "static_col"))
         staticCollisionCreator.run()
 
-        outputStaticColsDir = os.path.join(outputDir, prefix)
+        outputStaticColsDir = os.path.join(outputDir, prefix + "_col")
         os.makedirs(outputStaticColsDir)
         moveDirectory(staticCollisionCreator.getOutputDirCollisionModels(), outputStaticColsDir)
 
@@ -269,10 +282,10 @@ def main(argv):
         statisticsPrinter = StatisticsPrinter(nextInputDir)
         statisticsPrinter.run()
 
-    outputMapsDir = os.path.join(outputDir, prefix + "_metadata")
-    os.makedirs(outputMapsDir)
+    outputMetadataDir = os.path.join(outputDir, prefix + "_metadata")
+    os.makedirs(outputMetadataDir, exist_ok=True)
     if not os.path.samefile(nextInputDir, inputDir):
-        moveDirectory(nextInputDir, outputMapsDir)
+        moveDirectory(nextInputDir, outputMetadataDir)
     # else:
     #    no need to duplicate the input dir
     #    copyDirectory(nextInputDir, outputDir + "/maps")

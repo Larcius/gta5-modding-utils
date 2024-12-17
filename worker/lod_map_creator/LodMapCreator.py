@@ -294,13 +294,15 @@ class LodMapCreator:
         self.createOutputDir()
         self.readYtypItems()
         self.processFiles()
-        self.addLodAndSlodModelsToYtypDict()
-
-        self.fixMapExtents(self.getOutputDirMaps())
-        self.createManifest(self.getOutputDirMaps())
+        self.addLodAndSlodModelsToYtypDict(False)
         if self.createReflection:
-            self.fixMapExtents(self.getOutputDirReflMaps())
-            self.createManifest(self.getOutputDirReflMaps())
+            self.addLodAndSlodModelsToYtypDict(True)
+
+        self.fixMapExtents(False)
+        self.createManifest(False)
+        if self.createReflection:
+            self.fixMapExtents(True)
+            self.createManifest(True)
 
         self.copyOthers()
         self.copyTextureDictionaries()
@@ -321,23 +323,31 @@ class LodMapCreator:
             raise ValueError("Output dir " + self.outputDir + " must not exist")
 
         os.makedirs(self.outputDir)
-        os.mkdir(self.getOutputDirMaps())
+        os.mkdir(self.getOutputDirMaps(False))
+        os.mkdir(self.getOutputDirMeshes(False))
+        os.mkdir(self.getOutputDirModels(False))
+        os.mkdir(self.getOutputDirMetadata(False))
         if self.createReflection:
-            os.mkdir(self.getOutputDirReflMaps())
-        os.mkdir(self.getOutputDirMeshes())
-        os.mkdir(self.getOutputDirModels())
+            os.mkdir(self.getOutputDirMaps(True))
+            os.mkdir(self.getOutputDirMeshes(True))
+            os.mkdir(self.getOutputDirModels(True))
+            os.mkdir(self.getOutputDirMetadata(True))
 
-    def getOutputDirMaps(self) -> str:
-        return os.path.join(self.outputDir, "maps")
+    def getOutputDirMaps(self, reflection: bool) -> str:
+        directory = ("refl_" if reflection else "") + "maps"
+        return os.path.join(self.outputDir, directory)
 
-    def getOutputDirReflMaps(self) -> str:
-        return os.path.join(self.outputDir, "reflMaps")
+    def getOutputDirMetadata(self, reflection: bool) -> str:
+        directory = ("refl" if reflection else "slod") + "_metadata"
+        return os.path.join(self.outputDir, directory)
 
-    def getOutputDirModels(self) -> str:
-        return os.path.join(self.outputDir, "slod")
+    def getOutputDirModels(self, reflection: bool) -> str:
+        directory = "refl" if reflection else "slod"
+        return os.path.join(self.outputDir, directory)
 
-    def getOutputDirMeshes(self) -> str:
-        return os.path.join(self.outputDir, "_slod_meshes")
+    def getOutputDirMeshes(self, reflection: bool) -> str:
+        directory = "_" + ("refl" if reflection else "slod") + "_meshes"
+        return os.path.join(self.outputDir, directory)
 
     def readTemplates(self):
         templatesDir = os.path.join(os.path.dirname(__file__), "templates")
@@ -783,7 +793,7 @@ class LodMapCreator:
             .replace("${BOUNDS}\n", bounds) \
             .replace("${GEOMETRIES}\n", geometries)
 
-        fileModelMesh = open(os.path.join(self.getOutputDirMeshes(), lodName.lower() + ".mesh"), 'w')
+        fileModelMesh = open(os.path.join(self.getOutputDirMeshes(reflection), lodName.lower() + ".mesh"), 'w')
         fileModelMesh.write(contentModelMesh)
         fileModelMesh.close()
 
@@ -801,7 +811,7 @@ class LodMapCreator:
             .replace("${MESH_FILENAME}", lodName.lower() + ".mesh") \
             .replace("${SHADERS}\n", shaders)
 
-        fileModelOdr = open(os.path.join(self.getOutputDirMeshes(), lodName.lower() + ".odr"), 'w')
+        fileModelOdr = open(os.path.join(self.getOutputDirMeshes(reflection), lodName.lower() + ".odr"), 'w')
         fileModelOdr.write(contentModelOdr)
         fileModelOdr.close()
 
@@ -822,13 +832,13 @@ class LodMapCreator:
         coordinate = semiaxisX * semiaxisY / math.sqrt(semiaxisX**2 + semiaxisY**2)
         return [coordinate * (1 if quadrant == 0 or quadrant == 3 else -1), coordinate * (1 if quadrant == 0 or quadrant == 1 else -1)]
 
-    def createDrawableDictionary(self, name: str, entities: list[EntityItem]):
+    def createDrawableDictionary(self, name: str, entities: list[EntityItem], reflection: bool):
         if len(entities) == 0:
             return
 
-        relPath = os.path.relpath(self.getOutputDirMeshes(), self.getOutputDirModels())
+        relPath = os.path.relpath(self.getOutputDirMeshes(reflection), self.getOutputDirModels(reflection))
 
-        file = open(os.path.join(self.getOutputDirModels(), name.lower() + ".odd"), 'w')
+        file = open(os.path.join(self.getOutputDirModels(reflection), name.lower() + ".odd"), 'w')
         file.write("Version 165 32\n{\n")
         for entity in entities:
             file.write("\t")
@@ -993,7 +1003,7 @@ class LodMapCreator:
             .replace("${BOUNDS}\n", bounds) \
             .replace("${GEOMETRIES}\n", geometries)
 
-        fileModelMesh = open(os.path.join(self.getOutputDirMeshes(), name.lower() + ".mesh"), 'w')
+        fileModelMesh = open(os.path.join(self.getOutputDirMeshes(False), name.lower() + ".mesh"), 'w')
         fileModelMesh.write(contentModelMesh)
         fileModelMesh.close()
 
@@ -1011,7 +1021,7 @@ class LodMapCreator:
             .replace("${MESH_FILENAME}", name.lower() + ".mesh") \
             .replace("${SHADERS}\n", shaders)
 
-        fileModelOdr = open(os.path.join(self.getOutputDirMeshes(), name.lower() + ".odr"), 'w')
+        fileModelOdr = open(os.path.join(self.getOutputDirMeshes(False), name.lower() + ".odr"), 'w')
         fileModelOdr.write(contentModelOdr)
         fileModelOdr.close()
 
@@ -1034,8 +1044,8 @@ class LodMapCreator:
             ytypItems = self.slodYtypItems
 
         ytypName = self.getYtypName(reflection)
-        if not os.path.exists(os.path.join(self.getOutputDirModels(), ytypName + ".ytyp.xml")):
-            ytypItems = open(os.path.join(self.getOutputDirModels(), ytypName + ".ytyp.xml"), 'w')
+        if not os.path.exists(os.path.join(self.getOutputDirMetadata(reflection), ytypName + ".ytyp.xml")):
+            ytypItems = open(os.path.join(self.getOutputDirMetadata(reflection), ytypName + ".ytyp.xml"), 'w')
             ytypItems.write("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <CMapTypes>
   <extensions/>
@@ -1201,7 +1211,7 @@ class LodMapCreator:
 
             mapName = Util.getMapnameFromFilename(filename)
 
-            if os.path.exists(os.path.join(self.getOutputDirMaps(), Util.getFilenameFromMapname(mapName))):
+            if os.path.exists(os.path.join(self.getOutputDirMaps(False), Util.getFilenameFromMapname(mapName))):
                 print("\twarning: skipping " + filename + " since such a map was created by this script")
                 continue
 
@@ -1214,7 +1224,7 @@ class LodMapCreator:
             contentNoLod = self.resetParentIndexAndNumChildren(contentNoLod)
             contentNoLod = Ymap.replaceName(contentNoLod, mapName)
 
-            fileNoLod = open(os.path.join(self.getOutputDirMaps(), filename), 'w')
+            fileNoLod = open(os.path.join(self.getOutputDirMaps(False), filename), 'w')
             fileNoLod.write(contentNoLod)
             fileNoLod.close()
 
@@ -1341,7 +1351,7 @@ class LodMapCreator:
             index += 1
 
         for reflEntitiesIndex in range(len(drawableDictionariesReflEntities)):
-            self.createDrawableDictionary(reflDrawableDictionary + "_" + str(reflEntitiesIndex), drawableDictionariesReflEntities[reflEntitiesIndex])
+            self.createDrawableDictionary(reflDrawableDictionary + "_" + str(reflEntitiesIndex), drawableDictionariesReflEntities[reflEntitiesIndex], True)
 
         reflEntities = []
         for drawableDictionaryReflEntities in drawableDictionariesReflEntities:
@@ -1445,14 +1455,14 @@ class LodMapCreator:
             ))
 
         for lodEntitiesIndex in range(len(lodEntities)):
-            self.createDrawableDictionary(lodDrawableDictionary + "_" + str(lodEntitiesIndex), lodEntities[lodEntitiesIndex])
+            self.createDrawableDictionary(lodDrawableDictionary + "_" + str(lodEntitiesIndex), lodEntities[lodEntitiesIndex], False)
 
         for slod1EntitiesIndex in range(len(slod1Entities)):
-            self.createDrawableDictionary(slod1DrawableDictionary + "_" + str(slod1EntitiesIndex), slod1Entities[slod1EntitiesIndex])
+            self.createDrawableDictionary(slod1DrawableDictionary + "_" + str(slod1EntitiesIndex), slod1Entities[slod1EntitiesIndex], False)
 
-        self.createDrawableDictionary(slod2DrawableDictionary, slod2Entities)
-        self.createDrawableDictionary(slod3DrawableDictionary, slod3Entities)
-        self.createDrawableDictionary(slod4DrawableDictionary, slod4Entities)
+        self.createDrawableDictionary(slod2DrawableDictionary, slod2Entities, False)
+        self.createDrawableDictionary(slod3DrawableDictionary, slod3Entities, False)
+        self.createDrawableDictionary(slod4DrawableDictionary, slod4Entities, False)
 
         if len(slod4Entities) == 0:
             slod4MapName = None
@@ -1493,7 +1503,7 @@ class LodMapCreator:
             if not filename.endswith(".ymap.xml") or not filename.startswith(mapPrefix.lower()):
                 continue
 
-            pathNoLod = os.path.join(self.getOutputDirMaps(), filename)
+            pathNoLod = os.path.join(self.getOutputDirMaps(False), filename)
             fileNoLod = open(pathNoLod, 'r')
             contentNoLod = fileNoLod.read()
             fileNoLod.close()
@@ -1528,12 +1538,12 @@ class LodMapCreator:
 
             if orphanHdEntities is not None:
                 mapName = Util.getMapnameFromFilename(filename)
-                mapNameStrm = Util.findAvailableMapName(self.getOutputDirMaps(), mapName, "_strm", not self.clearLod)
+                mapNameStrm = Util.findAvailableMapName(self.getOutputDirMaps(False), mapName, "_strm", not self.clearLod)
 
                 if hdEntitiesContent is None:
                     contentHd = contentBeforeEntities + orphanHdEntities + contentAfterEntities
                     contentHd = Ymap.replaceParent(contentHd, None)
-                    fileHd = open(os.path.join(self.getOutputDirMaps(), Util.getFilenameFromMapname(mapNameStrm)), 'w')
+                    fileHd = open(os.path.join(self.getOutputDirMaps(False), Util.getFilenameFromMapname(mapNameStrm)), 'w')
                     fileHd.write(contentHd)
                     fileHd.close()
                 else:
@@ -1556,10 +1566,7 @@ class LodMapCreator:
 
         content = Ymap.replaceParent(content, parentMap)
 
-        if reflection:
-            mapsDir = self.getOutputDirReflMaps()
-        else:
-            mapsDir = self.getOutputDirMaps()
+        mapsDir = self.getOutputDirMaps(reflection)
 
         fileMap = open(os.path.join(mapsDir, Util.getFilenameFromMapname(mapName)), 'w')
         fileMap.write(content)
@@ -1642,12 +1649,14 @@ class LodMapCreator:
 
     def copyOthers(self):
         # copy other files
-        Util.copyFiles(self.inputDir, self.getOutputDirMaps(),
+        Util.copyFiles(self.inputDir, self.getOutputDirMaps(False),
             lambda filename: not filename.endswith(".ymap.xml") or not filename.startswith(tuple(each.lower() for each in self.bundlePrefixes)))
 
     # adapt extents and set current datetime
-    def fixMapExtents(self, mapsDir: str):
+    def fixMapExtents(self, reflection: bool):
         print("\tfixing map extents")
+
+        mapsDir = self.getOutputDirMaps(reflection)
 
         for filename in natsorted(os.listdir(mapsDir)):
             if not filename.endswith(".ymap.xml"):
@@ -1663,19 +1672,25 @@ class LodMapCreator:
             file.write(content)
             file.close()
 
-    def createManifest(self, mapsDir: str) -> None:
+    def createManifest(self, reflection: bool) -> None:
         print("\tcreating manifest")
-        manifest = Manifest(self.ytypItems, mapsDir)
+        mapsDir = self.getOutputDirMaps(reflection)
+        metadataDir = self.getOutputDirMetadata(reflection)
+        manifest = Manifest(self.ytypItems, mapsDir, metadataDir)
         manifest.parseYmaps()
         manifest.writeManifest()
 
-    def addLodAndSlodModelsToYtypDict(self) -> None:
-        if self.slodYtypItems is not None or self.reflYtypItems is not None:
-            self.ytypItems |= YtypParser.readYtypDirectory(self.getOutputDirModels())
+    def addLodAndSlodModelsToYtypDict(self, reflection: bool) -> None:
+        if reflection:
+            if self.reflYtypItems is not None:
+                self.ytypItems |= YtypParser.readYtypDirectory(self.getOutputDirMetadata(reflection))
+        else:
+            if self.slodYtypItems is not None:
+                self.ytypItems |= YtypParser.readYtypDirectory(self.getOutputDirMetadata(reflection))
 
     def copyTextureDictionaries(self):
         texturesDir = os.path.join(os.path.dirname(__file__), "textures")
         if self.foundLod:
-            shutil.copyfile(os.path.join(texturesDir, LodMapCreator.TEXTURE_DICTIONARY_LOD + ".ytd"), os.path.join(self.getOutputDirModels(), LodMapCreator.TEXTURE_DICTIONARY_LOD + ".ytd"))
+            shutil.copyfile(os.path.join(texturesDir, LodMapCreator.TEXTURE_DICTIONARY_LOD + ".ytd"), os.path.join(self.getOutputDirModels(False), LodMapCreator.TEXTURE_DICTIONARY_LOD + ".ytd"))
         if self.foundSlod:
-            shutil.copyfile(os.path.join(texturesDir, LodMapCreator.TEXTURE_DICTIONARY_SLOD + ".ytd"), os.path.join(self.getOutputDirModels(), LodMapCreator.TEXTURE_DICTIONARY_SLOD + ".ytd"))
+            shutil.copyfile(os.path.join(texturesDir, LodMapCreator.TEXTURE_DICTIONARY_SLOD + ".ytd"), os.path.join(self.getOutputDirModels(False), LodMapCreator.TEXTURE_DICTIONARY_SLOD + ".ytd"))

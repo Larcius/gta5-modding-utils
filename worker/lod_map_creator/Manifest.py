@@ -11,10 +11,12 @@ class Manifest:
     ytypItems: dict[str, YtypItem]
     imapsToYtyps: dict[str, set[str]]
     mapsDir: str
+    metadataDir: str
 
-    def __init__(self, ytypItems: dict[str, YtypItem], mapsDir: str):
+    def __init__(self, ytypItems: dict[str, YtypItem], mapsDir: str, metadataDir: str):
         self.ytypItems = ytypItems
         self.mapsDir = mapsDir
+        self.metadataDir = metadataDir
         self.imapsToYtyps = {}
 
     def parseYmaps(self):
@@ -44,7 +46,7 @@ class Manifest:
         self.imapsToYtyps[mapName] = ytyps
 
     def writeManifest(self):
-        file = open(os.path.join(self.mapsDir, '_manifest.ymf.xml'), 'w')
+        file = open(os.path.join(self.metadataDir, '_manifest.ymf.xml'), 'w')
         file.write("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <CPackFileMetaData>
 	<MapDataGroups/>
