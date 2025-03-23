@@ -122,6 +122,7 @@ class LodMapCreator:
             "prop_rus_olive": LodCandidate(0.484375, 0.546875, UV(0, 0), UV(1, 0.5), UV(0, 0.5), UV(1, 1)),
             "prop_rus_olive_wint": LodCandidate(0.556),
             # bushes
+            "prop_bush_lrg_02": LodCandidate(0.46875),
             "prop_bush_lrg_02b": LodCandidate(0.5),
             "prop_bush_lrg_04b": LodCandidate(0.375, 0.46875, UV(0, 0), UV(0.59375, 0.5), UV(0, 0.5), UV(1, 1), None, UV(0.59375, 0), UV(1, 0.5), 0.4423076923),
             "prop_bush_lrg_04c": LodCandidate(0.38157894736, 0.453125, UV(0, 0), UV(0.59375, 0.5), UV(0, 0.5), UV(1, 1), None, UV(0.59375, 0), UV(1, 0.5), 0.4423076923),
