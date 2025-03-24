@@ -575,7 +575,7 @@ class LodMapCreator:
         lengthVectorRightTop = norm(vectorRightTop)
         lengthVectorLeftBottom = norm(vectorLeftBottom)
         ratio = lengthVectorRightTop / (lengthVectorLeftBottom + lengthVectorRightTop)
-        desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
+        desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.textureOrigin, lodCandidate.textureOriginSide())
         uvDiagonal1Min = uvFrontMin if option == 0 else uvSideMin
         uvDiagonal1Max = uvFrontMax if option == 0 else uvSideMax
         if ratio > desiredRatio:
@@ -590,7 +590,7 @@ class LodMapCreator:
         lengthVectorLeftTop = norm(vectorLeftTop)
         lengthVectorRightBottom = norm(vectorRightBottom)
         ratio = lengthVectorRightBottom / (lengthVectorLeftTop + lengthVectorRightBottom)
-        desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.texture_origin, lodCandidate.textureOriginSide())
+        desiredRatio, option = LodMapCreator.findClosestRatio(ratio, lodCandidate.textureOrigin, lodCandidate.textureOriginSide())
         uvDiagonal2Min = uvFrontMin if option == 0 else uvSideMin
         uvDiagonal2Max = uvFrontMax if option == 0 else uvSideMax
         if ratio > desiredRatio:
@@ -735,7 +735,7 @@ class LodMapCreator:
 
             bbox = self.ytypItems[entity.archetypeName].boundingBox
             sizes = bbox.getSizes()
-            distanceLeftToIntersection = sizes[0] * lodCandidate.texture_origin
+            distanceLeftToIntersection = sizes[0] * lodCandidate.textureOrigin
             distanceBottomToIntersection = sizes[1] * lodCandidate.textureOriginSide()
             planeIntersection = [bbox.min[0] + distanceLeftToIntersection, bbox.min[1] + distanceBottomToIntersection]
 
